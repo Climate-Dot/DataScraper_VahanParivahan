@@ -53,14 +53,19 @@ def create_directory_if_not_exists(directory_path):
         print(f"Directory '{directory_path}' already exists.")
 
 
-def extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_category_label):
+def extract_oem_data_by_vehicle_category(
+    year_label, month_label, vehicle_category_label
+):
     """
     :param year_label: Year label for data
+    :param month_label: Month label for data
     :param vehicle_category_label: veg
     :return: Downloads csv file in directory set up by chrome
     """
     # create data download directory
-    download_path = os.path.join(os.getcwd(), "OEM-level", "oem_data_by_category", vehicle_category_label)
+    download_path = os.path.join(
+        os.getcwd(), "OEM-level", "oem_data_by_category", vehicle_category_label, str(year_label), month_label
+    )
     create_directory_if_not_exists(download_path)
     browserOpts = webdriver.ChromeOptions()
 
@@ -68,7 +73,7 @@ def extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_catego
     browserPrefs = {
         "credentials_enable_service": False,
         "profile.password_manager_enabled": False,
-        "download.default_directory": download_path
+        "download.default_directory": download_path,
     }
     browserOpts.add_experimental_option(
         "excludeSwitches", ["enable-automation", "enable-logging"]
@@ -86,26 +91,51 @@ def extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_catego
         find_element(browser, "id", "yaxisVar_label").click()
         time.sleep(1)
         find_element(browser, "id", "yaxisVar_4").click()
-        time.sleep(5)
+        time.sleep(2)
 
         # selecting x_axis entering fuel as parameter
         find_element(browser, "id", "xaxisVar_label").click()
         time.sleep(1)
         find_element(browser, "id", "xaxisVar_2").click()
-        time.sleep(5)
+        time.sleep(2)
 
         #  selecting year button and entering the value
         find_element(browser, "id", "selectedYear_label").click()
         time.sleep(1)
-        find_element(browser, "xpath", f"//ul[@id='selectedYear_items']/li[text()='{year_label}']").click()
+        find_element(
+            browser,
+            "xpath",
+            f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
+        ).click()
         time.sleep(5)
+
+        # click on main refresh button
+        find_element(
+            browser,
+            "css",
+            "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
+        ).click()
+        time.sleep(5)
+
+        # click on month button
+        find_element(browser, "id", "groupingTable:selectMonth").click()
+        time.sleep(1)
+        # Enter month
+        find_element(
+            browser,
+            "xpath",
+            f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
+        ).click()
+        time.sleep(2)
 
         # click on span toggler on left
         find_element(browser, "id", "filterLayout-toggler").click()
         time.sleep(1)
 
         # selecting adapted vehicle as category
-        find_element(browser, "xpath", f"//label[text()='{vehicle_category_label}']").click()
+        find_element(
+            browser, "xpath", f"//label[text()='{vehicle_category_label}']"
+        ).click()
         time.sleep(5)
 
         # click on refresh button on left toggler object
@@ -114,10 +144,10 @@ def extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_catego
             "css",
             "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left']",
         ).click()
-        time.sleep(10)
+        time.sleep(5)
 
         # click on download button for downloading report
-        find_element(browser, "id", "vchgroupTable:xls").click()
+        find_element(browser, "id", "groupingTable:xls").click()
         time.sleep(5)
         browser.quit()
 
@@ -126,7 +156,7 @@ def extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_catego
 
 
 def main():
-    extract_oem_data_by_vehicle_category(2024, 'JAN', 'ADAPTED VEHICLE')
+    extract_oem_data_by_vehicle_category(2024, "JAN", "ADAPTED VEHICLE")
 
 
 if __name__ == "__main__":
