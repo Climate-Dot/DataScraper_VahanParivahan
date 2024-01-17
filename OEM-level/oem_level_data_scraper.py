@@ -54,7 +54,7 @@ def create_directory_if_not_exists(directory_path):
 
 
 def extract_oem_data_by_vehicle_category(
-    year_label, month_label, vehicle_category_label
+        year_label, month_label, vehicle_category_label
 ):
     """
     :param year_label: Year label for data
@@ -155,8 +155,44 @@ def extract_oem_data_by_vehicle_category(
         browser.refresh()
 
 
+def get_all_vehicle_category_elements():
+    browserOpts = webdriver.ChromeOptions()
+
+    browserOpts.browser_version = "stable"
+    browserPrefs = {
+        "credentials_enable_service": False,
+        "profile.password_manager_enabled": False,
+    }
+    browserOpts.add_experimental_option(
+        "excludeSwitches", ["enable-automation", "enable-logging"]
+    )
+    browserOpts.add_experimental_option("prefs", browserPrefs)
+    browserOpts.add_argument("--disable-single-click-autofill")
+    browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    browser = webdriver.Chrome(options=browserOpts)
+
+    try:
+        browser.get(
+            "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
+        )
+        # click on span toggler on left
+        find_element(browser, "id", "filterLayout-toggler").click()
+        # find vehicle category element
+        element = find_element(browser, "xpath", '//table[@id="VhClass"]/tbody')
+
+        vehicle_category_lst = []
+        for row_label in element.find_elements(By.TAG_NAME, 'tr'):
+            vehicle_category_lst.append(row_label.text)
+        return vehicle_category_lst
+
+    except TimeoutException:
+        browser.refresh()
+
+
 def main():
-    extract_oem_data_by_vehicle_category(2024, "JAN", "ADAPTED VEHICLE")
+    # extract_oem_data_by_vehicle_category(2024, "JAN", "ADAPTED VEHICLE")
+    vehicle_category_lst = get_all_vehicle_category_elements()
+    print(vehicle_category_lst)
 
 
 if __name__ == "__main__":
