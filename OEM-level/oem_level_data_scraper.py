@@ -7,6 +7,8 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     WebDriverException,
 )
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from datetime import datetime, timedelta
 import os
 import re
@@ -32,7 +34,7 @@ class OEMDataScraper:
         self.browserOpts.add_argument("--disable-dev-shm-usage")
         self.browserOpts.add_argument("--disable-single-click-autofill")
         self.browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        self.browser = webdriver.Chrome(options=self.browserOpts)
+        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.browserOpts)
         self.max_retries = 5
         self.retry_delay = 5
 
@@ -134,7 +136,7 @@ class OEMDataScraper:
         self.create_directory_if_not_exists(download_path)
         self.browserPrefs.update({"download.default_directory": download_path})
         self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
-        self.browser = webdriver.Chrome(options=self.browserOpts)
+        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.browserOpts)
         retries = 0
         while retries < self.max_retries:
             try:
