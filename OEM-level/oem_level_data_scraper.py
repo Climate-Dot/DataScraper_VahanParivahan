@@ -27,6 +27,9 @@ class OEMDataScraper:
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
         self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
+        self.browserOpts.add_argument("--headless")
+        self.browserOpts.add_argument("--no-sandbox")
+        self.browserOpts.add_argument("--disable-dev-shm-usage")
         self.browserOpts.add_argument("--disable-single-click-autofill")
         self.browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
         self.browser = webdriver.Chrome(options=self.browserOpts)
@@ -161,7 +164,7 @@ class OEMDataScraper:
                 # selecting x_axis entering fuel as parameter
                 self.find_element(self.browser, "id", "xaxisVar_label").click()
                 time.sleep(1)
-                self.find_element(self.browser, "id", "xaxisVar_2").click()
+                self.find_element(self.browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
                 time.sleep(2)
 
                 #  selecting year button and entering the value
@@ -184,7 +187,7 @@ class OEMDataScraper:
 
                 # click on month button
                 self.find_element(
-                    self.browser, "id", "groupingTable:selectMonth"
+                    self.browser, "id", "groupingTable:selectMonth_label"
                 ).click()
                 time.sleep(1)
                 # Enter month
@@ -237,7 +240,7 @@ class OEMDataScraper:
                 self.browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
                 )
-
+                time.sleep(2)
                 # click on span toggler on left
                 self.find_element(self.browser, "id", "filterLayout-toggler").click()
                 time.sleep(2)
