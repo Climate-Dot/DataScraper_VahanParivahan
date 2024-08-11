@@ -1,4 +1,3 @@
-import shutil
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,35 +7,20 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     WebDriverException,
 )
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 from datetime import datetime, timedelta
 import os
 import re
 import sys
 import time
-
-
-# sys.stdout = open("logs_oem_data_2023_to_2013_missing_files", "w")
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class OEMDataScraper:
     def __init__(self):
-        # create data download directory
-        self.browserOpts = webdriver.ChromeOptions()
-
-        self.browserOpts.browser_version = "stable"
-        self.browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        self.browserOpts.add_experimental_option(
-            "excludeSwitches", ["enable-automation", "enable-logging"]
-        )
-        self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
-        self.browserOpts.add_argument("--disable-single-click-autofill")
-        self.browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        self.browser = webdriver.Chrome(options=self.browserOpts)
         self.max_retries = 5
-        self.retry_delay = 5
+        self.retry_delay = 15
 
     @staticmethod
     def create_directory_if_not_exists(directory_path):
@@ -47,9 +31,9 @@ class OEMDataScraper:
         """
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
-            # print(f"Directory '{directory_path}' created.")
+            print(f"Directory '{directory_path}' created.")
         else:
-            # print(f"Directory '{directory_path}' already exists.")
+            print(f"Directory '{directory_path}' already exists.")
             pass
 
     @staticmethod
@@ -89,7 +73,7 @@ class OEMDataScraper:
                 )
             return element
         except Exception as e:
-            # print(f"Element not found: {e}")
+            print(f"Element not found: {e}")
             raise e
 
     @staticmethod
@@ -120,6 +104,23 @@ class OEMDataScraper:
         :return: Downloads csv file in directory set up by chrome
         """
         # create data download directory
+        browser_opts = webdriver.ChromeOptions()
+
+        browser_opts.browser_version = "stable"
+        browser_prefs = {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+        }
+        browser_opts.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
+        browser_opts.add_experimental_option("prefs", browser_prefs)
+        browser_opts.add_argument("--headless")
+        browser_opts.add_argument("--no-sandbox")
+        browser_opts.add_argument("--disable-dev-shm-usage")
+        browser_opts.add_argument("--disable-single-click-autofill")
+        browser_opts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         vehicle_category_folder_name = re.sub(
             r"\W+", " ", vehicle_category_label
@@ -134,46 +135,47 @@ class OEMDataScraper:
             month_label,
         )
         self.create_directory_if_not_exists(download_path)
-        self.browserPrefs.update({"download.default_directory": download_path})
-        self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
-        self.browser = webdriver.Chrome(options=self.browserOpts)
+        browser_prefs.update({"download.default_directory": download_path})
+        browser_opts.add_experimental_option("prefs", browser_prefs)
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browser_opts)
+        file_path = os.path.join(download_path, "reportTable.xlsx")
         retries = 0
-        while retries < self.max_retries:
+        while not os.path.exists(file_path):
             try:
-                self.browser.get(
+                browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
                 )
 
                 # select the state
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     '//label[starts-with(text(), "All Vahan4 Running States")]',
                 ).click()
                 time.sleep(2)
 
                 self.find_element(
-                    self.browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
+                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
                 ).click()
                 time.sleep(2)
 
                 # selecting y_axis entering maker as parameter
-                self.find_element(self.browser, "id", "yaxisVar_label").click()
-                time.sleep(1)
-                self.find_element(self.browser, "id", "yaxisVar_4").click()
+                self.find_element(browser, "id", "yaxisVar_label").click()
+                time.sleep(2)
+                self.find_element(browser, "id", "yaxisVar_4").click()
                 time.sleep(2)
 
                 # selecting x_axis entering fuel as parameter
-                self.find_element(self.browser, "id", "xaxisVar_label").click()
+                self.find_element(browser, "id", "xaxisVar_label").click()
                 time.sleep(1)
-                self.find_element(self.browser, "id", "xaxisVar_2").click()
+                self.find_element(browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
                 time.sleep(2)
 
                 #  selecting year button and entering the value
-                self.find_element(self.browser, "id", "selectedYear_label").click()
-                time.sleep(1)
+                self.find_element(browser, "id", "selectedYear_label").click()
+                time.sleep(2)
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
                 ).click()
@@ -181,7 +183,7 @@ class OEMDataScraper:
 
                 # click on main refresh button
                 self.find_element(
-                    self.browser,
+                    browser,
                     "css",
                     "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
                 ).click()
@@ -189,39 +191,39 @@ class OEMDataScraper:
 
                 # click on month button
                 self.find_element(
-                    self.browser, "id", "groupingTable:selectMonth"
+                    browser, "id", "groupingTable:selectMonth_label"
                 ).click()
-                time.sleep(1)
+                time.sleep(2)
                 # Enter month
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
                 ).click()
                 time.sleep(2)
 
                 # click on span toggler on left
-                self.find_element(self.browser, "id", "filterLayout-toggler").click()
-                time.sleep(1)
+                self.find_element(browser, "id", "filterLayout-toggler").click()
+                time.sleep(2)
 
                 # selecting adapted vehicle as category
                 self.find_element(
-                    self.browser, "xpath", f"//label[text()='{vehicle_category_label}']"
+                    browser, "xpath", f"//label[text()='{vehicle_category_label}']"
                 ).click()
                 time.sleep(5)
 
                 # click on refresh button on left toggler object
                 self.find_element(
-                    self.browser,
+                    browser,
                     "css",
                     "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left']",
                 ).click()
                 time.sleep(5)
 
                 # click on download button for downloading report
-                self.find_element(self.browser, "id", "groupingTable:xls").click()
+                self.find_element(browser, "id", "groupingTable:xls").click()
                 time.sleep(5)
-                self.browser.quit()
+                browser.quit()
                 break
 
             except (
@@ -230,28 +232,42 @@ class OEMDataScraper:
                     WebDriverException,
             ) as e:
                 retries += 1
-                # print(
-                #     f"Retrying attempt {retries} for {state_label}, {year_label}, {month_label} and {vehicle_category_label}"
-                # )
+                print(
+                    f"Retrying attempt {retries} for {state_label}, {year_label}, {month_label} and {vehicle_category_label}"
+                )
                 time.sleep(self.retry_delay)
 
-        if retries == 5:
-            print(f"file not downloaded for: {state_label, year_label, month_label, vehicle_category_label}")
-
     def get_all_vehicle_category_elements(self):
+        browser_opts = webdriver.ChromeOptions()
+
+        browser_opts.browser_version = "stable"
+        browser_prefs = {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+        }
+        browser_opts.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
+        browser_opts.add_experimental_option("prefs", browser_prefs)
+        browser_opts.add_argument("--headless")
+        browser_opts.add_argument("--no-sandbox")
+        browser_opts.add_argument("--disable-dev-shm-usage")
+        browser_opts.add_argument("--disable-single-click-autofill")
+        browser_opts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browser_opts)
         retries = 0
         while retries < self.max_retries:
             try:
-                self.browser.get(
+                browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
                 )
-
+                time.sleep(5)
                 # click on span toggler on left
-                self.find_element(self.browser, "id", "filterLayout-toggler").click()
+                self.find_element(browser, "id", "filterLayout-toggler").click()
                 time.sleep(2)
                 # find vehicle category element
                 category_element = self.find_element(
-                    self.browser, "xpath", '//table[@id="VhClass"]/tbody'
+                    browser, "xpath", '//table[@id="VhClass"]/tbody'
                 )
                 time.sleep(2)
                 vehicle_category_lst = []
@@ -264,17 +280,21 @@ class OEMDataScraper:
                     StaleElementReferenceException,
                     WebDriverException,
             ) as e:
-                # print(f"Vehicle Category element function threw exception {e}")
+                print(f"Vehicle Category element function threw exception {e}")
                 retries += 1
-                # print(f"Retrying attempt {retries} for vehicle category label")
+                print(f"Retrying attempt {retries} for vehicle category label")
+
+    # define a function to wrap the selenium function for argument unpacking
+    def run_selenium(self, args):
+        return self.extract_oem_data_by_state_and_vehicle_category(*args)
 
 
 def main():
-    # for back-fill of data till 2023
     data_extract_class = OEMDataScraper()
 
     # get all state and vehicle category elements
     vehicle_category_lst = data_extract_class.get_all_vehicle_category_elements()
+    print(len(vehicle_category_lst))
     state_lst = [
         "Andaman & Nicobar Island",
         "Andhra Pradesh",
@@ -311,229 +331,40 @@ def main():
         "Uttar Pradesh",
         "West Bengal",
     ]
-    # Remove first state element
-    # states = state_lst[0:30]
-    # vehicle_category_lst = [
-    #     "ADAPTED VEHICLE",
-    #     "AGRICULTURAL TRACTOR",
-    #     "AMBULANCE",
-    #     "ANIMAL AMBULANCE",
-    #     "ARMOURED/SPECIALISED VEHICLE",
-    #     "ARTICULATED VEHICLE",
-    #     "AUXILIARY TRAILER",
-    #     "BREAKDOWN VAN",
-    #     "BULLDOZER",
-    #     "BUS",
-    #     "CAMPER VAN / TRAILER",
-    #     "CAMPER VAN / TRAILER (PRIVATE USE)",
-    #     "CASH VAN",
-    #     "CONSTRUCTION EQUIPMENT VEHICLE",
-    #     "CONSTRUCTION EQUIPMENT VEHICLE (COMMERCIAL)",
-    #     "CRANE MOUNTED VEHICLE",
-    #     "DUMPER",
-    #     "EARTH MOVING EQUIPMENT",
-    #     "EDUCATIONAL INSTITUTION BUS",
-    #     "E-RICKSHAW(P)",
-    #     "E-RICKSHAW WITH CART (G)",
-    #     "EXCAVATOR (COMMERCIAL)",
-    #     "EXCAVATOR (NT)",
-    #     "FIRE FIGHTING VEHICLE"]
-    # "FIRE TENDERS",
-    # "FORK LIFT"]
-    # "GOODS CARRIER",
-    # "HARVESTER",
-    # "HEARSES",
-    # "LIBRARY VAN",
-    # "LUXURY CAB",
-    # "MAXI CAB",
-    # "M-CYCLE/SCOOTER",
-    # "M-CYCLE/SCOOTER-WITH SIDE CAR",
-    # "MOBILE CANTEEN",
-    # "MOBILE CLINIC",
-    # "MOBILE WORKSHOP",
-    # "MODULAR HYDRAULIC TRAILER",
-    # "MOPED",
-    # "MOTOR CAB",
-    # "MOTOR CAR",
-    # "MOTOR CARAVAN",
-    # "MOTOR CYCLE/SCOOTER-SIDECAR(T)",
-    # "MOTOR CYCLE/SCOOTER-USED FOR HIRE",
-    # "MOTOR CYCLE/SCOOTER-WITH TRAILER",
-    # "MOTORISED CYCLE (CC > 25CC)",
-    # "OMNI BUS",
-    # "OMNI BUS (PRIVATE USE)",
-    # "POWER TILLER",
-    # "POWER TILLER (COMMERCIAL)",
-    # "PRIVATE SERVICE VEHICLE",
-    # "PRIVATE SERVICE VEHICLE (INDIVIDUAL USE)",
-    # "QUADRICYCLE (COMMERCIAL)",
-    # "QUADRICYCLE (PRIVATE)",
-    # "RECOVERY VEHICLE",
-    # "ROAD ROLLER",
-    # "SEMI-TRAILER (COMMERCIAL)",
-    # "SNORKED LADDERS",
-    # "THREE WHEELER (GOODS)",
-    # "THREE WHEELER (PASSENGER)",
-    # "THREE WHEELER (PERSONAL)",
-    # "TOWER WAGON",
-    # "TOW TRUCK",
-    # "TRACTOR (COMMERCIAL)",
-    # "TRACTOR-TROLLEY(COMMERCIAL)",
-    # "TRAILER (AGRICULTURAL)",
-    # "TRAILER (COMMERCIAL)",
-    # "TRAILER FOR PERSONAL USE",
-    # "TREE TRIMMING VEHICLE",
-    # "VEHICLE FITTED WITH COMPRESSOR",
-    # "VEHICLE FITTED WITH GENERATOR",
-    # "VEHICLE FITTED WITH RIG",
-    # "VINTAGE MOTOR VEHICLE",
-    # "X-RAY VAN",
 
-    # print(state_lst[16:])
-    # print(vehicle_category_lst[24:])
-
-    # get month abbreviation and year
-    # month, year = data_extract_class.get_year_month_label()
-
-    # month, year = "FEB", 2024
-    # for state in state_lst:
-    #     for category in vehicle_category_lst:
-    #         directory_path = os.path.join(
-    #             os.getcwd(),
-    #             "OEM-level",
-    #             "oem_data_by_category",
-    #             re.sub(r'[^a-zA-Z\s]', " ", state).rstrip(),
-    #             re.sub(r"\W+", " ", category).rstrip(),
-    #             str(year),
-    #             month,
-    #         )
-    #
-    #         # remove the file if already exists from previous month
-    #         # if os.path.exists(directory_path):
-    #         #     shutil.rmtree(directory_path)
-    #
-    #         data_extract_class.extract_oem_data_by_vehicle_category(state, year, month, category)
-    #
-    #         # check if file was downloaded
-    #         if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
-    #             print(f"file not downloaded for {state}, {category}, {year}, {month}")
-
-    # Used for one time extract
-    # TODO: Remove post review
-
-    years = [2024]
-    months = [
-        "APR"
-    ]
-    combination = []
+    if len(sys.argv) > 2:
+        # If month and year are passed as command-line arguments
+        month = sys.argv[1]
+        year = sys.argv[2]
+    else:
+        # Use the default function to get the month and year
+        month, year = data_extract_class.get_year_month_label()
+    parameters = []
     for state in state_lst:
-        for year in years:
-            for month in months:
-                for vehicle_category in vehicle_category_lst:
-                    combination.append((state, year, month, vehicle_category))
+        for category in vehicle_category_lst:
+            directory_path = os.path.join(
+                os.getcwd(),
+                "OEM-level",
+                "oem_data_by_state_and_category",
+                re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
+                re.sub(r"\W+", " ", category).rstrip(),
+                str(year),
+                month
+            )
+            file_path = os.path.join(directory_path, "reportTable.xlsx")
+            if not os.path.exists(file_path):
+                parameters.append((state, year, month, category))
 
-    # for i, comb in enumerate(combination):
-    #     if comb[0] == 'Andhra Pradesh' and comb[1] == 2018 and comb[2] == 'DEC' and comb[3] == 'THREE WHEELER (PASSENGER)':
-    #         print(i, comb)
-    # for i in range(len(combination)-1):
-    #     if combination[i][0] == 'Delhi' and combination[i+1][0] == 'Goa':
-    #         print(combination[i])
-    #         print(i)
-    #         print(i+1)
-    #         print(combination[i+1])
-    for item in combination:
-        # print(*item)
-        state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", item[0]).rstrip()
-        vehicle_category_folder_name = re.sub(
-            r"\W+", " ", item[3]
-        ).rstrip()
-        file_path = os.path.join(os.getcwd(),
-                                 "OEM-level",
-                                 "oem_data_by_state_and_category",
-                                 state_folder_name.rstrip(),
-                                 vehicle_category_folder_name,
-                                 str(item[1]),
-                                 item[2],
-                                 "reportTable.xlsx")
-        if not os.path.exists(file_path):
-            print(item)
+    # Run selenium function in parallel
+    with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers based on your system's capability
+        futures = [executor.submit(data_extract_class.run_selenium, args) for args in parameters]
 
-    # delete path of file if the file does not exist
-    # file_missing_lst = []
-    # for vehicle_category in os.listdir(parent_directory):
-    #
-    #     vehicle_category_path = os.path.join(parent_directory, vehicle_category)
-    #
-    #     # Check if it's a directory
-    #     if os.path.isdir(vehicle_category_path):
-    #         for year in os.listdir(vehicle_category_path):
-    #             year_path = os.path.join(vehicle_category_path, year)
-    #
-    #             for month in os.listdir(year_path):
-    #                 month_path = os.path.join(year_path, month)
-    #                 file_path = os.path.join(month_path, "reportTable.xlsx")
-    #                 if not os.path.exists(file_path):
-    #                     print(f"file not found for {vehicle_category}, {year}, {month}")
-
-    #                     file_missing_lst.append((vehicle_category, year, month))
-    #                     shutil.rmtree(month_path)
-    # return file_missing_lst
-
-    # file_missing_lst = data_extract_class.file_download_test(parent_directory)
-
-    # print(len(vehicle_category_lst))
-    # years = [2024]
-    #
-    # parent_directory = os.path.join(os.getcwd(), "OEM-level", "oem_data_by_category")
-    #
-    # # get missing file combinations
-    # parameter_combinations = [
-    #     (category, year, month)
-    #     for category in vehicle_category_lst
-    #     for year in years
-    #     for month in months
-    #     if not os.path.exists(os.path.join(parent_directory, re.sub(
-    #         r"\W+", " ", category
-    #     ).rstrip(), str(year), month, "reportTable.xlsx"))
-    # ]
-    #
-    # for combination in parameter_combinations:
-    #     vehicle_category_label = combination[0]
-    #     year_label = combination[1]
-    #     month_label = combination[2]
-    #     while not os.path.exists(os.path.join(parent_directory, re.sub(
-    #             r"\W+", " ", vehicle_category_label
-    #     ).rstrip(), str(year_label), month_label, "reportTable.xlsx")):
-    #         data_extract_class.extract_oem_data_by_vehicle_category(year_label, month_label, vehicle_category_label)
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+            except Exception as e:
+                print(f"Exception occurred: {e}")
 
 
 if __name__ == "__main__":
     main()
-
-# parent_directory = os.path.join(os.getcwd(), "OEM-level", "oem_data_by_category")
-# file_missing_lst = []
-# for state in os.listdir(parent_directory):
-#     state_path = os.path.join(parent_directory, state)
-#     for vehicle_category in os.listdir(state_path):
-#
-#         vehicle_category_path = os.path.join(state_path, vehicle_category)
-#
-#         # Check if it's a directory
-#         if os.path.isdir(vehicle_category_path):
-#             for year in os.listdir(vehicle_category_path):
-#                 year_path = os.path.join(vehicle_category_path, year)
-#                 for month in ["JAN", "FEB"]:
-#                     month_path = os.path.join(year_path, month)
-#                     file_path = os.path.join(month_path, "reportTable.xlsx")
-#                     if not os.path.exists(month_path):
-#                         print(f"file not found for {state}, {vehicle_category}, {year}, {month}")
-#
-#                         file_missing_lst.append((state, vehicle_category, year, month))
-#                     # shutil.rmtree(month_path)
-# # print(file_missing_lst)
-# import os
-# path = os.path.join(os.getcwd(), "OEM-level", "oem_data_by_category", "Uttarakhand")
-# files = os.walk(path)
-# # Print each file in the list
-# for file in files:
-#     print(file)

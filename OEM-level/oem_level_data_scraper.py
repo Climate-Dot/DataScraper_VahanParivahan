@@ -12,31 +12,16 @@ from selenium.webdriver.chrome.service import Service
 from datetime import datetime, timedelta
 import os
 import re
+import sys
+import shutil
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class OEMDataScraper:
     def __init__(self):
-        # create data download directory
-        self.browserOpts = webdriver.ChromeOptions()
-
-        self.browserOpts.browser_version = "stable"
-        self.browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        self.browserOpts.add_experimental_option(
-            "excludeSwitches", ["enable-automation", "enable-logging"]
-        )
-        self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
-        self.browserOpts.add_argument("--headless")
-        self.browserOpts.add_argument("--no-sandbox")
-        self.browserOpts.add_argument("--disable-dev-shm-usage")
-        self.browserOpts.add_argument("--disable-single-click-autofill")
-        self.browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.browserOpts)
         self.max_retries = 5
-        self.retry_delay = 5
+        self.retry_delay = 15
 
     @staticmethod
     def create_directory_if_not_exists(directory_path):
@@ -120,6 +105,23 @@ class OEMDataScraper:
         :return: Downloads csv file in directory set up by chrome
         """
         # create data download directory
+        browserOpts = webdriver.ChromeOptions()
+
+        browserOpts.browser_version = "stable"
+        browserPrefs = {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+        }
+        browserOpts.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
+        browserOpts.add_experimental_option("prefs", browserPrefs)
+        browserOpts.add_argument("--headless")
+        browserOpts.add_argument("--no-sandbox")
+        browserOpts.add_argument("--disable-dev-shm-usage")
+        browserOpts.add_argument("--disable-single-click-autofill")
+        browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         vehicle_category_folder_name = re.sub(
             r"\W+", " ", vehicle_category_label
@@ -134,46 +136,46 @@ class OEMDataScraper:
             month_label,
         )
         self.create_directory_if_not_exists(download_path)
-        self.browserPrefs.update({"download.default_directory": download_path})
-        self.browserOpts.add_experimental_option("prefs", self.browserPrefs)
-        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.browserOpts)
+        browserPrefs.update({"download.default_directory": download_path})
+        browserOpts.add_experimental_option("prefs", browserPrefs)
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browserOpts)
         retries = 0
         while retries < self.max_retries:
             try:
-                self.browser.get(
+                browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
                 )
 
                 # select the state
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     '//label[starts-with(text(), "All Vahan4 Running States")]',
                 ).click()
                 time.sleep(2)
 
                 self.find_element(
-                    self.browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
+                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
                 ).click()
                 time.sleep(2)
 
                 # selecting y_axis entering maker as parameter
-                self.find_element(self.browser, "id", "yaxisVar_label").click()
-                time.sleep(1)
-                self.find_element(self.browser, "id", "yaxisVar_4").click()
+                self.find_element(browser, "id", "yaxisVar_label").click()
+                time.sleep(2)
+                self.find_element(browser, "id", "yaxisVar_4").click()
                 time.sleep(2)
 
                 # selecting x_axis entering fuel as parameter
-                self.find_element(self.browser, "id", "xaxisVar_label").click()
+                self.find_element(browser, "id", "xaxisVar_label").click()
                 time.sleep(1)
-                self.find_element(self.browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
+                self.find_element(browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
                 time.sleep(2)
 
                 #  selecting year button and entering the value
-                self.find_element(self.browser, "id", "selectedYear_label").click()
-                time.sleep(1)
+                self.find_element(browser, "id", "selectedYear_label").click()
+                time.sleep(2)
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
                 ).click()
@@ -181,7 +183,7 @@ class OEMDataScraper:
 
                 # click on main refresh button
                 self.find_element(
-                    self.browser,
+                    browser,
                     "css",
                     "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
                 ).click()
@@ -189,39 +191,39 @@ class OEMDataScraper:
 
                 # click on month button
                 self.find_element(
-                    self.browser, "id", "groupingTable:selectMonth_label"
+                    browser, "id", "groupingTable:selectMonth_label"
                 ).click()
-                time.sleep(1)
+                time.sleep(2)
                 # Enter month
                 self.find_element(
-                    self.browser,
+                    browser,
                     "xpath",
                     f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
                 ).click()
                 time.sleep(2)
 
                 # click on span toggler on left
-                self.find_element(self.browser, "id", "filterLayout-toggler").click()
-                time.sleep(1)
+                self.find_element(browser, "id", "filterLayout-toggler").click()
+                time.sleep(2)
 
                 # selecting adapted vehicle as category
                 self.find_element(
-                    self.browser, "xpath", f"//label[text()='{vehicle_category_label}']"
+                    browser, "xpath", f"//label[text()='{vehicle_category_label}']"
                 ).click()
                 time.sleep(5)
 
                 # click on refresh button on left toggler object
                 self.find_element(
-                    self.browser,
+                    browser,
                     "css",
                     "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left']",
                 ).click()
                 time.sleep(5)
 
                 # click on download button for downloading report
-                self.find_element(self.browser, "id", "groupingTable:xls").click()
+                self.find_element(browser, "id", "groupingTable:xls").click()
                 time.sleep(5)
-                self.browser.quit()
+                browser.quit()
                 break
 
             except (
@@ -236,19 +238,36 @@ class OEMDataScraper:
                 time.sleep(self.retry_delay)
 
     def get_all_vehicle_category_elements(self):
+        browserOpts = webdriver.ChromeOptions()
+
+        browserOpts.browser_version = "stable"
+        browserPrefs = {
+            "credentials_enable_service": False,
+            "profile.password_manager_enabled": False,
+        }
+        browserOpts.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
+        browserOpts.add_experimental_option("prefs", browserPrefs)
+        browserOpts.add_argument("--headless")
+        browserOpts.add_argument("--no-sandbox")
+        browserOpts.add_argument("--disable-dev-shm-usage")
+        browserOpts.add_argument("--disable-single-click-autofill")
+        browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browserOpts)
         retries = 0
         while retries < self.max_retries:
             try:
-                self.browser.get(
+                browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
                 )
-                time.sleep(2)
+                time.sleep(5)
                 # click on span toggler on left
-                self.find_element(self.browser, "id", "filterLayout-toggler").click()
+                self.find_element(browser, "id", "filterLayout-toggler").click()
                 time.sleep(2)
                 # find vehicle category element
                 category_element = self.find_element(
-                    self.browser, "xpath", '//table[@id="VhClass"]/tbody'
+                    browser, "xpath", '//table[@id="VhClass"]/tbody'
                 )
                 time.sleep(2)
                 vehicle_category_lst = []
@@ -264,6 +283,10 @@ class OEMDataScraper:
                 print(f"Vehicle Category element function threw exception {e}")
                 retries += 1
                 print(f"Retrying attempt {retries} for vehicle category label")
+    
+    # define a function to wrap the selenium function for argument unpacking
+    def run_selenium(self, args):
+        return self.extract_oem_data_by_state_and_vehicle_category(*args)
 
 
 def main():
@@ -309,16 +332,22 @@ def main():
         "West Bengal",
     ]
 
-    month, year = data_extract_class.get_year_month_label()
-
+    if len(sys.argv) > 2:
+        # If month and year are passed as command-line arguments
+        month = sys.argv[1]
+        year = sys.argv[2]
+    else:
+        # Use the default function to get the month and year
+        month, year = data_extract_class.get_year_month_label()
+    parameters = []
     for state in state_lst:
         for category in vehicle_category_lst:
             directory_path = os.path.join(
                 os.getcwd(),
                 "OEM-level",
                 "oem_data_by_state_and_category",
+                re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
                 re.sub(r"\W+", " ", category).rstrip(),
-                state,
                 str(year),
                 month
             )
@@ -327,11 +356,17 @@ def main():
             if os.path.exists(directory_path):
                 shutil.rmtree(directory_path)
 
-            data_extract_class.extract_oem_data_by_state_and_vehicle_category(state, year, month, category)
+            parameters.append((state, year, month, category))
 
-            # check if file was downloaded
-            if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
-                print(f"file not downloaded for {state}, {category}, {year}, {month}")
+    # Run selenium function in parallel
+    with ThreadPoolExecutor(max_workers=30) as executor:  # Adjust max_workers based on your system's capability
+        futures = [executor.submit(data_extract_class.run_selenium, args) for args in parameters]
+
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+            except Exception as e:
+                print(f"Exception occurred: {e}")
 
 
 if __name__ == "__main__":
