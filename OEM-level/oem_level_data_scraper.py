@@ -224,6 +224,7 @@ class OEMDataScraper:
                 self.find_element(browser, "id", "groupingTable:xls").click()
                 time.sleep(5)
                 browser.quit()
+                print(f"file succesfully downloaded for {state_folder_name}, {vehicle_category_folder_name}, {year_label}, {month_label}")
                 break
 
             except (
