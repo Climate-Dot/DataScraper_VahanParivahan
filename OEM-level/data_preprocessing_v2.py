@@ -1,5 +1,3 @@
-from typing import Any
-
 from datetime import datetime, timedelta
 import os
 import pandas as pd
@@ -16,7 +14,6 @@ class OEMDataPreProcessor:
             os.getcwd(), "OEM-level", "Table and Mapping.xlsx"
         )
         self.mapping_df = pd.read_excel(self.mapping_file_path, sheet_name="Mapping")
-        self.final_df = pd.DataFrame()
         self.raw_files_directory = os.path.join(
             os.getcwd(), "OEM-level", "oem_data_by_state_and_category"
         )
@@ -90,11 +87,11 @@ class OEMDataPreProcessor:
         return month_abbreviation.upper(), year
 
     @staticmethod
-    def remove_special_chars(self, text):
+    def remove_special_chars(text):
         return re.sub(r"\W+", " ", text)
 
     @staticmethod
-    def convert_date(self, date_str):
+    def convert_date(date_str):
         return datetime.strptime(date_str, "%d/%b/%Y").strftime("%d/%m/%Y")
 
     def data_preprocessing(self, month, year):
@@ -104,10 +101,11 @@ class OEMDataPreProcessor:
         :param year: year of the file to pre_process
         :return: None
         """
+        final_df = pd.DataFrame()
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for vehicle_class in os.listdir(state_path):
-                raw_file_path = os.path.join(state_path, vehicle_class, year, month, "reportTables.xlsx")
+                raw_file_path = os.path.join(state_path, vehicle_class, year, month, "reportTable.xlsx")
                 if os.path.exists(raw_file_path):
                     temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
                     if temp_df.empty:
@@ -121,20 +119,21 @@ class OEMDataPreProcessor:
                         temp_df["Date"] = f"{1}/{month}/{year}"
                         temp_df["Vehicle Class"] = vehicle_class
                         temp_df["State"] = state
-                        self.final_df = self.final_df._append(temp_df)
+                        final_df = final_df._append(temp_df)
         # create vehicle category and vehicle type columns
-        self.final_df = pd.merge(
-            self.final_df, self.mapping_df, on="Vehicle Class", how="left"
+        self.mapping_df['Vehicle Class'] = self.mapping_df['Vehicle Class'].apply(self.remove_special_chars)
+        final_df = pd.merge(
+            final_df, self.mapping_df, on="Vehicle Class", how="left"
         )
         # rename columns
-        self.final_df = self.final_df.rename(self.column_rename_map, axis=1)
+        final_df = final_df.rename(self.column_rename_map, axis=1)
 
-        self.final_df["date"] = self.final_df["date"].apply(self.convert_date)
-        self.final_df["month"] = self.final_df["month"].map(self.month_mapping)
+        final_df["date"] = final_df["date"].apply(self.convert_date)
+        final_df["month"] = final_df["month"].map(self.month_mapping)
 
         # reorder columns
-        self.final_df = self.final_df[self.column_rename_map.values()]
-        return self.final_df
+        final_df = final_df[self.column_rename_map.values()]
+        return final_df
 
 
 def main():
