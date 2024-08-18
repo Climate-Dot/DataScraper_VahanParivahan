@@ -6,40 +6,40 @@ import warnings
 warnings.filterwarnings("ignore")
 
 columns = [
-    "Year",
-    "Month",
-    "Day",
-    "Date",
-    "State",
-    "Vehicle Class",
-    "Vehicle Type",
-    "Vehicle Category",
-    "Maker",
-    "CNG ONLY",
-    "DIESEL",
-    "DIESEL/HYBRID",
-    "DI-METHYL ETHER",
-    "DUAL DIESEL/BIO CNG",
-    "DUAL DIESEL/CNG",
-    "DUAL DIESEL/LNG",
-    "ELECTRIC(BOV)",
-    "ETHANOL",
-    "FUEL CELL HYDROGEN",
-    "LNG",
-    "LPG ONLY",
-    "METHANOL",
-    "NOT APPLICABLE",
-    "PETROL",
-    "PETROL/CNG",
-    "PETROL/ETHANOL",
-    "PETROL/HYBRID",
-    "PETROL/LPG",
-    "PETROL/METHANOL",
-    "PLUG-IN HYBRID EV",
-    "PURE EV",
-    "SOLAR",
-    "STRONG HYBRID EV",
-    "Total"
+    "year",
+    "month",
+    "day",
+    "date",
+    "state",
+    "vehicle_class",
+    "vehicle_type",
+    "vehicle_category",
+    "maker",
+    "cng_only",
+    "diesel",
+    "diesel_hybrid",
+    "di_methyl_ether",
+    "dual_diesel_bio_cng",
+    "dual_diesel_cng",
+    "dual_diesel_lng",
+    "electric_bov",
+    "ethanol",
+    "fuel_cell_hydrogen",
+    "lng",
+    "lpg_only",
+    "methanol",
+    "not_applicable",
+    "petrol",
+    "petrol_cng",
+    "petrol_ethanol",
+    "petrol_hybrid",
+    "petrol_lng",
+    "petrol_methanol",
+    "plug_in_hybrid_ev",
+    "pure_ev",
+    "solar",
+    "strong_hybrid_ev",
+    "total"
 ]
 file_path = os.path.join(os.getcwd(), "OEM-level", "Table and Mapping.xlsx")
 mapping_df = pd.read_excel(file_path, sheet_name='Mapping')
@@ -69,34 +69,9 @@ for state in os.listdir(parent_directory):
                     temp_df['State'] = state
                     df = df._append(temp_df)
 
-parent_directory_2024 = os.path.join(os.getcwd(), "OEM-level", "oem_data_by_category")
-for state in os.listdir(parent_directory_2024):
-    state_path = os.path.join(parent_directory_2024, state)
-    for vehicle_class in os.listdir(state_path):
-        vehicle_class_path = os.path.join(state_path, vehicle_class)
-        for year in os.listdir(vehicle_class_path):
-            year_path = os.path.join(vehicle_class_path, year)
-            for month in os.listdir(year_path):
-                month_path = os.path.join(year_path, month)
-                file_path = os.path.join(month_path, "reportTable.xlsx")
-                temp_df = pd.read_excel(file_path, skiprows=3, index_col=0)
-                if temp_df.empty:
-                    print(f"No records found in report for {vehicle_class}, {state}, {year}, {month}")
-                else:
-                    # print(temp_df.head(10))
-                    # print(temp_df.columns)
-                    temp_df['Month'] = month
-                    temp_df['Year'] = year
-                    temp_df['Day'] = 1
-                    temp_df['Date'] = f"{1}/{month}/{year}"
-                    temp_df['Vehicle Class'] = vehicle_class
-                    temp_df['State'] = state
-                    df = df._append(temp_df)
-
 
 def remove_special_chars(text):
     return re.sub(r"\W+", ' ', text)
-
 
 mapping_df['Vehicle Class'] = mapping_df['Vehicle Class'].apply(remove_special_chars)
 # create vehicle category and vehicle type columns
