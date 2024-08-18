@@ -107,7 +107,7 @@ class OEMDataPreProcessor:
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for vehicle_class in os.listdir(state_path):
-                raw_file_path = os.path.join(state_path, vehicle_class, year, month)
+                raw_file_path = os.path.join(state_path, vehicle_class, year, month, "reportTables.xlsx")
                 if os.path.exists(raw_file_path):
                     temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
                     if temp_df.empty:
@@ -124,16 +124,16 @@ class OEMDataPreProcessor:
                         self.final_df = self.final_df._append(temp_df)
         # create vehicle category and vehicle type columns
         self.final_df = pd.merge(
-            self.final_df, mapping_df, on="Vehicle Class", how="left"
+            self.final_df, self.mapping_df, on="Vehicle Class", how="left"
         )
         # rename columns
-        self.final_df = self.final_df.rename(column_rename_map, axis=1)
+        self.final_df = self.final_df.rename(self.column_rename_map, axis=1)
 
-        self.final_df["date"] = self.final_df["date"].apply(convert_date)
+        self.final_df["date"] = self.final_df["date"].apply(self.convert_date)
         self.final_df["month"] = self.final_df["month"].map(self.month_mapping)
 
         # reorder columns
-        self.final_df = self.final_df[column_rename_map.values()]
+        self.final_df = self.final_df[self.column_rename_map.values()]
         return self.final_df
 
 
