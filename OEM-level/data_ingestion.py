@@ -3,8 +3,9 @@ from sqlalchemy import create_engine
 
 import csv
 import logging
-import pandas as pd
+import os
 import pyodbc
+import sys
 import urllib.parse
 import yaml
 
@@ -46,9 +47,10 @@ class OEMDataIngest:
         year = last_day_of_previous_month.strftime("%Y")
         return month_abbreviation.upper(), year
 
-    def data_ingest(self):
-        month, year = self.get_year_month_label()
+    def data_ingest(self, month, year):
         file_path = f"oem_data_by_state_and_category_{month}_{year}.csv"
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"the file {file_path} does not exist. did you run data_pre_processing_v2 yet?")
 
         # Read CSV file
         with open(file_path, "r") as csv_file:
@@ -127,7 +129,14 @@ class OEMDataIngest:
 
 def main():
     oem_data_ingest = OEMDataIngest()
-    oem_data_ingest.data_ingest()
+    if len(sys.argv) > 2:
+        # If month and year are passed as command-line arguments
+        month = sys.argv[1]
+        year = sys.argv[2]
+    else:
+        # Use the default function to get the month and year
+        month, year = oem_data_ingest.get_year_month_label()
+    oem_data_ingest.data_ingest(month, year)
 
 
 if __name__ == "__main__":
