@@ -53,9 +53,15 @@ class OEMDataIngest:
             raise FileNotFoundError(f"the file {file_path} does not exist. did you run data_pre_processing_v2 yet?")
 
         # Read CSV file
+        data = []
         with open(file_path, "r") as csv_file:
             csv_reader = csv.reader(csv_file)
             headers = next(csv_reader)  # Read the header row
+
+            # Dynamically create tuples for each row
+            for row in csv_reader:
+                # Convert to tuple and add to data list
+                data.append(tuple(row))
 
             # Connect to the database
             logging.info("Connecting to the database...")
@@ -93,9 +99,10 @@ class OEMDataIngest:
             logging.info(
                 f"Inserting data into staging table: {self.staging_table_name}"
             )
+            cursor.fast_executemany = True
             try:
                 # Use cursor.executemany to insert data from csv_reader
-                cursor.executemany(insert_query, csv_reader)
+                cursor.executemany(insert_query, data)
                 conn.commit()
                 logging.info(
                     f"Successfully inserted data into staging table: {self.staging_table_name}"
