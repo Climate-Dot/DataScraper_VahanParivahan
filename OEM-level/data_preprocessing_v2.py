@@ -105,7 +105,9 @@ class OEMDataPreProcessor:
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for vehicle_class in os.listdir(state_path):
-                raw_file_path = os.path.join(state_path, vehicle_class, year, month, "reportTable.xlsx")
+                raw_file_path = os.path.join(
+                    state_path, vehicle_class, year, month, "reportTable.xlsx"
+                )
                 if os.path.exists(raw_file_path):
                     temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
                     if temp_df.empty:
@@ -119,12 +121,15 @@ class OEMDataPreProcessor:
                         temp_df["Date"] = f"{1}/{month}/{year}"
                         temp_df["Vehicle Class"] = vehicle_class
                         temp_df["State"] = state
-                        final_df = final_df._append(temp_df)
+                        final_df = pd.concat([final_df, temp_df], ignore_index=True)
         # create vehicle category and vehicle type columns
-        self.mapping_df['Vehicle Class'] = self.mapping_df['Vehicle Class'].apply(self.remove_special_chars)
-        final_df = pd.merge(
-            final_df, self.mapping_df, on="Vehicle Class", how="left"
+        self.mapping_df["Vehicle Class"] = self.mapping_df["Vehicle Class"].apply(
+            self.remove_special_chars
         )
+        final_df = pd.merge(final_df, self.mapping_df, on="Vehicle Class", how="left")
+        # Replace NaN values with 'Others' for 'Vehicle Class' and 'Vehicle Type' columns
+        final_df["Vehicle Class"] = final_df["Vehicle Class"].fillna("Others")
+        final_df["Vehicle Type"] = final_df["Vehicle Type"].fillna("Others")
         # rename columns
         final_df = final_df.rename(self.column_rename_map, axis=1)
 

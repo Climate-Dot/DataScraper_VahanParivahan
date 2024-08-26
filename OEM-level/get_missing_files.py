@@ -94,7 +94,7 @@ class OEMDataScraper:
         return month_abbreviation.upper(), year
 
     def extract_oem_data_by_state_and_vehicle_category(
-            self, state_label, year_label, month_label, vehicle_category_label
+        self, state_label, year_label, month_label, vehicle_category_label
     ):
         """
         :param state_label: State label for data
@@ -137,7 +137,9 @@ class OEMDataScraper:
         self.create_directory_if_not_exists(download_path)
         browser_prefs.update({"download.default_directory": download_path})
         browser_opts.add_experimental_option("prefs", browser_prefs)
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browser_opts)
+        browser = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=browser_opts
+        )
         file_path = os.path.join(download_path, "reportTable.xlsx")
         retries = 0
         while not os.path.exists(file_path):
@@ -168,7 +170,9 @@ class OEMDataScraper:
                 # selecting x_axis entering fuel as parameter
                 self.find_element(browser, "id", "xaxisVar_label").click()
                 time.sleep(1)
-                self.find_element(browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
+                self.find_element(
+                    browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']"
+                ).click()
                 time.sleep(2)
 
                 #  selecting year button and entering the value
@@ -227,9 +231,9 @@ class OEMDataScraper:
                 break
 
             except (
-                    TimeoutException,
-                    StaleElementReferenceException,
-                    WebDriverException,
+                TimeoutException,
+                StaleElementReferenceException,
+                WebDriverException,
             ) as e:
                 retries += 1
                 print(
@@ -254,7 +258,9 @@ class OEMDataScraper:
         browser_opts.add_argument("--disable-dev-shm-usage")
         browser_opts.add_argument("--disable-single-click-autofill")
         browser_opts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browser_opts)
+        browser = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=browser_opts
+        )
         retries = 0
         while retries < self.max_retries:
             try:
@@ -276,9 +282,9 @@ class OEMDataScraper:
                 return vehicle_category_lst
 
             except (
-                    TimeoutException,
-                    StaleElementReferenceException,
-                    WebDriverException,
+                TimeoutException,
+                StaleElementReferenceException,
+                WebDriverException,
             ) as e:
                 print(f"Vehicle Category element function threw exception {e}")
                 retries += 1
@@ -349,15 +355,20 @@ def main():
                 re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
                 re.sub(r"\W+", " ", category).rstrip(),
                 str(year),
-                month
+                month,
             )
             file_path = os.path.join(directory_path, "reportTable.xlsx")
             if not os.path.exists(file_path):
                 parameters.append((state, year, month, category))
 
     # Run selenium function in parallel
-    with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers based on your system's capability
-        futures = [executor.submit(data_extract_class.run_selenium, args) for args in parameters]
+    with ThreadPoolExecutor(
+        max_workers=10
+    ) as executor:  # Adjust max_workers based on your system's capability
+        futures = [
+            executor.submit(data_extract_class.run_selenium, args)
+            for args in parameters
+        ]
 
         for future in as_completed(futures):
             try:

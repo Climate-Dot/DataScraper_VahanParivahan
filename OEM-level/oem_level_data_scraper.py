@@ -95,7 +95,7 @@ class OEMDataScraper:
         return month_abbreviation.upper(), year
 
     def extract_oem_data_by_state_and_vehicle_category(
-            self, state_label, year_label, month_label, vehicle_category_label
+        self, state_label, year_label, month_label, vehicle_category_label
     ):
         """
         :param state_label: State label for data
@@ -138,7 +138,9 @@ class OEMDataScraper:
         self.create_directory_if_not_exists(download_path)
         browserPrefs.update({"download.default_directory": download_path})
         browserOpts.add_experimental_option("prefs", browserPrefs)
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browserOpts)
+        browser = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=browserOpts
+        )
         retries = 0
         while retries < self.max_retries:
             try:
@@ -168,7 +170,9 @@ class OEMDataScraper:
                 # selecting x_axis entering fuel as parameter
                 self.find_element(browser, "id", "xaxisVar_label").click()
                 time.sleep(1)
-                self.find_element(browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']").click()
+                self.find_element(
+                    browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']"
+                ).click()
                 time.sleep(2)
 
                 #  selecting year button and entering the value
@@ -224,13 +228,15 @@ class OEMDataScraper:
                 self.find_element(browser, "id", "groupingTable:xls").click()
                 time.sleep(5)
                 browser.quit()
-                print(f"file succesfully downloaded for {state_folder_name}, {vehicle_category_folder_name}, {year_label}, {month_label}")
+                print(
+                    f"file succesfully downloaded for {state_folder_name}, {vehicle_category_folder_name}, {year_label}, {month_label}"
+                )
                 break
 
             except (
-                    TimeoutException,
-                    StaleElementReferenceException,
-                    WebDriverException,
+                TimeoutException,
+                StaleElementReferenceException,
+                WebDriverException,
             ) as e:
                 retries += 1
                 print(
@@ -255,7 +261,9 @@ class OEMDataScraper:
         browserOpts.add_argument("--disable-dev-shm-usage")
         browserOpts.add_argument("--disable-single-click-autofill")
         browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=browserOpts)
+        browser = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=browserOpts
+        )
         retries = 0
         while retries < self.max_retries:
             try:
@@ -277,14 +285,14 @@ class OEMDataScraper:
                 return vehicle_category_lst
 
             except (
-                    TimeoutException,
-                    StaleElementReferenceException,
-                    WebDriverException,
+                TimeoutException,
+                StaleElementReferenceException,
+                WebDriverException,
             ) as e:
                 print(f"Vehicle Category element function threw exception {e}")
                 retries += 1
                 print(f"Retrying attempt {retries} for vehicle category label")
-    
+
     # define a function to wrap the selenium function for argument unpacking
     def run_selenium(self, args):
         return self.extract_oem_data_by_state_and_vehicle_category(*args)
@@ -350,7 +358,7 @@ def main():
                 re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
                 re.sub(r"\W+", " ", category).rstrip(),
                 str(year),
-                month
+                month,
             )
 
             # remove the file if already exists from previous month
@@ -360,8 +368,13 @@ def main():
             parameters.append((state, year, month, category))
 
     # Run selenium function in parallel
-    with ThreadPoolExecutor(max_workers=30) as executor:  # Adjust max_workers based on your system's capability
-        futures = [executor.submit(data_extract_class.run_selenium, args) for args in parameters]
+    with ThreadPoolExecutor(
+        max_workers=30
+    ) as executor:  # Adjust max_workers based on your system's capability
+        futures = [
+            executor.submit(data_extract_class.run_selenium, args)
+            for args in parameters
+        ]
 
         for future in as_completed(futures):
             try:
