@@ -300,7 +300,6 @@ def main():
 
     # get all state and vehicle category elements
     vehicle_category_lst = data_extract_class.get_all_vehicle_category_elements()
-    print(len(vehicle_category_lst))
     state_lst = [
         "Andaman & Nicobar Island",
         "Andhra Pradesh",
@@ -360,6 +359,10 @@ def main():
             file_path = os.path.join(directory_path, "reportTable.xlsx")
             if not os.path.exists(file_path):
                 parameters.append((state, year, month, category))
+
+    if not parameters:
+        print(f"no missing files found  for {month} and {year}")
+        return
 
     # Run selenium function in parallel
     with ThreadPoolExecutor(
