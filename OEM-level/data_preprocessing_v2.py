@@ -128,8 +128,8 @@ class OEMDataPreProcessor:
         )
         final_df = pd.merge(final_df, self.mapping_df, on="Vehicle Class", how="left")
         # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
-        final_df["Vehicle Class"] = final_df["Vehicle Type"].fillna("Others").replace("", "Others")
-        final_df["Vehicle Type"] = final_df["Vehicle Category"].fillna("Others").replace("", "Others")
+        final_df["Vehicle Type"] = final_df["Vehicle Type"].fillna("Others").replace("", "Others")
+        final_df["Vehicle Category"] = final_df["Vehicle Category"].fillna("Others").replace("", "Others")
         # rename columns
         final_df = final_df.rename(self.column_rename_map, axis=1)
 
