@@ -111,6 +111,24 @@ class OEMDataIngest:
                 logging.error(f"Error inserting data into staging table: {str(e)}")
                 raise
 
+            # Delete existing records from final table
+            delete_query = f"""
+            DELETE FROM {self.final_table_name}
+            WHERE EXISTS (
+                SELECT 1 FROM {self.staging_table_name} s
+                WHERE s.date = {self.final_table_name}.date
+                AND s.state = {self.final_table_name}.state
+                AND s.vehicle_class = {self.final_table_name}.vehicle_class
+            )
+            """
+            logging.info(f"Deleting existing records from final table: {self.final_table_name}")
+            try:
+                cursor.execute(delete_query)
+                logging.info(f"Successfully deleted existing records from final table: {self.final_table_name}")
+            except Exception as e:
+                logging.error(f"Error deleting existing records from final table: {str(e)}")
+                raise
+
             # Transfer data from staging to final table
             transfer_query = f"""
             INSERT INTO {self.final_table_name}
