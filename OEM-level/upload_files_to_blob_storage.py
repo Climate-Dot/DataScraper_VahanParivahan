@@ -1,6 +1,7 @@
 import os
 import glob
 import sys
+import shutil
 import yaml
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient
@@ -75,7 +76,7 @@ for file_path in file_list:
         blob_client.upload_blob(data, overwrite=True)
         print(f"Uploaded {file_path} to {file_path}")
     # remove file from directory
-    os.remove(file_path)
+    shutil.rmtree(file_path)
 
 # Check if the CSV file exists and upload it to climatedotraw
 csv_file_pattern = f"oem_data_by_state_and_category_{month}_{year}"
@@ -97,4 +98,4 @@ if csv_file:
         blob_client.upload_blob(data, overwrite=True)
         print(f"Uploaded {csv_file_path} to {csv_container_name}/{csv_file}")
     # remove file from directory
-    os.remove(csv_file)
+    shutil.rmtree(csv_file)
