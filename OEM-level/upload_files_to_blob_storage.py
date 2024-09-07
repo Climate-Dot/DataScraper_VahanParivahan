@@ -75,8 +75,9 @@ for file_path in file_list:
     with open(file_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
         print(f"Uploaded {file_path} to {file_path}")
-    # remove file from directory
-    shutil.rmtree(file_path)
+
+# remove directory and file from structure
+shutil.rmtree(os.path.join(os.getcwd(), "OEM-level", "oem_data_by_state_and_category"))
 
 # Check if the CSV file exists and upload it to climatedotraw
 csv_file_pattern = f"oem_data_by_state_and_category_{month}_{year}"
@@ -97,5 +98,5 @@ if csv_file:
     with open(csv_file_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
         print(f"Uploaded {csv_file_path} to {csv_container_name}/{csv_file}")
-    # remove file from directory
-    shutil.rmtree(csv_file)
+    # remove file
+    os.remove(csv_file)
