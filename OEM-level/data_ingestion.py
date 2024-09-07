@@ -50,7 +50,9 @@ class OEMDataIngest:
     def data_ingest(self, month, year):
         file_path = f"oem_data_by_state_and_category_{month}_{year}.csv"
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"the file {file_path} does not exist. did you run data_pre_processing_v2 yet?")
+            raise FileNotFoundError(
+                f"the file {file_path} does not exist. did you run data_pre_processing_v2 yet?"
+            )
 
         # Read CSV file
         data = []
@@ -63,6 +65,10 @@ class OEMDataIngest:
                 # Convert to tuple and add to data list
                 data.append(tuple(row))
 
+            SQL_ATTR_CONNECTION_TIMEOUT = 113
+            login_timeout = 1
+            connection_timeout = 1
+
             # Connect to the database
             logging.info("Connecting to the database...")
             try:
@@ -72,6 +78,8 @@ class OEMDataIngest:
                     database=self.database_name,
                     uid=self.database_username,
                     pwd=self.database_password,
+                    timeout=login_timeout,
+                    attrs_before={SQL_ATTR_CONNECTION_TIMEOUT: connection_timeout},
                 )
                 cursor = conn.cursor()
                 logging.info("Successfully connected to the database.")
@@ -121,12 +129,18 @@ class OEMDataIngest:
                 AND s.vehicle_class = {self.final_table_name}.vehicle_class
             )
             """
-            logging.info(f"Deleting existing records from final table: {self.final_table_name}")
+            logging.info(
+                f"Deleting existing records from final table: {self.final_table_name}"
+            )
             try:
                 cursor.execute(delete_query)
-                logging.info(f"Successfully deleted existing records from final table: {self.final_table_name}")
+                logging.info(
+                    f"Successfully deleted existing records from final table: {self.final_table_name}"
+                )
             except Exception as e:
-                logging.error(f"Error deleting existing records from final table: {str(e)}")
+                logging.error(
+                    f"Error deleting existing records from final table: {str(e)}"
+                )
                 raise
 
             # Transfer data from staging to final table
