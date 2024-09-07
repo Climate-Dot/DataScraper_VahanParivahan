@@ -1,8 +1,10 @@
 import os
+import glob
 import sys
 import yaml
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient
+
 
 def get_year_month_label():
     """
@@ -19,6 +21,7 @@ def get_year_month_label():
     month_abbreviation = last_day_of_previous_month.strftime("%b")
     year = last_day_of_previous_month.strftime("%Y")
     return month_abbreviation.upper(), year
+
 
 if len(sys.argv) > 2:
     # If month and year are passed as command-line arguments
@@ -58,32 +61,40 @@ except Exception as e:
 
 
 # Local directory to scan
-local_directory = f"OEM-level/oem_data_by_state_and_category/{year}/{month}"
+pattern = f"OEM-level/oem_data_by_state_and_category/*/*/{year}/{month}/*.xlsx"
+file_list = glob.glob(pattern)
 processed_file_directory = os.getcwd()
-# Walk through the directory structure and upload each file
-for root, dirs, files in os.walk(local_directory):
-    for file in files:
-        if file.endswith(".xlsx"):
-            file_path = os.path.join(root, file)
-            # Blob path matches the directory structure under the local directory
-            blob_path = os.path.relpath(file_path, local_directory).replace("\\", "/")
-            blob_client = container_client.get_blob_client(blob=blob_path)
 
-            # Upload the file
-            with open(file_path, "rb") as data:
-                blob_client.upload_blob(data, overwrite=True)
-                print(f"Uploaded {file_path} to {blob_path}")
+for file_path in file_list:
+    relative_path = os.path.relpath(
+        file_path, "OEM-level/oem_data_by_state_and_category"
+    ).replace("\\", "/")
+    blob_client = container_client.get_blob_client(blob=relative_path)
+    # Upload the file
+    with open(file_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+        print(f"Uploaded {file_path} to {file_path}")
+    # remove file from directory
+    os.remove(file_path)
 
 # Check if the CSV file exists and upload it to climatedotraw
-csv_file_pattern = f"oem_data_by_state_and_category_{year}_{month}"
-for root, dirs, files in os.walk(processed_file_directory):
-    for file in files:
-        if file.startswith(csv_file_pattern) and file.endswith(".csv"):
-            csv_file_path = os.path.join(root, file)
-            # Use only the CSV filename for the blob path
-            blob_client = csv_container_client.get_blob_client(blob=file)
+csv_file_pattern = f"oem_data_by_state_and_category_{month}_{year}"
+csv_file = next(
+    (
+        file
+        for file in os.listdir(processed_file_directory)
+        if file.startswith(csv_file_pattern) and file.endswith(".csv")
+    ),
+    None,
+)
+if csv_file:
+    csv_file_path = os.path.join(processed_file_directory, csv_file)
+    # Use only the CSV filename for the blob path
+    blob_client = csv_container_client.get_blob_client(blob=csv_file)
 
-            # Upload the CSV file
-            with open(csv_file_path, "rb") as data:
-                blob_client.upload_blob(data, overwrite=True)
-                print(f"Uploaded {csv_file_path} to {csv_container_name}/{file}")
+    # Upload the CSV file
+    with open(csv_file_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+        print(f"Uploaded {csv_file_path} to {csv_container_name}/{csv_file}")
+    # remove file from directory
+    os.remove(csv_file)
