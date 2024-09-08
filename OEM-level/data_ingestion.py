@@ -66,8 +66,8 @@ class OEMDataIngest:
                 data.append(tuple(row))
 
             SQL_ATTR_CONNECTION_TIMEOUT = 113
-            login_timeout = 1
-            connection_timeout = 1
+            login_timeout = 30
+            connection_timeout = 30
 
             # Connect to the database
             logging.info("Connecting to the database...")
