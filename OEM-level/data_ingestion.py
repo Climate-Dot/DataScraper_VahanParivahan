@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
 
 import csv
 import logging
 import os
 import pyodbc
 import sys
+import time
 import urllib.parse
 import yaml
 
@@ -71,21 +71,29 @@ class OEMDataIngest:
 
             # Connect to the database
             logging.info("Connecting to the database...")
-            try:
-                conn = pyodbc.connect(
-                    driver=self.driver,
-                    server=self.database_host,
-                    database=self.database_name,
-                    uid=self.database_username,
-                    pwd=self.database_password,
-                    timeout=login_timeout,
-                    attrs_before={SQL_ATTR_CONNECTION_TIMEOUT: connection_timeout},
-                )
-                cursor = conn.cursor()
-                logging.info("Successfully connected to the database.")
-            except Exception as e:
-                logging.error(f"Error connecting to the database: {str(e)}")
-                raise
+            for attempt in range(5):
+                try:
+                    conn = pyodbc.connect(
+                        driver=self.driver,
+                        server=self.database_host,
+                        database=self.database_name,
+                        uid=self.database_username,
+                        pwd=self.database_password,
+                        timeout=login_timeout,
+                        attrs_before={SQL_ATTR_CONNECTION_TIMEOUT: connection_timeout},
+                    )
+                    cursor = conn.cursor()
+                    logging.info("Successfully connected to the database.")
+
+                except pyodbc.Error as e:
+                    logging.info(f"Attempt {attempt + 1} failed: {e}")
+                    wait_time = 2 ** attempt  # Exponential backoff
+                    logging.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+
+                except Exception as e:
+                    logging.error(f"Error connecting to the database: {str(e)}")
+                    raise
 
             # Truncate staging table
             logging.info(f"Truncating staging table: {self.staging_table_name}")
