@@ -62,7 +62,7 @@ except Exception as e:
 
 
 # Local directory to scan
-pattern = f"State-level/state_level_ev_data/{year}/{month}/*.xlsx"
+pattern = f"State-level/state_level_ev_data/*/{year}/{month}/*.xlsx"
 file_list = glob.glob(pattern)
 processed_file_directory = os.getcwd()
 
