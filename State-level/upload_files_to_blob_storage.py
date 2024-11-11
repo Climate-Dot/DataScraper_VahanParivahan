@@ -38,8 +38,8 @@ with open("config.yaml", "r") as config_file:
 
 # Extract values from the YAML config
 connection_string = config["storage"]["connection_string"]
-container_name = config["storage"]["container_name"]
-csv_container_name = config["storage"]["csv_container_name"]
+container_name = config["storage"]["state_wise_container_name"]
+csv_container_name = config["storage"]["state_wise_csv_container_name"]
 
 # Create the BlobServiceClient
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
@@ -62,7 +62,7 @@ except Exception as e:
 
 
 # Local directory to scan
-pattern = f"OEM-level/state_level_ev_data/*/*/{year}/{month}/*.xlsx"
+pattern = f"State-level/state_level_ev_data/{year}/{month}/*.xlsx"
 file_list = glob.glob(pattern)
 processed_file_directory = os.getcwd()
 
@@ -79,7 +79,7 @@ for file_path in file_list:
     # remove directory and file from structure
     shutil.rmtree(os.path.dirname(file_path))
 
-# Check if the CSV file exists and upload it to climatedotraw
+# Check if the CSV file exists and upload it to statewiseraw
 csv_file_pattern = f"state_level_ev_data_{month}_{year}"
 csv_file = next(
     (
