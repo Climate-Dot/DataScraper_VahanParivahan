@@ -87,7 +87,7 @@ class OEMDataIngest:
 
                 except pyodbc.Error as e:
                     logging.info(f"Attempt {attempt + 1} failed: {e}")
-                    wait_time = 2 ** attempt  # Exponential backoff
+                    wait_time = 20 * attempt  # backoff
                     logging.info(f"Retrying in {wait_time} seconds...")
                     time.sleep(wait_time)
 
