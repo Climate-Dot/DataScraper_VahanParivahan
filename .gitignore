@@ -1,2 +1,4 @@
 venv
 config.yaml
+OEM-level/oem_data_by_state_and_category
+State-level/state_level_ev_data
