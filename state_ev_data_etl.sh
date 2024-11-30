@@ -13,7 +13,7 @@ python3 State-level/state_level_data_scraper.py
 python3 State-level/state_level_get_missing_files.py
 
 # Run Pre Processing
-python3 State-level/state_level_data_preprocessing.py
+python3 State-level/state_level_data_pre_processing.py
 
 # Ingestion
 python3 State-level/state_level_data_ingestion.py
