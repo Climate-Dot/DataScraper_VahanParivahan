@@ -121,11 +121,7 @@ class StateLevelDataPreProcessor:
                         temp_df["Date"] = f"{1}/{month}/{year}"
                         temp_df["State"] = state
                         final_df = pd.concat([final_df, temp_df], ignore_index=True)
-        # create vehicle category and vehicle type columns
-        self.mapping_df["Vehicle Class"] = self.mapping_df["Vehicle Class"].apply(
-            self.remove_special_chars
-        )
-        self.mapping_df["Vehicle Class"] = self.mapping_df["Vehicle Class"].str.strip()
+
         final_df = pd.merge(final_df, self.mapping_df, left_on="Unnamed: 1", right_on="Vehicle Class", how="left")
         # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
         final_df["Vehicle Type"] = (
