@@ -113,11 +113,16 @@ for file in file_list:
             temp_df["Day"] = 1
             temp_df["Date"] = f"{1}/{month}/{year}"
             temp_df["State"] = state
+            if "PLUG-IN HYBRID EV" not in temp_df.columns:
+                temp_df["PLUG-IN HYBRID EV"] = 0
+            if "PURE EV" not in temp_df.columns:
+                temp_df["PURE EV"] = 0
+            if "STRONG HYBRID EV" not in temp_df.columns:
+                temp_df["STRONG HYBRID EV"] = 0
+            if "Unnamed: 26" not in temp_df.columns:
+                temp_df = temp_df.rename(columns={"Unnamed: 23": "Unnamed: 26"})
             final_df = pd.concat([final_df, temp_df], ignore_index=True)
 
-# create vehicle category and vehicle type columns
-mapping_df["Vehicle Class"] = mapping_df["Vehicle Class"].apply(remove_special_chars)
-mapping_df["Vehicle Class"] = mapping_df["Vehicle Class"].str.strip()
 final_df = pd.merge(final_df, mapping_df, left_on="Unnamed: 1", right_on="Vehicle Class", how="left")
 # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
 final_df["Vehicle Type"] = (
@@ -135,8 +140,8 @@ value_replacements = {
     "UT of DNH and DD": "Dadara and Nagar Havelli",
 }
 final_df["State"] = final_df["State"].replace(value_replacements)
-# rename columns
-final_df = final_df.rename(column_rename_map, errors='ignore', axis=1)
+# # rename columns
+final_df = final_df.rename(column_rename_map, axis=1)
 final_df["month"] = final_df["month"].map(month_mapping)
 final_df["date"] = final_df["date"].apply(convert_date)
 final_df["plug_in_hybrid_ev"] = final_df["plug_in_hybrid_ev"].fillna(0)
