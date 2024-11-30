@@ -10,9 +10,7 @@ warnings.filterwarnings("ignore")
 
 class OEMDataPreProcessor:
     def __init__(self):
-        self.mapping_file_path = os.path.join(
-            os.getcwd(), "OEM-level", "Table and Mapping.xlsx"
-        )
+        self.mapping_file_path = os.path.join(os.getcwd(), "Table and Mapping V2.xlsx")
         self.mapping_df = pd.read_excel(self.mapping_file_path, sheet_name="Mapping")
         self.raw_files_directory = os.path.join(
             os.getcwd(), "OEM-level", "oem_data_by_state_and_category"
@@ -26,6 +24,7 @@ class OEMDataPreProcessor:
             "Vehicle Class": "vehicle_class",
             "Vehicle Type": "vehicle_type",
             "Vehicle Category": "vehicle_category",
+            "Vehicle Use Type": "vehicle_use_type",
             "Unnamed: 1": "maker",
             "CNG ONLY": "cng_only",
             "DIESEL": "diesel",
@@ -135,6 +134,16 @@ class OEMDataPreProcessor:
         final_df["Vehicle Category"] = (
             final_df["Vehicle Category"].fillna("Others").replace("", "Others")
         )
+        final_df["Vehicle Use Type"] = (
+            final_df["Vehicle Use Type"].fillna("Others").replace("", "Others")
+        )
+        # Replace values in state column
+        value_replacements = {
+            "Andaman   Nicobar Island": "Andaman and Nicobar",
+            "UT of DNH and DD": "Dadara and Nagar Havelli",
+            # Add more replacements as needed
+        }
+        final_df["State"] = final_df["State"].replace(value_replacements)
         # rename columns
         final_df = final_df.rename(self.column_rename_map, axis=1)
 
