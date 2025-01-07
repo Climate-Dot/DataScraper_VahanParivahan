@@ -59,7 +59,7 @@ class RTODataScraper:
             "profile.password_manager_enabled": False,
         }
         browser_options.add_experimental_option("prefs", browserPrefs)
-        # browser_options.add_argument("--headless")
+        browser_options.add_argument("--headless")
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browser_options
         )
