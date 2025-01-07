@@ -291,7 +291,6 @@ def main():
 
                     parameters.append((state, rto_office_name, year, month))
 
-
     # run selenium function in parallel
     with ThreadPoolExecutor(
             max_workers=35
