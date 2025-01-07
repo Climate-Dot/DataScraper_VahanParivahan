@@ -145,7 +145,7 @@ class RTODataScraper:
         download_path = os.path.join(
             os.getcwd(),
             "rto_level",
-            "state_level_rto_data",
+            "rto_level_ev_data",
             state_folder_name.rstrip(),
             rto_folder_name,
             str(year_label),
@@ -291,6 +291,7 @@ def main():
 
                     parameters.append((state, rto_office_name, year, month))
 
+    parameters = parameters[:1]
     # run selenium function in parallel
     with ThreadPoolExecutor(
             max_workers=35
