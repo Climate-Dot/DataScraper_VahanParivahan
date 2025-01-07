@@ -259,6 +259,7 @@ def main():
         "Karnataka",
         "Kerala",
         "Ladakh",
+        "Lakshadweep",
         "Maharashtra",
         "Meghalaya",
         "Manipur",
