@@ -136,7 +136,7 @@ class RTODataScraper:
             "credentials_enable_service": False,
             "profile.password_manager_enabled": False,
         }
-        # browserOpts.add_argument("--headless")
+        browserOpts.add_argument("--headless")
 
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
