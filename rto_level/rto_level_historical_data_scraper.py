@@ -268,7 +268,6 @@ def main():
         state_rto_mapping = json.load(f)
 
     years = [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
-
     parameters = []
     for year in years:
         for month in month_mapping.keys():
@@ -286,14 +285,12 @@ def main():
                         month,
                     )
                     # remove the file if already exists from previous month
-                    if os.path.exists(directory_path):
-                        shutil.rmtree(directory_path)
-
-                    parameters.append((state, rto_office_name, year, month))
+                    if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
+                        parameters.append((state, rto_office_name, year, month))
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-            max_workers=35
+            max_workers=100
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
