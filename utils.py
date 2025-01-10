@@ -132,7 +132,7 @@ def find_element(driver, identifier, value, timeout=10):
             )
         return element
     except Exception as e:
-        logging.error(f"Element not found: {e}")
+        logging.error(f"Element not found: {e}", identifier=identifier, value=value)
         raise e
 
 def convert_date(date_str):
