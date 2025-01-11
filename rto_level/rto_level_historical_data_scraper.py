@@ -224,21 +224,20 @@ def main():
                     # remove the file if already exists from previous month
                     if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
                         parameters.append((state, rto_office_name, year, month))
-    data_extract_class.extract_rto_level_data(*parameters[39501])
     # run selenium function in parallel
-    # with ThreadPoolExecutor(
-    #         max_workers=35
-    # ) as executor:  # adjust max_workers based on your system's capability
-    #     futures = [
-    #         executor.submit(data_extract_class.run_selenium, args)
-    #         for args in parameters
-    #     ]
-    #
-    #     for future in as_completed(futures):
-    #         try:
-    #             result = future.result()
-    #         except Exception as e:
-    #             logging.info(f"Exception occurred: {e}")
+    with ThreadPoolExecutor(
+            max_workers=35
+    ) as executor:  # adjust max_workers based on your system's capability
+        futures = [
+            executor.submit(data_extract_class.run_selenium, args)
+            for args in parameters
+        ]
+
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+            except Exception as e:
+                logging.info(f"Exception occurred: {e}")
 
 
 
