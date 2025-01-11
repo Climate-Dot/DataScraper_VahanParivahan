@@ -45,76 +45,6 @@ class RTODataScraper:
             return f"{region}_{state_code}"
         return None  # return None if the format doesn't match
 
-    def get_all_rto_from_state(self, state):
-        """
-        Function is used to get all the rto from the given state
-        :param state: string
-        :return: list of all rto from the state
-        """
-
-        browser_options = webdriver.ChromeOptions()
-        browser_options.browser_version = "stable"
-        browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browser_options.add_experimental_option("prefs", browserPrefs)
-        browser_options.add_argument("--headless")
-        browser = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=browser_options
-        )
-
-        all_rto_office_names = []
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                browser.get(
-                    "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
-                )
-                time.sleep(5)
-
-                # click on state drop down
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running States")]',
-                ).click()
-                time.sleep(2)
-
-                # click on state label
-                find_element(
-                    browser, "xpath", f'//li[starts-with(text(), "{state}")]'
-                ).click()
-                time.sleep(2)
-
-                # click on the rto drop down
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running Office")]',
-                ).click()
-                time.sleep(2)
-
-                # get list of rtos
-                rto_list = find_element(
-                    browser,
-                    "xpath",
-                    "//ul[@id='selectedRto_items']",
-                )
-                for elem in rto_list.find_elements(By.TAG_NAME, "li"):
-                    if "All Vahan4 Running Office" not in elem.text:
-                        all_rto_office_names.append(elem.text)
-                return {state: all_rto_office_names}
-
-            except (
-                TimeoutException,
-                StaleElementReferenceException,
-                WebDriverException,
-            ) as e:
-                logging.warning(f"rto category element function threw exception {e}")
-                retries += 1
-                logging.warning(f"retrying attempt {retries} for rto label")
-
     def extract_rto_level_data(
         self,
         state_label,
@@ -136,7 +66,14 @@ class RTODataScraper:
             "credentials_enable_service": False,
             "profile.password_manager_enabled": False,
         }
+        browserOpts.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
         browserOpts.add_argument("--headless")
+        browserOpts.add_argument("--no-sandbox")
+        browserOpts.add_argument("--disable-dev-shm-usage")
+        browserOpts.add_argument("--disable-single-click-autofill")
+        browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
@@ -288,10 +225,9 @@ def main():
                     if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
                         parameters.append((state, rto_office_name, year, month))
 
-
     # run selenium function in parallel
     with ThreadPoolExecutor(
-            max_workers=40
+            max_workers=35
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
