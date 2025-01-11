@@ -122,7 +122,7 @@ class RTODataScraper:
                     "xpath",
                     '//label[starts-with(text(), "All Vahan4 Running Office")]',
                 ).click()
-                time.sleep(1)
+                time.sleep(3)
 
                 find_element(
                     browser,
