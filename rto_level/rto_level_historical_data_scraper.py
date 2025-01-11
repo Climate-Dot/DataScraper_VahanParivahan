@@ -18,7 +18,7 @@ import time
 
 # configure logging to write to both the console and a file
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the logging level (INFO, DEBUG, etc.)
+    level=logging.INFO,  # Set the logging level (INFO, DEBUG, etc.)
     format="%(asctime)s - %(levelname)s - %(message)s",  # log message format
 )
 
