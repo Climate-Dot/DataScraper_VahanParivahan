@@ -69,7 +69,7 @@ class RTODataScraper:
         browserOpts.add_experimental_option(
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
-        browserOpts.add_argument("--headless")
+        # browserOpts.add_argument("--headless")
         browserOpts.add_argument("--no-sandbox")
         browserOpts.add_argument("--disable-dev-shm-usage")
         browserOpts.add_argument("--disable-single-click-autofill")
@@ -78,6 +78,7 @@ class RTODataScraper:
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         rto_folder_name = self.extract_rto_name_and_code(rto_label)
+        rto_office_name = rto_folder_name.split("_")[0]
 
         download_path = os.path.join(
             os.getcwd(),
@@ -122,12 +123,12 @@ class RTODataScraper:
                     "xpath",
                     '//label[starts-with(text(), "All Vahan4 Running Office")]',
                 ).click()
-                time.sleep(5)
+                time.sleep(2)
 
                 find_element(
                     browser,
                     "xpath",
-                    f"//ul[@id='selectedRto_items']/li[text()='{rto_label}']",
+                    f'//ul[@id="selectedRto_items"]/li[starts-with(text(), "{rto_office_name}")]',
                 ).click()
                 time.sleep(2)
 
@@ -222,12 +223,14 @@ def main():
                         month,
                     )
                     # remove the file if already exists from previous month
-                    if not os.path.exists(os.path.join(directory_path, "reportTable.xlsx")):
+                    if not os.path.exists(
+                        os.path.join(directory_path, "reportTable.xlsx")
+                    ):
                         parameters.append((state, rto_office_name, year, month))
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-            max_workers=25
+        max_workers=50
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
@@ -239,7 +242,6 @@ def main():
                 result = future.result()
             except Exception as e:
                 logging.info(f"Exception occurred: {e}")
-
 
 
 if __name__ == "__main__":
