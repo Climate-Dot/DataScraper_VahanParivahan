@@ -230,7 +230,7 @@ def main():
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-        max_workers=50
+        max_workers=35
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
