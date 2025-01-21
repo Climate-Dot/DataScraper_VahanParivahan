@@ -13,7 +13,6 @@ import json
 import logging
 import os
 import sys
-import shutil
 import time
 
 # configure logging to write to both the console and a file
@@ -230,7 +229,7 @@ def main():
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-        max_workers=35
+        max_workers=50
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
