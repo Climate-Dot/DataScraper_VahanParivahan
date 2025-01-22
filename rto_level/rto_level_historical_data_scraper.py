@@ -68,7 +68,7 @@ class RTODataScraper:
         browserOpts.add_experimental_option(
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
-        # browserOpts.add_argument("--headless")
+        browserOpts.add_argument("--headless")
         browserOpts.add_argument("--no-sandbox")
         browserOpts.add_argument("--disable-dev-shm-usage")
         browserOpts.add_argument("--disable-single-click-autofill")
