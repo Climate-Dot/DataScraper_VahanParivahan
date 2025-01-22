@@ -68,7 +68,7 @@ class RTODataScraper:
         browserOpts.add_experimental_option(
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
-        browserOpts.add_argument("--headless")
+        # browserOpts.add_argument("--headless")
         browserOpts.add_argument("--no-sandbox")
         browserOpts.add_argument("--disable-dev-shm-usage")
         browserOpts.add_argument("--disable-single-click-autofill")
@@ -77,7 +77,7 @@ class RTODataScraper:
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         rto_folder_name = self.extract_rto_name_and_code(rto_label)
-        rto_office_name = rto_folder_name.split("_")[0]
+        rto_office_code = rto_folder_name.split("_")[1]
 
         download_path = os.path.join(
             os.getcwd(),
@@ -127,7 +127,7 @@ class RTODataScraper:
                 find_element(
                     browser,
                     "xpath",
-                    f'//ul[@id="selectedRto_items"]/li[starts-with(text(), "{rto_office_name}")]',
+                    f'//ul[@id="selectedRto_items"]/li[contains(text(), "{rto_office_code}")]',
                 ).click()
                 time.sleep(2)
 
@@ -229,7 +229,7 @@ def main():
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-        max_workers=1
+        max_workers=50
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
