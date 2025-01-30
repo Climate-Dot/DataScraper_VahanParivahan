@@ -238,6 +238,7 @@ def main():
                         os.path.join(directory_path, "reportTable.xlsx")
                     ):
                         parameters.append((state, rto_office_name, year, month))
+    print(parameters)
     print(len(parameters))
 
     # run selenium function in parallel
