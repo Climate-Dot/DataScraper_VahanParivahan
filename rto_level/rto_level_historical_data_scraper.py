@@ -34,6 +34,11 @@ class RTODataScraper:
         self.retry_delay = 15
 
     @staticmethod
+    def sanitize_folder_name(name):
+        """replace or remove special characters to make a valid folder name."""
+        return re.sub(r"[\/,()]", "", name).strip()
+
+    @staticmethod
     def extract_rto_name_and_code(rto_label):
         # extract the region and state code using a regular expression
         match = re.match(r"(.*) - ([A-Z0-9]+)\(", rto_label)
@@ -76,7 +81,8 @@ class RTODataScraper:
 
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
-        rto_folder_name = self.extract_rto_name_and_code(rto_label)
+        rto_name_code = self.extract_rto_name_and_code(rto_label)
+        rto_folder_name = self.sanitize_folder_name(rto_name_code)
         rto_office_code = rto_folder_name.split("_")[1]
 
         download_path = os.path.join(
@@ -212,12 +218,18 @@ def main():
                 # get all RTO office names for state
                 all_rto_office_names = state_rto_mapping.get(state)
                 for rto_office_name in all_rto_office_names:
+                    rto_office_name_code = data_extract_class.extract_rto_name_and_code(
+                        rto_office_name
+                    )
+                    rto_folder_name = data_extract_class.sanitize_folder_name(
+                        rto_office_name_code
+                    )
                     directory_path = os.path.join(
                         os.getcwd(),
                         "rto_level",
                         "rto_level_ev_data",
                         re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
-                        data_extract_class.extract_rto_name_and_code(rto_office_name),
+                        rto_folder_name,
                         str(year),
                         month,
                     )
@@ -226,21 +238,22 @@ def main():
                         os.path.join(directory_path, "reportTable.xlsx")
                     ):
                         parameters.append((state, rto_office_name, year, month))
+    print(len(parameters))
 
     # run selenium function in parallel
-    with ThreadPoolExecutor(
-        max_workers=50
-    ) as executor:  # adjust max_workers based on your system's capability
-        futures = [
-            executor.submit(data_extract_class.run_selenium, args)
-            for args in parameters
-        ]
-
-        for future in as_completed(futures):
-            try:
-                result = future.result()
-            except Exception as e:
-                logging.info(f"Exception occurred: {e}")
+    # with ThreadPoolExecutor(
+    #     max_workers=50
+    # ) as executor:  # adjust max_workers based on your system's capability
+    #     futures = [
+    #         executor.submit(data_extract_class.run_selenium, args)
+    #         for args in parameters
+    #     ]
+    #
+    #     for future in as_completed(futures):
+    #         try:
+    #             result = future.result()
+    #         except Exception as e:
+    #             logging.info(f"Exception occurred: {e}")
 
 
 if __name__ == "__main__":
