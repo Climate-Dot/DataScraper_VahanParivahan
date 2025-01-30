@@ -36,7 +36,7 @@ class RTODataScraper:
     @staticmethod
     def sanitize_folder_name(name):
         """replace or remove special characters to make a valid folder name."""
-        return re.sub(r"[\/,()]", "", name).strip()
+        return re.sub(r"[\/]", "", name).strip()
 
     @staticmethod
     def extract_rto_name_and_code(rto_label):
