@@ -25,25 +25,17 @@ with open("config.yaml", "r") as config_file:
 
 # Extract values from the YAML config
 connection_string = config["storage"]["connection_string"]
-container_name = config["storage"]["state_wise_container_name"]
-csv_container_name = config["storage"]["state_wise_csv_container_name"]
+container_name = config["storage"]["rto_wise_container_name"]
 
 # Create the BlobServiceClient
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
 # Initialize the container client
 container_client = blob_service_client.get_container_client(container_name)
-csv_container_client = blob_service_client.get_container_client(csv_container_name)
 
 # Ensure the container exists
 try:
     container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
-
-# Ensure processed data container exists
-try:
-    csv_container_client.create_container()
 except Exception as e:
     print(f"Container may already exist: {e}")
 
