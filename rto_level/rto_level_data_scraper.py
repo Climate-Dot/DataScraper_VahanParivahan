@@ -290,8 +290,14 @@ def main():
         # use the default function to get the month and year
         month, year = get_year_month_label()
 
-    with open("output.json", "r") as f:
-        state_rto_mapping = json.load(f)
+    try:
+        state_rto_mapping = data_extract_class.run_for_all_states(state_lst)
+        with open("output.json", "w") as f:
+            json.dumps(state_rto_mapping)
+    except Exception as e:
+        logging.info(f"rto fetching failed with exception {e}.. using older output.json file")
+        with open("output.json", "r") as f:
+            state_rto_mapping = json.load(f)
 
     parameters = []
     for state in state_lst:
