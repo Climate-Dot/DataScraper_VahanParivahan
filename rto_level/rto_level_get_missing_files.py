@@ -19,7 +19,7 @@ from utils import *
 from rto_level.rto_level_data_scraper import RTODataScraper
 
 
-year, month = get_year_month_label()
+month, year = get_year_month_label()
 
 rto_data_scraper = RTODataScraper()
 
@@ -44,7 +44,7 @@ for state in state_lst:
         if not os.path.exists(directory_path):
             parameters.append((state, rto_office_name, year, month))
 
-logging.info(f"There are {len(parameters)} missing files..beginning to download")
+logging.info(f"There are {len(parameters)} missing files..beginning to extract")
 
 # run selenium function in parallel
 with ThreadPoolExecutor(
