@@ -145,7 +145,7 @@ class RTODataScraper:
         download_path = os.path.join(
             os.getcwd(),
             "rto_level",
-            "state_level_rto_data",
+            "rto_level_ev_data",
             state_folder_name.rstrip(),
             rto_folder_name,
             str(year_label),
@@ -292,8 +292,8 @@ def main():
 
     try:
         state_rto_mapping = data_extract_class.run_for_all_states(state_lst)
-        with open("output.json", "w") as f:
-            json.dumps(state_rto_mapping)
+        with open("output.json", "w") as rto_mapping_output:
+            json.dump(state_rto_mapping, rto_mapping_output, indent=4)
     except Exception as e:
         logging.info(f"rto fetching failed with exception {e}.. using older output.json file")
         with open("output.json", "r") as f:
