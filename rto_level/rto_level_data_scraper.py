@@ -45,6 +45,11 @@ class RTODataScraper:
             return f"{region}_{state_code}"
         return None  # return None if the format doesn't match
 
+    @staticmethod
+    def sanitize_folder_name(name):
+        """replace or remove special characters to make a valid folder name."""
+        return re.sub(r"[\/]", "", name).strip()
+
     def get_all_rto_from_state(self, state):
         """
         Function is used to get all the rto from the given state
@@ -140,6 +145,9 @@ class RTODataScraper:
 
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
+        rto_name_code = self.extract_rto_name_and_code(rto_label)
+        rto_folder_name = self.sanitize_folder_name(rto_name_code)
+        rto_office_code = rto_folder_name.split("_")[1]
         rto_folder_name = self.extract_rto_name_and_code(rto_label)
 
         download_path = os.path.join(
@@ -176,7 +184,7 @@ class RTODataScraper:
                 time.sleep(2)
 
                 find_element(
-                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
+                    browser, "xpath", f'//li[contains(text(), "{rto_office_code}")]'
                 ).click()
                 time.sleep(2)
 
@@ -295,7 +303,9 @@ def main():
         with open("output.json", "w") as rto_mapping_output:
             json.dump(state_rto_mapping, rto_mapping_output, indent=4)
     except Exception as e:
-        logging.info(f"rto fetching failed with exception {e}.. using older output.json file")
+        logging.info(
+            f"rto fetching failed with exception {e}.. using older output.json file"
+        )
         with open("output.json", "r") as f:
             state_rto_mapping = json.load(f)
 
@@ -321,7 +331,7 @@ def main():
 
     # run selenium function in parallel
     with ThreadPoolExecutor(
-            max_workers=35
+        max_workers=35
     ) as executor:  # adjust max_workers based on your system's capability
         futures = [
             executor.submit(data_extract_class.run_selenium, args)
@@ -333,7 +343,6 @@ def main():
                 result = future.result()
             except Exception as e:
                 logging.info(f"Exception occurred: {e}")
-
 
 
 if __name__ == "__main__":
