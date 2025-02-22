@@ -69,6 +69,6 @@ for root, _, files in os.walk(directory):
         if file.endswith(".xlsx"):
             file_count += 1
 
-expected_file_count = sum(item for item in state_rto_mapping.values())
+expected_file_count = sum(len(item) for item in state_rto_mapping.values())
 assert expected_file_count == file_count
 
