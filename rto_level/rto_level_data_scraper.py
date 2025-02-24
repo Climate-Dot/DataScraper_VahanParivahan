@@ -286,9 +286,44 @@ class RTODataScraper:
                     print(f"Error fetching offices for {state}: {e}")
         return results
 
+    @staticmethod
+    def load_previous_mapping():
+        """
+        function is used to load previous version of output.json if the current fetch fails due to any reason
+        :return:
+        """
+        if os.path.exists("output.json"):
+            try:
+                with open("output.json", "r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                logging.error("Previous output.json is corrupted. Starting fresh.")
+        return {}
+
 
 def main():
     data_extract_class = RTODataScraper()
+
+    try:
+        previous_mapping = data_extract_class.load_previous_mapping()
+        state_rto_mapping = data_extract_class.run_for_all_states(state_lst)
+
+        # Check if all states returned results
+        if len(state_rto_mapping) < len(state_lst):
+            logging.warning(
+                f"Only fetched {len(state_rto_mapping)} out of {len(state_lst)} states. Merging with previous data."
+            )
+
+        # Save updated mapping only if it contains some valid data
+        if state_rto_mapping:
+            with open("output.json", "w") as rto_mapping_output:
+                json.dump(state_rto_mapping, rto_mapping_output, indent=4)
+        else:
+            logging.error("No valid data fetched. Using only previous mapping.")
+
+    except Exception as e:
+        logging.error(f"RTO fetching failed with exception: {e}. Using older output.json file if available.")
+        state_rto_mapping = previous_mapping
 
     if len(sys.argv) > 2:
         # if month and year are passed as command-line arguments
@@ -297,17 +332,6 @@ def main():
     else:
         # use the default function to get the month and year
         month, year = get_year_month_label()
-
-    try:
-        state_rto_mapping = data_extract_class.run_for_all_states(state_lst)
-        with open("output.json", "w") as rto_mapping_output:
-            json.dump(state_rto_mapping, rto_mapping_output, indent=4)
-    except Exception as e:
-        logging.info(
-            f"rto fetching failed with exception {e}.. using older output.json file"
-        )
-        with open("output.json", "r") as f:
-            state_rto_mapping = json.load(f)
 
     parameters = []
     for state in state_lst:
