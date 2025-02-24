@@ -184,7 +184,7 @@ class RTODataScraper:
                 time.sleep(2)
 
                 find_element(
-                    browser, "xpath", f'//li[contains(text(), "{rto_office_code}")]'
+                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
                 ).click()
                 time.sleep(2)
 
@@ -198,7 +198,7 @@ class RTODataScraper:
                 find_element(
                     browser,
                     "xpath",
-                    f"//ul[@id='selectedRto_items']/li[text()='{rto_label}']",
+                    f'//ul[@id="selectedRto_items"]/li[contains(text(), "{rto_office_code}")]',
                 ).click()
                 time.sleep(2)
 
@@ -322,8 +322,8 @@ def main():
             logging.error("No valid data fetched. Using only previous mapping.")
 
     except Exception as e:
-        logging.error(f"RTO fetching failed with exception: {e}. Using older output.json file if available.")
         state_rto_mapping = previous_mapping
+        logging.error(f"RTO fetching failed with exception: {e}. Using older output.json file if available.")
 
     if len(sys.argv) > 2:
         # if month and year are passed as command-line arguments
