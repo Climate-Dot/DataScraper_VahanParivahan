@@ -153,21 +153,21 @@ class RtoDataIngest:
                 raise
 
             # # Transfer data from staging to final table
-            # transfer_query = f"""
-            # INSERT INTO {self.final_table_name}
-            # SELECT * FROM {self.staging_table_name}
-            # """
-            # logging.info(
-            #     f"Transferring data from staging table to final table: {self.final_table_name}"
-            # )
-            # try:
-            #     cursor.execute(transfer_query)
-            #     logging.info(
-            #         f"Successfully transferred data to final table: {self.final_table_name}"
-            #     )
-            # except Exception as e:
-            #     logging.error(f"Error transferring data to final table: {str(e)}")
-            #     raise
+            transfer_query = f"""
+            INSERT INTO {self.final_table_name}
+            SELECT * FROM {self.staging_table_name}
+            """
+            logging.info(
+                f"Transferring data from staging table to final table: {self.final_table_name}"
+            )
+            try:
+                cursor.execute(transfer_query)
+                logging.info(
+                    f"Successfully transferred data to final table: {self.final_table_name}"
+                )
+            except Exception as e:
+                logging.error(f"Error transferring data to final table: {str(e)}")
+                raise
 
             # Commit the transaction and close the connection
             conn.commit()
