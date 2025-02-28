@@ -315,7 +315,10 @@ def main():
             )
 
         # Save updated mapping only if it contains some valid data
-        if state_rto_mapping and len(state_rto_mapping.keys()) == len(state_lst):
+        if state_rto_mapping and len(state_rto_mapping) == len(state_lst):
+            logging.info(
+                f"rto fetching successful. fetched for {len(state_rto_mapping)} so saving the mapping to file"
+            )
             with open("output.json", "w") as rto_mapping_output:
                 json.dump(state_rto_mapping, rto_mapping_output, indent=4)
         else:
@@ -323,7 +326,9 @@ def main():
 
     except Exception as e:
         state_rto_mapping = previous_mapping
-        logging.error(f"RTO fetching failed with exception: {e}. Using older output.json file if available.")
+        logging.error(
+            f"RTO fetching failed with exception: {e}. Using older output.json file if available."
+        )
 
     if len(sys.argv) > 2:
         # if month and year are passed as command-line arguments

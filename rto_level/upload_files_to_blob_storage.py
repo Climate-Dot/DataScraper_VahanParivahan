@@ -16,6 +16,7 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from utils import *
+
 if len(sys.argv) > 2:
     # If month and year are passed as command-line arguments
     month = sys.argv[1]
@@ -59,15 +60,15 @@ file_list = glob.glob(pattern)
 processed_file_directory = os.getcwd()
 
 for file_path in file_list:
-    relative_path = os.path.relpath(
-        file_path, "rto_level/rto_level_ev_data"
-    ).replace("\\", "/")
+    relative_path = os.path.relpath(file_path, "rto_level/rto_level_ev_data").replace(
+        "\\", "/"
+    )
     blob_client = container_client.get_blob_client(blob=relative_path)
     # Upload the file
     with open(file_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
         print(f"Uploaded {file_path} to {file_path}")
-   
+
     # remove directory and file from structure
     shutil.rmtree(os.path.dirname(file_path))
 

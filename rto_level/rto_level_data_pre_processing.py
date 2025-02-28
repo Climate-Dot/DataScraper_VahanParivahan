@@ -58,7 +58,7 @@ class RTOLevelDataPreProcessor:
             "PURE EV": "pure_ev",
             "SOLAR": "solar",
             "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 26": "total"
+            "Unnamed: 26": "total",
         }
 
     def data_preprocessing(self, month, year):

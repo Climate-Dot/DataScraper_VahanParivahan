@@ -67,7 +67,9 @@ def extract_missing_files():
     logging.info(f"There are {len(parameters)} missing files. Extracting...")
 
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(rto_data_scraper.run_selenium, args) for args in parameters]
+        futures = [
+            executor.submit(rto_data_scraper.run_selenium, args) for args in parameters
+        ]
 
         for future in as_completed(futures):
             try:
@@ -76,6 +78,7 @@ def extract_missing_files():
                 logging.warning(f"Exception occurred: {e}")
 
     return True  # Missing files were extracted
+
 
 # Retry extraction until all files are downloaded
 while True:
@@ -86,7 +89,9 @@ while True:
         logging.info("All files have been successfully extracted!")
         break  # Exit loop if all files are present
 
-    logging.warning(f"Files missing! Expected: {expected_file_count}, Found: {existing_file_count}")
+    logging.warning(
+        f"Files missing! Expected: {expected_file_count}, Found: {existing_file_count}"
+    )
 
     success = extract_missing_files()
     if not success:
