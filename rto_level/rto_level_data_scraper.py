@@ -317,7 +317,7 @@ def main():
         # Save updated mapping only if it contains some valid data
         if state_rto_mapping and len(state_rto_mapping) == len(state_lst):
             logging.info(
-                f"rto fetching successful. fetched for {len(state_rto_mapping)} so saving the mapping to file"
+                f"rto fetching successful. fetched for {len(state_rto_mapping)} states.. saving the mapping to file"
             )
             with open("output.json", "w") as rto_mapping_output:
                 json.dump(state_rto_mapping, rto_mapping_output, indent=4)
