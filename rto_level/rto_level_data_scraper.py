@@ -315,7 +315,7 @@ def main():
             )
 
         # Save updated mapping only if it contains some valid data
-        if state_rto_mapping:
+        if state_rto_mapping and len(state_rto_mapping.keys()) == len(state_lst):
             with open("output.json", "w") as rto_mapping_output:
                 json.dump(state_rto_mapping, rto_mapping_output, indent=4)
         else:
