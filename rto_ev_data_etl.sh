@@ -21,5 +21,9 @@ python3 rto_level/rto_level_data_pre_processing.py $ARGS
 # Ingestion
 python3 rto_level/rto_level_data_ingestion.py $ARGS
 
+# Run dbt model
+cd /home/climate_dot_data/DataScraper_VahanParivahan/climate_dot_dbt
+dbt run --select rto_wise_ev_data >> /home/climate_dot_data/DataScraper_VahanParivahan/dbt_rto_wise_logs.txt 2>&1
+
 # File Upload and Cleanup
 python3 rto_level/upload_files_to_blob_storage.py $ARGS

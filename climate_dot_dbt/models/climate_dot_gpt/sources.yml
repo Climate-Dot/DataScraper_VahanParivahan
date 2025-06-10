@@ -1,0 +1,233 @@
+version: 2
+
+sources:
+  - name: raw_data
+    database: climate_dot  
+    schema: dbo
+    tables:
+      - name: fact_ev_data_by_rto
+        description: "Raw EV data by RTO containing vehicle registration information"
+        columns:
+          - name: year
+            description: "Year of the data"
+          - name: month
+            description: "Month of the data"
+          - name: day
+            description: "Day of the data"
+          - name: date
+            description: "Date of the data"
+          - name: state
+            description: "State name"
+          - name: rto_name
+            description: "RTO office name"
+          - name: rto_code
+            description: "RTO code"
+          - name: vehicle_type
+            description: "Type of vehicle"
+          - name: vehicle_category
+            description: "Category of vehicle"
+          - name: vehicle_use_type
+            description: "Use type of vehicle"
+          - name: vehicle_class
+            description: "Class of vehicle"
+          - name: cng_only
+            description: "Number of CNG only vehicles"
+          - name: diesel
+            description: "Number of diesel vehicles"
+          - name: diesel_hybrid
+            description: "Number of diesel hybrid vehicles"
+          - name: di_methyl_ether
+            description: "Number of di-methyl ether vehicles"
+          - name: dual_diesel_bio_cng
+            description: "Number of dual diesel bio CNG vehicles"
+          - name: dual_diesel_cng
+            description: "Number of dual diesel CNG vehicles"
+          - name: dual_diesel_lng
+            description: "Number of dual diesel LNG vehicles"
+          - name: electric_vehicles
+            description: "Number of electric vehicles"
+          - name: ethanol
+            description: "Number of ethanol vehicles"
+          - name: lng
+            description: "Number of LNG vehicles"
+          - name: lpg_only
+            description: "Number of LPG only vehicles"
+          - name: methanol
+            description: "Number of methanol vehicles"
+          - name: not_applicable
+            description: "Number of vehicles with not applicable fuel type"
+          - name: petrol
+            description: "Number of petrol vehicles"
+          - name: petrol_cng
+            description: "Number of petrol CNG vehicles"
+          - name: petrol_ethanol
+            description: "Number of petrol ethanol vehicles"
+          - name: petrol_hybrid
+            description: "Number of petrol hybrid vehicles"
+          - name: petrol_lpg
+            description: "Number of petrol LPG vehicles"
+          - name: petrol_methanol
+            description: "Number of petrol methanol vehicles"
+          - name: plug_in_hybrid_ev
+            description: "Number of plug-in hybrid electric vehicles"
+          - name: pure_ev
+            description: "Number of pure electric vehicles"
+          - name: solar
+            description: "Number of solar vehicles"
+          - name: strong_hybrid_ev
+            description: "Number of strong hybrid electric vehicles"
+          - name: total
+            description: "Total number of vehicles"
+          - name: inserted_at
+            description: "Timestamp when the record was inserted"
+      - name: rto_code_to_district_mapping
+        description: "Mapping table containing RTO codes and their corresponding districts"
+        columns:
+          - name: rto_code
+            description: "RTO code"
+          - name: district
+            description: "District name corresponding to the RTO code"
+      - name: state_wise_ev_data
+        description: "State-wise aggregated EV data containing vehicle registration information"
+        columns:
+          - name: year
+            description: "Year of the data"
+          - name: month
+            description: "Month of the data"
+          - name: day
+            description: "Day of the data"
+          - name: date
+            description: "Date of the data"
+          - name: state
+            description: "State name"
+          - name: vehicle_type
+            description: "Type of vehicle"
+          - name: vehicle_category
+            description: "Category of vehicle"
+          - name: vehicle_use_type
+            description: "Use type of vehicle"
+          - name: vehicle_class
+            description: "Class of vehicle"
+          - name: cng_only
+            description: "Number of CNG only vehicles"
+          - name: diesel
+            description: "Number of diesel vehicles"
+          - name: diesel_hybrid
+            description: "Number of diesel hybrid vehicles"
+          - name: di_methyl_ether
+            description: "Number of di-methyl ether vehicles"
+          - name: dual_diesel_bio_cng
+            description: "Number of dual diesel bio CNG vehicles"
+          - name: dual_diesel_cng
+            description: "Number of dual diesel CNG vehicles"
+          - name: dual_diesel_lng
+            description: "Number of dual diesel LNG vehicles"
+          - name: electric_vehicles
+            description: "Number of electric vehicles"
+          - name: ethanol
+            description: "Number of ethanol vehicles"
+          - name: lng
+            description: "Number of LNG vehicles"
+          - name: lpg_only
+            description: "Number of LPG only vehicles"
+          - name: methanol
+            description: "Number of methanol vehicles"
+          - name: not_applicable
+            description: "Number of vehicles with not applicable fuel type"
+          - name: petrol
+            description: "Number of petrol vehicles"
+          - name: petrol_cng
+            description: "Number of petrol CNG vehicles"
+          - name: petrol_ethanol
+            description: "Number of petrol ethanol vehicles"
+          - name: petrol_hybrid
+            description: "Number of petrol hybrid vehicles"
+          - name: petrol_lpg
+            description: "Number of petrol LPG vehicles"
+          - name: petrol_methanol
+            description: "Number of petrol methanol vehicles"
+          - name: plug_in_hybrid_ev
+            description: "Number of plug-in hybrid electric vehicles"
+          - name: pure_ev
+            description: "Number of pure electric vehicles"
+          - name: solar
+            description: "Number of solar vehicles"
+          - name: strong_hybrid_ev
+            description: "Number of strong hybrid electric vehicles"
+          - name: total
+            description: "Total number of vehicles"
+          - name: inserted_at
+            description: "Timestamp when the record was inserted"
+      - name: oem_wise_ev_data
+        description: "OEM-wise aggregated EV data containing vehicle registration information"
+        columns:
+          - name: year
+            description: "Year of the data"
+          - name: month
+            description: "Month of the data"
+          - name: day
+            description: "Day of the data"
+          - name: date
+            description: "Date of the data"
+          - name: state
+            description: "State name"
+          - name: oem_name
+            description: "Name of the Original Equipment Manufacturer"
+          - name: vehicle_type
+            description: "Type of vehicle"
+          - name: vehicle_category
+            description: "Category of vehicle"
+          - name: vehicle_use_type
+            description: "Use type of vehicle"
+          - name: vehicle_class
+            description: "Class of vehicle"
+          - name: cng_only
+            description: "Number of CNG only vehicles"
+          - name: diesel
+            description: "Number of diesel vehicles"
+          - name: diesel_hybrid
+            description: "Number of diesel hybrid vehicles"
+          - name: di_methyl_ether
+            description: "Number of di-methyl ether vehicles"
+          - name: dual_diesel_bio_cng
+            description: "Number of dual diesel bio CNG vehicles"
+          - name: dual_diesel_cng
+            description: "Number of dual diesel CNG vehicles"
+          - name: dual_diesel_lng
+            description: "Number of dual diesel LNG vehicles"
+          - name: electric_vehicles
+            description: "Number of electric vehicles"
+          - name: ethanol
+            description: "Number of ethanol vehicles"
+          - name: lng
+            description: "Number of LNG vehicles"
+          - name: lpg_only
+            description: "Number of LPG only vehicles"
+          - name: methanol
+            description: "Number of methanol vehicles"
+          - name: not_applicable
+            description: "Number of vehicles with not applicable fuel type"
+          - name: petrol
+            description: "Number of petrol vehicles"
+          - name: petrol_cng
+            description: "Number of petrol CNG vehicles"
+          - name: petrol_ethanol
+            description: "Number of petrol ethanol vehicles"
+          - name: petrol_hybrid
+            description: "Number of petrol hybrid vehicles"
+          - name: petrol_lpg
+            description: "Number of petrol LPG vehicles"
+          - name: petrol_methanol
+            description: "Number of petrol methanol vehicles"
+          - name: plug_in_hybrid_ev
+            description: "Number of plug-in hybrid electric vehicles"
+          - name: pure_ev
+            description: "Number of pure electric vehicles"
+          - name: solar
+            description: "Number of solar vehicles"
+          - name: strong_hybrid_ev
+            description: "Number of strong hybrid electric vehicles"
+          - name: total
+            description: "Total number of vehicles"
+          - name: inserted_at
+            description: "Timestamp when the record was inserted" 
