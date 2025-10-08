@@ -50,7 +50,7 @@ class OEMDataPreProcessor:
             "PURE EV": "pure_ev",
             "SOLAR": "solar",
             "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 26": "total",
+            "Unnamed: 38": "total",
         }
 
         self.month_mapping = {

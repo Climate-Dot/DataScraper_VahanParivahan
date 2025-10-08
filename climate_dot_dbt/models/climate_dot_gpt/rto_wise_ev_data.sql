@@ -9,7 +9,7 @@ SELECT
     CAST(year AS INT) as year,
     CAST(month AS INT) as month,
     CAST(day AS INT) as day,
-    CAST(date AS DATE) as date,
+    CONVERT(DATE, [date], 103) as date,
     CAST(state AS VARCHAR(100)) as state,
     CAST(d.district AS VARCHAR(100)) as district,
     CAST(rto_name AS VARCHAR(100)) as rto_name,
@@ -47,5 +47,5 @@ FROM {{ source('raw_data', 'fact_ev_data_by_rto') }} f
 LEFT JOIN {{ source('raw_data', 'rto_code_to_district_mapping') }} d
     ON f.rto_code = d.rto_code
 {% if is_incremental() %}
-WHERE date >= DATEADD(MONTH, -1, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
+WHERE CONVERT(DATE, [date], 103) >= DATEADD(MONTH, -1, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
 {% endif %} 

@@ -258,6 +258,7 @@ def main():
         "Karnataka",
         "Kerala",
         "Ladakh",
+        "Lakshadweep",
         "Maharashtra",
         "Meghalaya",
         "Manipur",
@@ -273,7 +274,7 @@ def main():
         "Tripura",
         "Uttarakhand",
         "Uttar Pradesh",
-        "West Bengal",
+        "West Bengal"
     ]
 
     if len(sys.argv) > 2:

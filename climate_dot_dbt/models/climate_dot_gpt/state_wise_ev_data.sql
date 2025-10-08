@@ -9,7 +9,7 @@ SELECT
     CAST(year AS INT) as year,
     CAST(month AS INT) as month,
     CAST(day AS INT) as day,
-    CAST(date AS DATE) as date,
+    CONVERT(DATE, [date], 103) as date,
     CAST(state AS VARCHAR(100)) as state,
     CAST(vehicle_type AS VARCHAR(100)) as vehicle_type,
     CAST(vehicle_category AS VARCHAR(100)) as vehicle_category,

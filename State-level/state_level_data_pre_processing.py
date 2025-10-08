@@ -51,7 +51,7 @@ class StateLevelDataPreProcessor:
             "PURE EV": "pure_ev",
             "SOLAR": "solar",
             "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 26": "total",
+            "Unnamed: 38": "total",
         }
 
         self.month_mapping = {
@@ -121,7 +121,6 @@ class StateLevelDataPreProcessor:
                         temp_df["Date"] = f"{1}/{month}/{year}"
                         temp_df["State"] = state
                         final_df = pd.concat([final_df, temp_df], ignore_index=True)
-
         final_df = pd.merge(final_df, self.mapping_df, left_on="Unnamed: 1", right_on="Vehicle Class", how="left")
         # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
         final_df["Vehicle Type"] = (
@@ -145,7 +144,6 @@ class StateLevelDataPreProcessor:
 
         final_df["date"] = final_df["date"].apply(self.convert_date)
         final_df["month"] = final_df["month"].map(self.month_mapping)
-
         # reorder columns
         final_df = final_df[self.column_rename_map.values()]
         return final_df

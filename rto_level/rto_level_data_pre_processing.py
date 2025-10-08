@@ -58,7 +58,7 @@ class RTOLevelDataPreProcessor:
             "PURE EV": "pure_ev",
             "SOLAR": "solar",
             "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 26": "total",
+            "Unnamed: 38": "total",
         }
 
     def data_preprocessing(self, month, year):
@@ -78,6 +78,7 @@ class RTOLevelDataPreProcessor:
                 raw_file_path = os.path.join(
                     rto_office_path, year, month, "reportTable.xlsx"
                 )
+                print(raw_file_path)
                 if os.path.exists(raw_file_path):
                     temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
                     if temp_df.empty:

@@ -306,7 +306,7 @@ def main():
 
     try:
         previous_mapping = data_extract_class.load_previous_mapping()
-        state_rto_mapping = data_extract_class.run_for_all_states(state_lst)
+        state_rto_mapping = previous_mapping
 
         # Check if all states returned results
         if len(state_rto_mapping) < len(state_lst):
