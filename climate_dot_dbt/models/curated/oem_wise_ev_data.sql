@@ -25,6 +25,7 @@ SELECT
     CAST(REPLACE(dual_diesel_lng, ',', '') AS INT) as dual_diesel_lng,
     CAST(REPLACE(electric_bov, ',', '') AS INT) as electric_vehicles,
     CAST(REPLACE(ethanol, ',', '') AS INT) as ethanol,
+    CAST(REPLACE(fuel_cell_hydrogen, ',', '') AS INT) as fuel_cell_hydrogen,
     CAST(REPLACE(lng, ',', '') AS INT) as lng,
     CAST(REPLACE(lpg_only, ',', '') AS INT) as lpg_only,
     CAST(REPLACE(methanol, ',', '') AS INT) as methanol,
@@ -40,7 +41,7 @@ SELECT
     CAST(REPLACE(solar, ',', '') AS INT) as solar,
     CAST(REPLACE(strong_hybrid_ev, ',', '') AS INT) as strong_hybrid_ev,
     CAST(REPLACE(total, ',', '') AS INT) as total,
-    CAST(insert_date AS DATETIME) as inserted_at
+    CAST(inserted_at AS DATETIME) as inserted_at
 FROM {{ source('raw_data', 'fact_oem_data_by_state_and_category') }}
 {% if is_incremental() %}
 WHERE CONVERT(DATE, [date], 103) >= DATEADD(MONTH, -1, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
@@ -65,6 +66,7 @@ GROUP BY
     dual_diesel_lng,
     electric_bov,
     ethanol,
+    fuel_cell_hydrogen,
     lng,
     lpg_only,
     methanol,
@@ -80,4 +82,4 @@ GROUP BY
     solar,
     strong_hybrid_ev,
     total,
-    insert_date
+    inserted_at
