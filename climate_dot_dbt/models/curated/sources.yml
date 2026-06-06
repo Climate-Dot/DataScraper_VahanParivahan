@@ -304,5 +304,5 @@ sources:
             description: "Number of strong hybrid electric vehicles"
           - name: total
             description: "Total number of vehicles"
-          - name: insert_date
+          - name: inserted_at
             description: "Timestamp when the record was inserted into the raw OEM fact table"
