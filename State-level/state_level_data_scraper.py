@@ -24,12 +24,15 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from pipeline_constants import STATE_LIST
+from pipeline_logging import configure_pipeline_logging
 
 # Set up logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+configure_pipeline_logging()
 
 
 class StateLevelDataScraper:

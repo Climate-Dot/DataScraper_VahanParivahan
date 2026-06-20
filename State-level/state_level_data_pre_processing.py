@@ -12,11 +12,14 @@ repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from pipeline_logging import configure_pipeline_logging
 from preprocessing_schema_utils import (
     ensure_expected_output_columns,
     find_unexpected_source_columns,
 )
 from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
+
+configure_pipeline_logging()
 
 
 class StateLevelDataPreProcessor:

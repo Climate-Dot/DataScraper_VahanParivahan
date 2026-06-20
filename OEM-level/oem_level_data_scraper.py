@@ -22,6 +22,9 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from pipeline_constants import STATE_LIST
+from pipeline_logging import configure_pipeline_logging
+
+configure_pipeline_logging()
 
 
 class OEMDataScraper:

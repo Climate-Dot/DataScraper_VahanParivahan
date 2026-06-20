@@ -1,5 +1,11 @@
 #!/bin/bash
 
+set -e
+
+log_step() {
+    printf '%s - INFO - %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
+}
+
 # Check if arguments (e.g., "OCT 2024") are passed
 ARGS="$@"
 
@@ -10,20 +16,26 @@ ARGS="$@"
 cd /home/climate_dot_data/DataScraper_VahanParivahan
 
 # Run the Extraction
+log_step "Starting RTO extraction for ${ARGS:-default previous month}"
 python3 rto_level/rto_level_data_scraper.py $ARGS
 
 # Run missing files extraction
+log_step "Running RTO missing-file recovery for ${ARGS:-default previous month}"
 python3 rto_level/rto_level_get_missing_files.py $ARGS
 
 # Run Pre Processing
+log_step "Running RTO preprocessing for ${ARGS:-default previous month}"
 python3 rto_level/rto_level_data_pre_processing.py $ARGS
 
 # Ingestion
+log_step "Running RTO ingestion for ${ARGS:-default previous month}"
 python3 rto_level/rto_level_data_ingestion.py $ARGS
 
 # File Upload and Cleanup
+log_step "Running RTO upload and cleanup for ${ARGS:-default previous month}"
 python3 rto_level/upload_files_to_blob_storage.py $ARGS
 
 # Run dbt model
+log_step "Running RTO dbt model for ${ARGS:-default previous month}"
 cd /home/climate_dot_data/DataScraper_VahanParivahan/climate_dot_dbt
 dbt run --select rto_wise_ev_data >> /home/climate_dot_data/DataScraper_VahanParivahan/dbt_rto_wise_logs.txt 2>&1
