@@ -7,6 +7,7 @@ This runbook is for the one-time raw table migration that aligns the `RTO`, `Sta
 ## Migration File
 
 - SQL script: [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql)
+- Post-migration repair for already-backfilled environments: [`sql/migrations/2026-06-21_vahan_business_column_null_repair.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-21_vahan_business_column_null_repair.sql)
 
 ## What The Migration Does
 
@@ -21,8 +22,9 @@ This runbook is for the one-time raw table migration that aligns the `RTO`, `Sta
 
 - The migration creates backup tables first and refuses to overwrite them if they already exist.
 - The drop, recreate, and backfill steps run inside a transaction.
-- The script is tolerant of VM drift for some legacy columns such as `electric_vehicles` vs `electric_bov` and `insert_date` vs `inserted_at`.
+- The script is tolerant of metadata drift such as `insert_date` vs `inserted_at`.
 - Legacy columns like `petrol_ethanol` are not remapped into the new E20 columns.
+- Legacy business columns are not remapped into newer business columns like `ethanol_e100` or `electric_bov`; those stay `NULL` for historical rows unless the exact newer column already existed in raw history.
 
 ## Execution Order
 
@@ -30,7 +32,7 @@ This runbook is for the one-time raw table migration that aligns the `RTO`, `Sta
 2. Open the migration SQL file and sanity-check the backup table names include the intended date suffix.
 3. Run the migration in SQL Server against production.
 4. Review the six row-count results returned by the script.
-5. Run a full refresh for the three curated dbt models.
+5. Run a full refresh for the curated dbt models that are currently used in production.
 6. Run one known month manually if you want an extra confidence pass before the next scheduled cron run.
 
 ## Commands After Raw Migration
@@ -40,8 +42,16 @@ From the dbt project directory on the VM:
 ```bash
 cd /home/climate_dot_data/DataScraper_VahanParivahan/climate_dot_dbt
 dbt parse
-dbt run --full-refresh --select rto_wise_ev_data state_wise_ev_data oem_wise_ev_data
+dbt run --full-refresh --select rto_wise_ev_data oem_wise_ev_data
 ```
+
+Optional manual model:
+
+```bash
+dbt run --full-refresh --select state_wise_ev_data
+```
+
+Use the state model only if you intentionally maintain that curated table in your environment. It is not part of the current prod operating path.
 
 ## What To Verify
 
@@ -51,7 +61,7 @@ dbt run --full-refresh --select rto_wise_ev_data state_wise_ev_data oem_wise_ev_
   - `dbo.fact_oem_data_by_state_and_category_backup_20260619`
 - New raw tables contain rows after backfill.
 - `inserted_at` exists on all new staging and raw tables.
-- The curated dbt models run successfully with `--full-refresh`.
+- The `rto_wise_ev_data` and `oem_wise_ev_data` models run successfully with `--full-refresh`.
 
 ## Expected Functional Behavior After Migration
 

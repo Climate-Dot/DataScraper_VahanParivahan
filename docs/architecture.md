@@ -82,7 +82,8 @@ All three scripts:
 - Processed monthly CSV is `state_level_ev_data_<MON>_<YEAR>.csv`
 - Staging table is `staging_fact_ev_data_by_state`
 - Raw final table is `fact_ev_data_by_state`
-- Curated dbt model is `state_wise_ev_data`
+- Repo curated dbt model is `state_wise_ev_data`
+- `state_wise_ev_data` is not currently part of the live prod operating path
 
 ## dbt Layer
 
@@ -102,6 +103,18 @@ At the time of writing:
 - The repo does not yet enforce a separate curated schema in `dbt_project.yml`.
 - Schema resolution still depends on the active dbt profile on the VM.
 - The curated models now read the newer raw fuel taxonomy directly instead of forcing new Vahan columns back into legacy names.
+- Only `rto_wise_ev_data` and `oem_wise_ev_data` are currently used in prod.
+- `state_wise_ev_data` exists in the repo but is currently manual or future-facing only.
+
+## Legacy Reference Files
+
+These files are kept for reference only and are not part of the active monthly production flow:
+
+- [`OEM-level/data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/OEM-level/data_preprocessing.py)
+- [`State-level/state_level_historical_data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/State-level/state_level_historical_data_preprocessing.py)
+- [`rto_level/rto_level_eda.py`](/Users/monish/DataScraper_VahanParivahan/rto_level/rto_level_eda.py)
+
+They still reflect older naming conventions such as `electric_vehicles`, `ethanol`, `petrol_ethanol`, or `insert_date` and should not be used as the starting point for new production changes.
 
 ## Schema Drift Handling
 

@@ -10,7 +10,7 @@ The repo currently contains three ingestion pipelines:
 
 - `RTO` pipeline: scrapes RTO-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
 - `OEM` pipeline: scrapes OEM-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and has a dbt curated model available for manual execution.
-- `State` pipeline: scrapes state-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and has a dbt curated model available for manual execution.
+- `State` pipeline: scrapes state-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and keeps a repo dbt model available for manual or future use.
 
 ## Important Operating Assumptions
 
@@ -39,11 +39,11 @@ The repo currently contains three ingestion pipelines:
 
 ## Pipeline Summary
 
-| Pipeline | Entry script | Raw final table | Curated dbt model | Blob upload |
+| Pipeline | Entry script | Raw final table | Curated dbt status | Blob upload |
 | --- | --- | --- | --- | --- |
-| RTO | `rto_ev_data_etl.sh` | `fact_ev_data_by_rto` | `rto_wise_ev_data` | Yes |
-| OEM | `oem_data_etl.sh` | `fact_oem_data_by_state_and_category` | `oem_wise_ev_data` | Yes |
-| State | `state_ev_data_etl.sh` | `fact_ev_data_by_state` | `state_wise_ev_data` | Yes |
+| RTO | `rto_ev_data_etl.sh` | `fact_ev_data_by_rto` | `rto_wise_ev_data` runs automatically in prod | Yes |
+| OEM | `oem_data_etl.sh` | `fact_oem_data_by_state_and_category` | `oem_wise_ev_data` exists and is refreshed manually in prod | Yes |
+| State | `state_ev_data_etl.sh` | `fact_ev_data_by_state` | `state_wise_ev_data` exists in the repo but is not part of the current prod operating path | Yes |
 
 ## dbt Project
 
@@ -56,6 +56,11 @@ Current curated models:
 - [`rto_wise_ev_data.sql`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated/rto_wise_ev_data.sql)
 - [`oem_wise_ev_data.sql`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated/oem_wise_ev_data.sql)
 - [`state_wise_ev_data.sql`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated/state_wise_ev_data.sql)
+
+Operational note:
+
+- Only `rto_wise_ev_data` and `oem_wise_ev_data` are currently used in production.
+- `state_wise_ev_data` remains in the repo for manual or future use, but it is not currently materialized as part of the live prod workflow.
 
 ## Recommended Reading Order
 

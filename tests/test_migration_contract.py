@@ -6,6 +6,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MIGRATION_PATH = (
     REPO_ROOT / "sql" / "migrations" / "2026-06-19_vahan_fuel_schema_refresh.sql"
 )
+REPAIR_PATH = (
+    REPO_ROOT / "sql" / "migrations" / "2026-06-21_vahan_business_column_null_repair.sql"
+)
 
 
 class MigrationContractTests(unittest.TestCase):
@@ -41,9 +44,21 @@ class MigrationContractTests(unittest.TestCase):
 
     def test_migration_handles_legacy_vm_drift(self):
         sql = MIGRATION_PATH.read_text()
-        self.assertIn("electric_vehicles", sql)
         self.assertIn("insert_date", sql)
         self.assertIn("COL_LENGTH", sql)
+
+    def test_migration_does_not_alias_legacy_business_columns(self):
+        sql = MIGRATION_PATH.read_text()
+        self.assertNotIn("N'[electric_vehicles]'", sql)
+        self.assertNotIn("N'[ethanol]'", sql)
+
+    def test_repair_script_targets_legacy_business_backfill_only(self):
+        sql = REPAIR_PATH.read_text()
+        self.assertIn("electric_bov = NULL", sql)
+        self.assertIn("ethanol_e100 = NULL", sql)
+        self.assertIn("electric_vehicles", sql)
+        self.assertIn("ethanol", sql)
+        self.assertNotIn("inserted_at = NULL", sql)
 
 
 if __name__ == "__main__":

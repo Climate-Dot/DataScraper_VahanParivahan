@@ -1,34 +1,23 @@
-/*
-Purpose
-=======
-Refresh the raw Vahan fuel schema across RTO, State, and OEM pipelines.
-
-What this script does
-=====================
-1. Creates one-time backups of the existing raw fact tables.
-2. Drops and recreates the staging tables with the new shared fuel taxonomy.
-3. Drops and recreates the raw fact tables with the new shared fuel taxonomy.
-4. Backfills legacy-compatible data from the backups into the new raw fact tables.
-
-Important notes
-===============
-- This script intentionally keeps the backup tables.
-- Legacy columns such as `ethanol` and `petrol_ethanol` are not preserved in the new raw schema.
-- Historical data that cannot be mapped safely into the new schema is left as NULL in the new tables.
-- After this script completes, run the dbt curated models with `--full-refresh`.
-*/
-
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
 IF OBJECT_ID('dbo.fact_ev_data_by_rto_backup_20260619', 'U') IS NOT NULL
-    THROW 50001, 'Backup table dbo.fact_ev_data_by_rto_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 1;
+BEGIN
+    RAISERROR('Backup table dbo.fact_ev_data_by_rto_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 16, 1);
+    RETURN;
+END;
 
 IF OBJECT_ID('dbo.fact_ev_data_by_state_backup_20260619', 'U') IS NOT NULL
-    THROW 50002, 'Backup table dbo.fact_ev_data_by_state_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 1;
+BEGIN
+    RAISERROR('Backup table dbo.fact_ev_data_by_state_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 16, 1);
+    RETURN;
+END;
 
 IF OBJECT_ID('dbo.fact_oem_data_by_state_and_category_backup_20260619', 'U') IS NOT NULL
-    THROW 50003, 'Backup table dbo.fact_oem_data_by_state_and_category_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 1;
+BEGIN
+    RAISERROR('Backup table dbo.fact_oem_data_by_state_and_category_backup_20260619 already exists. Aborting to avoid overwriting a backup.', 16, 1);
+    RETURN;
+END;
 
 SELECT *
 INTO dbo.fact_ev_data_by_rto_backup_20260619
@@ -406,12 +395,10 @@ SELECT
     [dual_diesel_lng],
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_ev_data_by_rto_backup_20260619', 'electric_bov') IS NOT NULL THEN N'[electric_bov]'
-        WHEN COL_LENGTH('dbo.fact_ev_data_by_rto_backup_20260619', 'electric_vehicles') IS NOT NULL THEN N'[electric_vehicles]'
         ELSE N'NULL'
     END + N',
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_ev_data_by_rto_backup_20260619', 'ethanol_e100') IS NOT NULL THEN N'[ethanol_e100]'
-        WHEN COL_LENGTH('dbo.fact_ev_data_by_rto_backup_20260619', 'ethanol') IS NOT NULL THEN N'[ethanol]'
         ELSE N'NULL'
     END + N',
     ' + CASE
@@ -517,12 +504,10 @@ SELECT
     [dual_diesel_lng],
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_ev_data_by_state_backup_20260619', 'electric_bov') IS NOT NULL THEN N'[electric_bov]'
-        WHEN COL_LENGTH('dbo.fact_ev_data_by_state_backup_20260619', 'electric_vehicles') IS NOT NULL THEN N'[electric_vehicles]'
         ELSE N'NULL'
     END + N',
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_ev_data_by_state_backup_20260619', 'ethanol_e100') IS NOT NULL THEN N'[ethanol_e100]'
-        WHEN COL_LENGTH('dbo.fact_ev_data_by_state_backup_20260619', 'ethanol') IS NOT NULL THEN N'[ethanol]'
         ELSE N'NULL'
     END + N',
     ' + CASE
@@ -628,12 +613,10 @@ SELECT
     [dual_diesel_lng],
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_oem_data_by_state_and_category_backup_20260619', 'electric_bov') IS NOT NULL THEN N'[electric_bov]'
-        WHEN COL_LENGTH('dbo.fact_oem_data_by_state_and_category_backup_20260619', 'electric_vehicles') IS NOT NULL THEN N'[electric_vehicles]'
         ELSE N'NULL'
     END + N',
     ' + CASE
         WHEN COL_LENGTH('dbo.fact_oem_data_by_state_and_category_backup_20260619', 'ethanol_e100') IS NOT NULL THEN N'[ethanol_e100]'
-        WHEN COL_LENGTH('dbo.fact_oem_data_by_state_and_category_backup_20260619', 'ethanol') IS NOT NULL THEN N'[ethanol]'
         ELSE N'NULL'
     END + N',
     ' + CASE
@@ -727,10 +710,3 @@ FROM dbo.fact_oem_data_by_state_and_category_backup_20260619
 UNION ALL
 SELECT 'dbo.fact_oem_data_by_state_and_category', COUNT(*)
 FROM dbo.fact_oem_data_by_state_and_category;
-
-/*
-After running this raw-table migration, run these commands from the dbt project directory:
-
-dbt parse
-dbt run --full-refresh --select rto_wise_ev_data state_wise_ev_data oem_wise_ev_data
-*/

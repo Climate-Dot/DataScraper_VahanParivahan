@@ -19,7 +19,7 @@ The OEM pipeline collects monthly EV registration data at the OEM-by-state-and-c
 Current note:
 
 - The shell script does not yet run dbt automatically.
-- The curated dbt model exists and can be run manually.
+- The curated dbt model exists and is refreshed manually in production when needed.
 - The active state and OEM scrapers now share one centralized state list, including `Telangana`.
 
 ## Default Execution Behavior
