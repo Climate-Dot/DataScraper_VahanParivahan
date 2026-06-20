@@ -1,3 +1,10 @@
+"""
+Legacy reference script for historical state preprocessing.
+
+This file still uses older fuel column names such as `electric_vehicles` and
+`petrol_ethanol`. It is not part of the active monthly production flow.
+"""
+
 import pandas as pd
 from pathlib import Path
 from datetime import datetime

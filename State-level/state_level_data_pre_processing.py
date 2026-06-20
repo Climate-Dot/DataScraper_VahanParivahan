@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import pandas as pd
 import re
@@ -6,6 +7,16 @@ import sys
 import warnings
 
 warnings.filterwarnings("ignore")
+
+repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if repo_path not in sys.path:
+    sys.path.append(repo_path)
+
+from preprocessing_schema_utils import (
+    ensure_expected_output_columns,
+    find_unexpected_source_columns,
+)
+from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
 
 
 class StateLevelDataPreProcessor:
@@ -27,31 +38,7 @@ class StateLevelDataPreProcessor:
             "Vehicle Category": "vehicle_category",
             "Vehicle Use Type": "vehicle_use_type",
             "Unnamed: 1": "vehicle_class",
-            "CNG ONLY": "cng_only",
-            "DIESEL": "diesel",
-            "DIESEL/HYBRID": "diesel_hybrid",
-            "DI-METHYL ETHER": "di_methyl_ether",
-            "DUAL DIESEL/BIO CNG": "dual_diesel_bio_cng",
-            "DUAL DIESEL/CNG": "dual_diesel_cng",
-            "DUAL DIESEL/LNG": "dual_diesel_lng",
-            "ELECTRIC(BOV)": "electric_vehicles",
-            "ETHANOL": "ethanol",
-            "FUEL CELL HYDROGEN": "fuel_cell_hydrogen",
-            "LNG": "lng",
-            "LPG ONLY": "lpg_only",
-            "METHANOL": "methanol",
-            "NOT APPLICABLE": "not_applicable",
-            "PETROL": "petrol",
-            "PETROL/CNG": "petrol_cng",
-            "PETROL/ETHANOL": "petrol_ethanol",
-            "PETROL/HYBRID": "petrol_hybrid",
-            "PETROL/LPG": "petrol_lpg",
-            "PETROL/METHANOL": "petrol_methanol",
-            "PLUG-IN HYBRID EV": "plug_in_hybrid_ev",
-            "PURE EV": "pure_ev",
-            "SOLAR": "solar",
-            "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 38": "total",
+            **COMMON_FUEL_COLUMN_RENAME_MAP,
         }
 
         self.month_mapping = {
@@ -102,6 +89,7 @@ class StateLevelDataPreProcessor:
         :return: None
         """
         final_df = pd.DataFrame()
+        unexpected_source_columns = set()
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for year in os.listdir(state_path):
@@ -115,12 +103,25 @@ class StateLevelDataPreProcessor:
                             f"No records found in report for {state}, {year}, {month}"
                         )
                     else:
+                        unexpected_source_columns.update(
+                            find_unexpected_source_columns(
+                                temp_df.columns,
+                                self.column_rename_map.keys(),
+                            )
+                        )
                         temp_df["Month"] = month
                         temp_df["Year"] = year
                         temp_df["Day"] = 1
                         temp_df["Date"] = f"{1}/{month}/{year}"
                         temp_df["State"] = state
                         final_df = pd.concat([final_df, temp_df], ignore_index=True)
+        if unexpected_source_columns:
+            logging.warning(
+                "Detected new state-level source columns for %s %s that are not mapped yet: %s",
+                month,
+                year,
+                ", ".join(sorted(unexpected_source_columns)),
+            )
         final_df = pd.merge(final_df, self.mapping_df, left_on="Unnamed: 1", right_on="Vehicle Class", how="left")
         # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
         final_df["Vehicle Type"] = (
@@ -144,6 +145,11 @@ class StateLevelDataPreProcessor:
 
         final_df["date"] = final_df["date"].apply(self.convert_date)
         final_df["month"] = final_df["month"].map(self.month_mapping)
+        final_df = ensure_expected_output_columns(
+            final_df,
+            self.column_rename_map.values(),
+            f"State preprocessing for {month} {year}",
+        )
         # reorder columns
         final_df = final_df[self.column_rename_map.values()]
         return final_df

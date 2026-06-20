@@ -1,3 +1,11 @@
+"""
+Legacy reference script.
+
+This file reflects an older OEM preprocessing path and older fuel taxonomy.
+It is not used by the active monthly OEM pipeline, which runs
+`OEM-level/data_preprocessing_v2.py`.
+"""
+
 import os
 import pandas as pd
 import re

@@ -1,3 +1,11 @@
+"""
+Legacy reference script used for historical RTO analysis and ad hoc exports.
+
+It is not part of the active monthly production pipeline and still reflects
+older column conventions such as `ethanol`, `petrol_ethanol`, and
+`insert_date`.
+"""
+
 import pandas as pd
 import os
 

@@ -50,7 +50,7 @@ class StateDataIngest:
         file_path = f"state_level_ev_data_{month}_{year}.csv"
         if not os.path.exists(file_path):
             raise FileNotFoundError(
-                f"the file {file_path} does not exist. did you run data_pre_processing_v2 yet?"
+                f"the file {file_path} does not exist. did you run state_level_data_pre_processing yet?"
             )
 
         # Read CSV file
@@ -61,8 +61,8 @@ class StateDataIngest:
 
             # Dynamically create tuples for each row
             for row in csv_reader:
-                # Convert to tuple and add to data list
-                data.append(tuple(row))
+                # Preserve missing CSV values as SQL NULL instead of empty strings.
+                data.append(tuple(value if value != "" else None for value in row))
 
             SQL_ATTR_CONNECTION_TIMEOUT = 113
             login_timeout = 30
@@ -109,7 +109,7 @@ class StateDataIngest:
             # Insert data into staging table
             columns = ", ".join(headers)
             placeholders = ", ".join(["?" for _ in headers])
-            insert_query = f"INSERT INTO {self.staging_table_name} ({columns}, insert_date) VALUES ({placeholders}, GETDATE())"
+            insert_query = f"INSERT INTO {self.staging_table_name} ({columns}, inserted_at) VALUES ({placeholders}, GETDATE())"
 
             logging.info(
                 f"Inserting data into staging table: {self.staging_table_name}"
