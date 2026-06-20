@@ -2,6 +2,8 @@ import logging
 import re
 import os
 
+from pipeline_constants import STATE_LIST
+
 
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
@@ -14,43 +16,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',  # log message format
 )
 
-state_lst = [
-    "Andaman & Nicobar Island",
-    "Andhra Pradesh",
-    "Arunachal Pradesh",
-    "Assam",
-    "Bihar",
-    "Chhattisgarh",
-    "Chandigarh",
-    "UT of DNH and DD",
-    "Delhi",
-    "Goa",
-    "Gujarat",
-    "Himachal Pradesh",
-    "Haryana",
-    "Jharkhand",
-    "Jammu and Kashmir",
-    "Karnataka",
-    "Kerala",
-    "Ladakh",
-    "Lakshadweep",
-    "Maharashtra",
-    "Meghalaya",
-    "Manipur",
-    "Madhya Pradesh",
-    "Mizoram",
-    "Nagaland",
-    "Odisha",
-    "Punjab",
-    "Puducherry",
-    "Rajasthan",
-    "Sikkim",
-    "Tamil Nadu",
-    "Tripura",
-    "Uttarakhand",
-    "Uttar Pradesh",
-    "West Bengal",
-]
+state_lst = STATE_LIST
 
 month_mapping = {
             "JAN": 1,

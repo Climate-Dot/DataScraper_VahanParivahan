@@ -16,6 +16,12 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if repo_path not in sys.path:
+    sys.path.append(repo_path)
+
+from pipeline_constants import STATE_LIST
+
 
 class OEMDataScraper:
     def __init__(self):
@@ -300,42 +306,7 @@ def main():
 
     # get all state and vehicle category elements
     vehicle_category_lst = data_extract_class.get_all_vehicle_category_elements()
-    state_lst = [
-        "Andaman & Nicobar Island",
-        "Andhra Pradesh",
-        "Arunachal Pradesh",
-        "Assam",
-        "Bihar",
-        "Chhattisgarh",
-        "Chandigarh",
-        "UT of DNH and DD",
-        "Delhi",
-        "Goa",
-        "Gujarat",
-        "Himachal Pradesh",
-        "Haryana",
-        "Jharkhand",
-        "Jammu and Kashmir",
-        "Karnataka",
-        "Kerala",
-        "Ladakh",
-        "Maharashtra",
-        "Meghalaya",
-        "Manipur",
-        "Madhya Pradesh",
-        "Mizoram",
-        "Nagaland",
-        "Odisha",
-        "Punjab",
-        "Puducherry",
-        "Rajasthan",
-        "Sikkim",
-        "Tamil Nadu",
-        "Tripura",
-        "Uttarakhand",
-        "Uttar Pradesh",
-        "West Bengal",
-    ]
+    state_lst = STATE_LIST
 
     if len(sys.argv) > 2:
         # If month and year are passed as command-line arguments

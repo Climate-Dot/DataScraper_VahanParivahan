@@ -14,6 +14,11 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from utils import *
+from preprocessing_schema_utils import (
+    ensure_expected_output_columns,
+    find_unexpected_source_columns,
+)
+from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
 
 
 class RTOLevelDataPreProcessor:
@@ -35,30 +40,7 @@ class RTOLevelDataPreProcessor:
             "Vehicle Category": "vehicle_category",
             "Vehicle Use Type": "vehicle_use_type",
             "Unnamed: 1": "vehicle_class",
-            "CNG ONLY": "cng_only",
-            "DIESEL": "diesel",
-            "DIESEL/HYBRID": "diesel_hybrid",
-            "DI-METHYL ETHER": "di_methyl_ether",
-            "DUAL DIESEL/BIO CNG": "dual_diesel_bio_cng",
-            "DUAL DIESEL/CNG": "dual_diesel_cng",
-            "DUAL DIESEL/LNG": "dual_diesel_lng",
-            "ELECTRIC(BOV)": "electric_vehicles",
-            "ETHANOL": "ethanol",
-            "LNG": "lng",
-            "LPG ONLY": "lpg_only",
-            "METHANOL": "methanol",
-            "NOT APPLICABLE": "not_applicable",
-            "PETROL": "petrol",
-            "PETROL/CNG": "petrol_cng",
-            "PETROL/ETHANOL": "petrol_ethanol",
-            "PETROL/HYBRID": "petrol_hybrid",
-            "PETROL/LPG": "petrol_lpg",
-            "PETROL/METHANOL": "petrol_methanol",
-            "PLUG-IN HYBRID EV": "plug_in_hybrid_ev",
-            "PURE EV": "pure_ev",
-            "SOLAR": "solar",
-            "STRONG HYBRID EV": "strong_hybrid_ev",
-            "Unnamed: 38": "total",
+            **COMMON_FUEL_COLUMN_RENAME_MAP,
         }
 
     def data_preprocessing(self, month, year):
@@ -69,6 +51,7 @@ class RTOLevelDataPreProcessor:
         :return: None
         """
         final_df = pd.DataFrame()
+        unexpected_source_columns = set()
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for rto_office in os.listdir(state_path):
@@ -86,6 +69,12 @@ class RTOLevelDataPreProcessor:
                             f"No records found in report for {state}, {year}, {month}"
                         )
                     else:
+                        unexpected_source_columns.update(
+                            find_unexpected_source_columns(
+                                temp_df.columns,
+                                self.column_rename_map.keys(),
+                            )
+                        )
                         temp_df["Month"] = month
                         temp_df["Year"] = year
                         temp_df["Day"] = 1
@@ -94,6 +83,13 @@ class RTOLevelDataPreProcessor:
                         temp_df["rto_code"] = rto_office.split("_")[1]
                         temp_df["State"] = state
                         final_df = pd.concat([final_df, temp_df], ignore_index=True)
+        if unexpected_source_columns:
+            logging.warning(
+                "Detected new RTO source columns for %s %s that are not mapped yet: %s",
+                month,
+                year,
+                ", ".join(sorted(unexpected_source_columns)),
+            )
         final_df = pd.merge(
             final_df,
             self.mapping_df,
@@ -123,6 +119,11 @@ class RTOLevelDataPreProcessor:
 
         final_df["date"] = final_df["date"].apply(convert_date)
         final_df["month"] = final_df["month"].map(month_mapping)
+        final_df = ensure_expected_output_columns(
+            final_df,
+            self.column_rename_map.values(),
+            f"RTO preprocessing for {month} {year}",
+        )
 
         # reorder columns
         final_df = final_df[self.column_rename_map.values()]
