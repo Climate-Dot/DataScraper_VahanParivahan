@@ -13,12 +13,15 @@ repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from pipeline_logging import configure_pipeline_logging
 from utils import *
 from preprocessing_schema_utils import (
     ensure_expected_output_columns,
     find_unexpected_source_columns,
 )
 from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
+
+configure_pipeline_logging()
 
 
 class RTOLevelDataPreProcessor:
@@ -52,6 +55,8 @@ class RTOLevelDataPreProcessor:
         """
         final_df = pd.DataFrame()
         unexpected_source_columns = set()
+        files_found = 0
+        empty_reports = 0
         for state in os.listdir(self.raw_files_directory):
             state_path = os.path.join(self.raw_files_directory, state)
             for rto_office in os.listdir(state_path):
@@ -61,12 +66,17 @@ class RTOLevelDataPreProcessor:
                 raw_file_path = os.path.join(
                     rto_office_path, year, month, "reportTable.xlsx"
                 )
-                print(raw_file_path)
                 if os.path.exists(raw_file_path):
+                    files_found += 1
                     temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
                     if temp_df.empty:
-                        print(
-                            f"No records found in report for {state}, {year}, {month}"
+                        empty_reports += 1
+                        logging.warning(
+                            "No records found in RTO report for state=%s office=%s year=%s month=%s",
+                            state,
+                            rto_office,
+                            year,
+                            month,
                         )
                     else:
                         unexpected_source_columns.update(
@@ -123,6 +133,15 @@ class RTOLevelDataPreProcessor:
             final_df,
             self.column_rename_map.values(),
             f"RTO preprocessing for {month} {year}",
+        )
+
+        logging.info(
+            "RTO preprocessing summary for %s %s: files_found=%s empty_reports=%s output_rows=%s",
+            month,
+            year,
+            files_found,
+            empty_reports,
+            len(final_df),
         )
 
         # reorder columns

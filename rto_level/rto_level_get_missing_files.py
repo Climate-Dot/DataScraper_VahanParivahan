@@ -16,10 +16,17 @@ repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from pipeline_logging import configure_pipeline_logging
 from utils import *
 from rto_level.rto_level_data_scraper import RTODataScraper
 
-month, year = get_year_month_label()
+configure_pipeline_logging()
+
+if len(sys.argv) > 2:
+    month = sys.argv[1]
+    year = sys.argv[2]
+else:
+    month, year = get_year_month_label()
 rto_data_scraper = RTODataScraper()
 
 with open("output.json", "r") as f:
@@ -29,15 +36,20 @@ with open("output.json", "r") as f:
 def get_missing_files():
     """Check for missing files and return a list of parameters for extraction."""
     parameters = []
+    invalid_rto_labels = []
     for state in state_lst:
         all_rto_office_names = state_rto_mapping.get(state, [])
         for rto_office_name in all_rto_office_names:
+            rto_folder_name = rto_data_scraper.build_rto_folder_name(rto_office_name)
+            if not rto_folder_name:
+                invalid_rto_labels.append((state, rto_office_name))
+                continue
             directory_path = os.path.join(
                 os.getcwd(),
                 "rto_level",
                 "rto_level_ev_data",
                 re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
-                rto_data_scraper.extract_rto_name_and_code(rto_office_name),
+                rto_folder_name,
                 str(year),
                 month,
                 "reportTable.xlsx",
@@ -45,6 +57,15 @@ def get_missing_files():
 
             if not os.path.exists(directory_path):
                 parameters.append((state, rto_office_name, year, month))
+
+    if invalid_rto_labels:
+        sample_state, sample_label = invalid_rto_labels[0]
+        logging.error(
+            "Skipped %s invalid RTO labels while checking missing files. Example: state=%s label=%s",
+            len(invalid_rto_labels),
+            sample_state,
+            sample_label,
+        )
 
     return parameters
 
@@ -67,15 +88,37 @@ def extract_missing_files():
     logging.info(f"There are {len(parameters)} missing files. Extracting...")
 
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [
-            executor.submit(rto_data_scraper.run_selenium, args) for args in parameters
-        ]
+        futures = {
+            executor.submit(rto_data_scraper.run_selenium, args): args
+            for args in parameters
+        }
+        failed_downloads = []
+        successful_downloads = 0
 
         for future in as_completed(futures):
+            state_label, rto_label, year_label, month_label = futures[future]
             try:
                 future.result()
+                successful_downloads += 1
             except Exception as e:
-                logging.warning(f"Exception occurred: {e}")
+                failed_downloads.append((state_label, rto_label))
+                logging.warning(
+                    "Missing-file recovery failed for state=%s rto=%s year=%s month=%s: %s",
+                    state_label,
+                    rto_label,
+                    year_label,
+                    month_label,
+                    e,
+                )
+
+    logging.info(
+        "RTO missing-file recovery summary for %s %s: requested=%s succeeded=%s failed=%s",
+        month,
+        year,
+        len(parameters),
+        successful_downloads,
+        len(failed_downloads),
+    )
 
     return True  # Missing files were extracted
 

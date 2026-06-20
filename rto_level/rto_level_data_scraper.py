@@ -26,7 +26,10 @@ repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from pipeline_logging import configure_pipeline_logging
 from utils import *
+
+configure_pipeline_logging()
 
 
 def merge_state_rto_mappings(previous_mapping, fresh_mapping):
@@ -62,7 +65,14 @@ class RTODataScraper:
     @staticmethod
     def sanitize_folder_name(name):
         """replace or remove special characters to make a valid folder name."""
-        return re.sub(r"[\/]", "", name).strip()
+        return re.sub(r"[\\/]", "", name).strip()
+
+    @staticmethod
+    def build_rto_folder_name(rto_label):
+        rto_name_code = RTODataScraper.extract_rto_name_and_code(rto_label)
+        if not rto_name_code:
+            return None
+        return RTODataScraper.sanitize_folder_name(rto_name_code)
 
     def get_all_rto_from_state(self, state):
         """
@@ -159,10 +169,10 @@ class RTODataScraper:
 
         # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
-        rto_name_code = self.extract_rto_name_and_code(rto_label)
-        rto_folder_name = self.sanitize_folder_name(rto_name_code)
-        rto_office_code = rto_folder_name.split("_")[1]
-        rto_folder_name = self.extract_rto_name_and_code(rto_label)
+        rto_folder_name = self.build_rto_folder_name(rto_label)
+        if not rto_folder_name:
+            raise ValueError(f"Unable to parse RTO label: {rto_label}")
+        rto_office_code = rto_folder_name.rsplit("_", 1)[1]
 
         download_path = os.path.join(
             os.getcwd(),
@@ -264,7 +274,11 @@ class RTODataScraper:
                 time.sleep(5)
                 browser.quit()
                 logging.info(
-                    f"file successfully downloaded for {state_folder_name}, {rto_folder_name}, {year_label}, {month_label}"
+                    "Downloaded RTO report for state=%s rto=%s year=%s month=%s",
+                    state_folder_name,
+                    rto_folder_name,
+                    year_label,
+                    month_label,
                 )
                 return
             except (
@@ -274,7 +288,12 @@ class RTODataScraper:
             ) as e:
                 retries += 1
                 logging.info(
-                    f"retrying attempt {retries} for {state_label}, {rto_label}, {year_label},{month_label}"
+                    "Retrying RTO download attempt %s for state=%s rto=%s year=%s month=%s",
+                    retries,
+                    state_label,
+                    rto_label,
+                    year_label,
+                    month_label,
                 )
                 time.sleep(self.retry_delay)
 
@@ -380,16 +399,21 @@ def main():
         month, year = get_year_month_label()
 
     parameters = []
+    invalid_rto_labels = []
     for state in state_lst:
         # get all RTO office names for state
         all_rto_office_names = state_rto_mapping.get(state, [])
         for rto_office_name in all_rto_office_names:
+            rto_folder_name = data_extract_class.build_rto_folder_name(rto_office_name)
+            if not rto_folder_name:
+                invalid_rto_labels.append((state, rto_office_name))
+                continue
             directory_path = os.path.join(
                 os.getcwd(),
                 "rto_level",
                 "rto_level_ev_data",
                 re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
-                data_extract_class.extract_rto_name_and_code(rto_office_name),
+                rto_folder_name,
                 str(year),
                 month,
             )
@@ -399,20 +423,57 @@ def main():
 
             parameters.append((state, rto_office_name, year, month))
 
+    if invalid_rto_labels:
+        sample_state, sample_label = invalid_rto_labels[0]
+        logging.error(
+            "Skipped %s RTO labels that could not be converted into folder names. Example: state=%s label=%s",
+            len(invalid_rto_labels),
+            sample_state,
+            sample_label,
+        )
+
+    logging.info(
+        "Prepared %s RTO download tasks for %s %s.",
+        len(parameters),
+        month,
+        year,
+    )
+
     # run selenium function in parallel
     with ThreadPoolExecutor(
         max_workers=35
     ) as executor:  # adjust max_workers based on your system's capability
-        futures = [
-            executor.submit(data_extract_class.run_selenium, args)
+        futures = {
+            executor.submit(data_extract_class.run_selenium, args): args
             for args in parameters
-        ]
+        }
+        failed_downloads = []
+        successful_downloads = 0
 
         for future in as_completed(futures):
+            state_label, rto_label, year_label, month_label = futures[future]
             try:
-                result = future.result()
+                future.result()
+                successful_downloads += 1
             except Exception as e:
-                logging.info(f"Exception occurred: {e}")
+                failed_downloads.append((state_label, rto_label))
+                logging.warning(
+                    "RTO download failed for state=%s rto=%s year=%s month=%s: %s",
+                    state_label,
+                    rto_label,
+                    year_label,
+                    month_label,
+                    e,
+                )
+
+    logging.info(
+        "RTO extraction summary for %s %s: prepared=%s succeeded=%s failed=%s",
+        month,
+        year,
+        len(parameters),
+        successful_downloads,
+        len(failed_downloads),
+    )
 
 
 if __name__ == "__main__":
