@@ -2,3 +2,9 @@ venv
 config.yaml
 OEM-level/oem_data_by_state_and_category
 State-level/state_level_ev_data
+rto_level/rto_level_ev_data
+__pycache__/
+*/__pycache__/
+*.pyc
+.DS_Store
+.idea/
