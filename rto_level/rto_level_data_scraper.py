@@ -29,6 +29,20 @@ if repo_path not in sys.path:
 from utils import *
 
 
+def merge_state_rto_mappings(previous_mapping, fresh_mapping):
+    """Prefer newly fetched RTO lists, but keep the last known list as fallback."""
+    merged_mapping = dict(previous_mapping or {})
+    for state, offices in (fresh_mapping or {}).items():
+        if offices:
+            merged_mapping[state] = offices
+    return merged_mapping
+
+
+def get_missing_mapping_states(state_rto_mapping, states):
+    """Return states that still do not have any mapped RTO offices."""
+    return [state for state in states if not state_rto_mapping.get(state)]
+
+
 class RTODataScraper:
     def __init__(self):
         self.max_retries = 5
@@ -277,13 +291,19 @@ class RTODataScraper:
                 executor.submit(self.get_all_rto_from_state, state): state
                 for state in states
             }
-            for future in futures:
+            for future in as_completed(futures):
                 state = futures[future]
                 try:
                     result = future.result()  # Wait for the thread to finish
-                    results.update(result)  # Add the state's result to the dictionary
+                    if result:
+                        results.update(result)  # Add the state's result to the dictionary
+                    else:
+                        logging.warning(
+                            "No RTO offices were fetched for state '%s'.",
+                            state,
+                        )
                 except Exception as e:
-                    print(f"Error fetching offices for {state}: {e}")
+                    logging.warning(f"Error fetching offices for {state}: {e}")
         return results
 
     @staticmethod
@@ -303,31 +323,52 @@ class RTODataScraper:
 
 def main():
     data_extract_class = RTODataScraper()
+    previous_mapping = data_extract_class.load_previous_mapping()
 
     try:
-        previous_mapping = data_extract_class.load_previous_mapping()
-        state_rto_mapping = previous_mapping
-
-        # Check if all states returned results
-        if len(state_rto_mapping) < len(state_lst):
-            logging.warning(
-                f"Only fetched {len(state_rto_mapping)} out of {len(state_lst)} states. Merging with previous data."
-            )
-
-        # Save updated mapping only if it contains some valid data
-        if state_rto_mapping and len(state_rto_mapping) == len(state_lst):
-            logging.info(
-                f"rto fetching successful. fetched for {len(state_rto_mapping)} states.. saving the mapping to file"
-            )
-            with open("output.json", "w") as rto_mapping_output:
-                json.dump(state_rto_mapping, rto_mapping_output, indent=4)
-        else:
-            logging.error("No valid data fetched. Using only previous mapping.")
-
+        fresh_mapping = data_extract_class.run_for_all_states(state_lst)
     except Exception as e:
-        state_rto_mapping = previous_mapping
+        fresh_mapping = {}
         logging.error(
-            f"RTO fetching failed with exception: {e}. Using older output.json file if available."
+            "RTO fetching failed with exception: %s. Falling back to older output.json if available.",
+            e,
+        )
+
+    state_rto_mapping = merge_state_rto_mappings(previous_mapping, fresh_mapping)
+
+    fresh_missing_states = get_missing_mapping_states(fresh_mapping, state_lst)
+    merged_missing_states = get_missing_mapping_states(state_rto_mapping, state_lst)
+
+    if fresh_mapping:
+        logging.info(
+            "Fetched live RTO mapping for %s out of %s states.",
+            len(fresh_mapping),
+            len(state_lst),
+        )
+        if fresh_missing_states:
+            logging.warning(
+                "Live RTO mapping refresh missed states and will fall back to the previous output.json for: %s",
+                ", ".join(fresh_missing_states),
+            )
+        with open("output.json", "w") as rto_mapping_output:
+            json.dump(state_rto_mapping, rto_mapping_output, indent=4)
+        logging.info(
+            "Saved merged RTO mapping to output.json with coverage for %s states.",
+            len(state_lst) - len(merged_missing_states),
+        )
+    elif previous_mapping:
+        logging.warning(
+            "Live RTO mapping refresh returned no states. Continuing with the previous output.json."
+        )
+    else:
+        logging.error(
+            "Live RTO mapping refresh returned no states and no previous output.json is available."
+        )
+
+    if merged_missing_states:
+        raise RuntimeError(
+            "RTO mapping is still missing states after refresh: "
+            + ", ".join(merged_missing_states)
         )
 
     if len(sys.argv) > 2:
@@ -341,7 +382,7 @@ def main():
     parameters = []
     for state in state_lst:
         # get all RTO office names for state
-        all_rto_office_names = state_rto_mapping.get(state)
+        all_rto_office_names = state_rto_mapping.get(state, [])
         for rto_office_name in all_rto_office_names:
             directory_path = os.path.join(
                 os.getcwd(),
