@@ -11,11 +11,12 @@ The RTO pipeline collects monthly EV registration data at the RTO-office grain, 
 ## Current Flow
 
 1. `rto_level/rto_level_data_scraper.py`
-2. `rto_level/rto_level_get_missing_files.py`
-3. `rto_level/rto_level_data_pre_processing.py`
-4. `rto_level/rto_level_data_ingestion.py`
-5. `rto_level/upload_files_to_blob_storage.py`
-6. `dbt run --select rto_wise_ev_data`
+2. Refresh `output.json` with the latest state-to-RTO mapping, while falling back to the previous file for any states that fail to refresh
+3. `rto_level/rto_level_get_missing_files.py`
+4. `rto_level/rto_level_data_pre_processing.py`
+5. `rto_level/rto_level_data_ingestion.py`
+6. `rto_level/upload_files_to_blob_storage.py`
+7. `dbt run --select rto_wise_ev_data`
 
 ## Default Execution Behavior
 
@@ -65,6 +66,9 @@ dbt run --select rto_wise_ev_data
 ## Operational Notes
 
 - The preprocessing step derives `rto_name` and `rto_code` from the folder name.
+- The entrypoint now refreshes the RTO mapping on every run and writes the merged result back to `output.json`.
+- If a live mapping refresh is partial, the scraper falls back to the previous `output.json` for the missing states instead of silently dropping them.
+- If a state is still missing after the merge, the scraper now fails early with a clear missing-state error before download work starts.
 - The preprocessing step uses the shared fuel taxonomy and logs unexpected raw columns.
 - Missing expected output columns are written as `NULL`, not `0`.
 - The ingestion step deletes matching rows from the raw final table before inserting staged data.
