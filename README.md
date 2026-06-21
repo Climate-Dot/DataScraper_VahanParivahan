@@ -35,6 +35,7 @@ The repo currently contains three ingestion pipelines:
 - [`docs/architecture.md`](/Users/monish/DataScraper_VahanParivahan/docs/architecture.md): current-state architecture and operational notes
 - [`docs/runbooks`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks): pipeline-specific operational runbooks
 - [`docs/runbooks/raw_schema_migration.md`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks/raw_schema_migration.md): one-time raw schema migration runbook
+- [`ops/production_vm.crontab`](/Users/monish/DataScraper_VahanParivahan/ops/production_vm.crontab): current production cron snapshot for the Azure VM
 - [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql): one-time SQL Server migration for the shared raw fuel taxonomy
 
 ## Pipeline Summary
@@ -42,7 +43,7 @@ The repo currently contains three ingestion pipelines:
 | Pipeline | Entry script | Raw final table | Curated dbt status | Blob upload |
 | --- | --- | --- | --- | --- |
 | RTO | `rto_ev_data_etl.sh` | `fact_ev_data_by_rto` | `rto_wise_ev_data` runs automatically in prod | Yes |
-| OEM | `oem_data_etl.sh` | `fact_oem_data_by_state_and_category` | `oem_wise_ev_data` exists and is refreshed manually in prod | Yes |
+| OEM | `oem_data_etl.sh` | `fact_oem_data_by_state_and_category` | `oem_wise_ev_data` runs automatically in prod | Yes |
 | State | `state_ev_data_etl.sh` | `fact_ev_data_by_state` | `state_wise_ev_data` exists in the repo but is not part of the current prod operating path | Yes |
 
 ## dbt Project

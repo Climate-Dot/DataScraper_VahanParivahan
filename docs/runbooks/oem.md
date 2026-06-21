@@ -15,11 +15,12 @@ The OEM pipeline collects monthly EV registration data at the OEM-by-state-and-c
 3. `OEM-level/data_preprocessing_v2.py`
 4. `OEM-level/data_ingestion.py`
 5. `OEM-level/upload_files_to_blob_storage.py`
+6. `dbt run --select oem_wise_ev_data`
 
 Current note:
 
-- The shell script does not yet run dbt automatically.
-- The curated dbt model exists and is refreshed manually in production when needed.
+- The shell script now runs `dbt run --select oem_wise_ev_data` automatically at the end.
+- The dbt output is written to `dbt_oem_wise_logs.txt` on the VM.
 - The active state and OEM scrapers now share one centralized state list, including `Telangana`.
 
 ## Default Execution Behavior
@@ -74,6 +75,7 @@ dbt run --select oem_wise_ev_data
 - Missing expected output columns are written as `NULL`, not `0`.
 - The curated model reads from the newer raw fuel taxonomy directly.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
+- The shell entrypoint now stops on the first failed step and will not continue into dbt after an upstream failure.
 
 ## Common Failure Points
 

@@ -34,3 +34,8 @@ python3 OEM-level/data_ingestion.py $ARGS
 # File Upload and Cleanup
 log_step "Running OEM upload and cleanup for ${ARGS:-default previous month}"
 python3 OEM-level/upload_files_to_blob_storage.py $ARGS
+
+# Run dbt model
+log_step "Running OEM dbt model for ${ARGS:-default previous month}"
+cd /home/climate_dot_data/DataScraper_VahanParivahan/climate_dot_dbt
+dbt run --select oem_wise_ev_data >> /home/climate_dot_data/DataScraper_VahanParivahan/dbt_oem_wise_logs.txt 2>&1
