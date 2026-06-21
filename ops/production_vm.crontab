@@ -1,0 +1,10 @@
+# Production crontab snapshot for the Azure VM.
+# Install manually on the VM, for example:
+#   crontab /home/climate_dot_data/DataScraper_VahanParivahan/ops/production_vm.crontab
+#
+# This file is documentation plus a reproducible install artifact.
+# It does not update the VM automatically when the repository changes.
+
+30 18 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_etl_logs.txt 2>&1
+00 19 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/oem_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt 2>&1
+30 23 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt 2>&1
