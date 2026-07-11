@@ -1,7 +1,4 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
     TimeoutException,
     StaleElementReferenceException,
@@ -25,6 +22,14 @@ if repo_path not in sys.path:
 
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
+from utils import (
+    SeleniumStepError,
+    find_element as shared_find_element,
+    format_log_context,
+    open_page,
+    summarize_exception,
+    VAHAN_DASHBOARD_URL,
+)
 
 # Set up logging
 logging.basicConfig(
@@ -50,49 +55,17 @@ class StateLevelDataScraper:
         if not os.path.exists(directory_path):
             os.makedirs(directory_path)
             logging.info(f"Directory '{directory_path}' created.")
-        else:
-            logging.info(f"Directory '{directory_path}' already exists.")
-            return
 
     @staticmethod
-    def find_element(driver, identifier, value, timeout=10):
-        """
-        Find and return a web element based on the identifier (ID, CSS, or XPath).
-
-        Parameters:
-        - driver: Selenium WebDriver instance.
-        - identifier: String, either "id", "css", or "xpath".
-        - value: String, the value of the ID, CSS selector, or XPath expression.
-        - timeout: Optional, timeout for WebDriverWait in seconds. Default is 20 seconds.
-
-        Returns:
-        - WebElement: The located element.
-        """
-        try:
-            if identifier == "id":
-                element = WebDriverWait(driver, timeout).until(
-                    EC.element_to_be_clickable((By.ID, value))
-                )
-            elif identifier == "css":
-                element = WebDriverWait(driver, timeout).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, value))
-                )
-            elif identifier == "xpath":
-                element = WebDriverWait(driver, timeout).until(
-                    EC.element_to_be_clickable((By.XPATH, value))
-                )
-            elif identifier == "tag":
-                element = WebDriverWait(driver, timeout).until(
-                    EC.element_to_be_clickable((By.TAG, value))
-                )
-            else:
-                raise ValueError(
-                    "Invalid identifier. Use 'id', 'css', 'tag' or 'xpath'."
-                )
-            return element
-        except Exception as e:
-            logging.info(f"Element not found: {e}")
-            raise e
+    def find_element(driver, identifier, value, timeout=10, step=None, context=None):
+        return shared_find_element(
+            driver,
+            identifier,
+            value,
+            timeout=timeout,
+            step=step,
+            context=context,
+        )
 
     @staticmethod
     def get_year_month_label():
@@ -120,7 +93,6 @@ class StateLevelDataScraper:
         :param month_label: Month label for data
         :return: Downloads csv file in directory set up by chrome
         """
-        # create data download directory
         browserOpts = webdriver.ChromeOptions()
 
         browserOpts.browser_version = "stable"
@@ -138,7 +110,6 @@ class StateLevelDataScraper:
         browserOpts.add_argument("--disable-single-click-autofill")
         browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
 
         download_path = os.path.join(
@@ -156,90 +127,156 @@ class StateLevelDataScraper:
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
+        context = {
+            "pipeline": "state",
+            "state": state_label,
+            "year": year_label,
+            "month": month_label,
+        }
 
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                browser.get(
-                    "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
-                )
+        try:
+            retries = 0
+            last_exception = None
+            while retries < self.max_retries:
+                try:
+                    open_page(
+                        browser,
+                        VAHAN_DASHBOARD_URL,
+                        step="initial_page_load",
+                        context=context,
+                    )
 
-                # select the state
-                self.find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running States")]',
-                ).click()
-                time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "xpath",
+                        '//label[starts-with(text(), "All Vahan4 Running States")]',
+                        step="open_state_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                self.find_element(
-                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
-                ).click()
-                time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "xpath",
+                        f'//li[starts-with(text(), "{state_label}")]',
+                        step="select_state",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # selecting y_axis entering vehicle class as parameter
-                self.find_element(browser, "id", "yaxisVar_label").click()
-                time.sleep(2)
-                self.find_element(browser, "id", "yaxisVar_1").click()
-                time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "id",
+                        "yaxisVar_label",
+                        step="open_y_axis_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "id",
+                        "yaxisVar_1",
+                        step="select_y_axis_vehicle_class",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # selecting x_axis entering fuel as parameter
-                self.find_element(browser, "id", "xaxisVar_label").click()
-                time.sleep(1)
-                self.find_element(
-                    browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']"
-                ).click()
-                time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "id",
+                        "xaxisVar_label",
+                        step="open_x_axis_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(1)
+                    self.find_element(
+                        browser,
+                        "xpath",
+                        "//ul[@id='xaxisVar_items']/li[text()='Fuel']",
+                        step="select_x_axis_fuel",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                #  selecting year button and entering the value
-                self.find_element(browser, "id", "selectedYear_label").click()
-                time.sleep(2)
-                self.find_element(
-                    browser,
-                    "xpath",
-                    f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
-                ).click()
-                time.sleep(5)
+                    self.find_element(
+                        browser,
+                        "id",
+                        "selectedYear_label",
+                        step="open_year_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "xpath",
+                        f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
+                        step="select_year",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
 
-                # click on main refresh button
-                self.find_element(
-                    browser,
-                    "css",
-                    "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
-                ).click()
-                time.sleep(5)
+                    self.find_element(
+                        browser,
+                        "css",
+                        "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
+                        step="click_main_refresh",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
 
-                # click on month button
-                self.find_element(
-                    browser, "id", "groupingTable:selectMonth_label"
-                ).click()
-                time.sleep(2)
-                # Enter month
-                self.find_element(
-                    browser,
-                    "xpath",
-                    f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
-                ).click()
-                time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "id",
+                        "groupingTable:selectMonth_label",
+                        step="open_month_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    self.find_element(
+                        browser,
+                        "xpath",
+                        f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
+                        step="select_month",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # click on download button for downloading report
-                self.find_element(browser, "id", "groupingTable:xls").click()
-                time.sleep(5)
-                browser.quit()
-                logging.info(
-                    f"file successfully downloaded for {state_folder_name}, {year_label}, {month_label}"
-                )
-                return
-            except (
+                    self.find_element(
+                        browser,
+                        "id",
+                        "groupingTable:xls",
+                        step="download_report",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
+                    logging.info(
+                        "Downloaded state report state=%s year=%s month=%s",
+                        state_folder_name,
+                        year_label,
+                        month_label,
+                    )
+                    return
+                except (
+                    SeleniumStepError,
                     TimeoutException,
                     StaleElementReferenceException,
                     WebDriverException,
-            ) as e:
-                retries += 1
-                logging.info(
-                    f"Retrying attempt {retries} for {state_label}, {year_label}, {month_label}"
-                )
-                time.sleep(self.retry_delay)
+                ) as e:
+                    last_exception = e
+                    retries += 1
+                    logging.warning(
+                        "Retrying state download attempt=%s/%s context=%s failed_step=%s error=%s",
+                        retries,
+                        self.max_retries,
+                        format_log_context(context),
+                        getattr(e, "step", "download_flow"),
+                        summarize_exception(e),
+                    )
+                    time.sleep(self.retry_delay)
+
+            raise last_exception
+        finally:
+            browser.quit()
 
     # define a function to wrap the selenium function for argument unpacking
     def run_selenium(self, args):
@@ -277,19 +314,49 @@ def main():
         parameters.append((state, year, month))
 
     # Run selenium function in parallel
+    logging.info(
+        "Prepared state download tasks count=%s year=%s month=%s",
+        len(parameters),
+        year,
+        month,
+    )
+
     with ThreadPoolExecutor(
             max_workers=34
     ) as executor:  # Adjust max_workers based on your system's capability
-        futures = [
-            executor.submit(data_extract_class.run_selenium, args)
+        futures = {
+            executor.submit(data_extract_class.run_selenium, args): args
             for args in parameters
-        ]
+        }
+
+        successful_downloads = 0
+        failed_downloads = []
 
         for future in as_completed(futures):
+            state, year_label, month_label = futures[future]
             try:
-                result = future.result()
+                future.result()
+                successful_downloads += 1
             except Exception as e:
-                logging.info(f"Exception occurred: {e}")
+                failed_downloads.append(state)
+                logging.error(
+                    "State download failed state=%s year=%s month=%s failed_step=%s diagnostics=%s error=%s",
+                    state,
+                    year_label,
+                    month_label,
+                    getattr(e, "step", "download_flow"),
+                    getattr(e, "diagnostics", {}).get("metadata_path", ""),
+                    summarize_exception(getattr(e, "original_exception", e)),
+                )
+
+    logging.info(
+        "State extraction summary for %s %s: prepared=%s succeeded=%s failed=%s",
+        month,
+        year,
+        len(parameters),
+        successful_downloads,
+        len(failed_downloads),
+    )
 
 
 if __name__ == "__main__":

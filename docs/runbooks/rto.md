@@ -83,6 +83,24 @@ dbt run --select rto_wise_ev_data
 - Folder naming drift that breaks `rto_name` and `rto_code` extraction
 - dbt duplicate model paths on the VM if stale model folders remain under `climate_dot_dbt/models`
 
+## Selenium Failure Triage
+
+- Every Selenium lookup now logs a semantic `failed_step`, not just a raw stacktrace.
+- Retry logs now include the full run context, for example state, RTO, month, and year.
+- On each failed lookup, the scraper writes three debug artifacts under `debug_artifacts/selenium/rto/`:
+  - a screenshot `.png`
+  - the page source `.html`
+  - a metadata `.json` file with step name, locator, URL, and run context
+- If a run fails, search the log for `failed_step=` first. That tells you whether the breakage was at initial page load, state selection, RTO selection, year selection, refresh, or download.
+- The metadata JSON path is included directly in the error log line, so you can open the saved HTML and screenshot without reproducing the issue live.
+
+Example VM commands:
+
+```bash
+grep -n "failed_step=" /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt | tail -20
+find /home/climate_dot_data/DataScraper_VahanParivahan/debug_artifacts/selenium/rto -type f | tail -20
+```
+
 ## Verification Checklist
 
 - Confirm the processed CSV exists before ingestion.

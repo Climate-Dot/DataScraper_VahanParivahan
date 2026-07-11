@@ -84,6 +84,24 @@ dbt run --select oem_wise_ev_data
 - Raw SQL tables on the VM not yet migrated to the newer shared schema
 - Mapping file drift in [`Table and Mapping V2.xlsx`](/Users/monish/DataScraper_VahanParivahan/Table%20and%20Mapping%20V2.xlsx)
 
+## Selenium Failure Triage
+
+- Every Selenium lookup now logs a semantic `failed_step`, not just a raw stacktrace.
+- Retry logs now include the full run context, for example state, vehicle category, month, and year.
+- On each failed lookup, the scraper writes three debug artifacts under `debug_artifacts/selenium/oem/`:
+  - a screenshot `.png`
+  - the page source `.html`
+  - a metadata `.json` file with step name, locator, URL, and run context
+- If a run fails, search the log for `failed_step=` first. That tells you whether the breakage was at initial page load, state selection, category selection, year selection, refresh, or download.
+- The metadata JSON path is included directly in the error log line, so you can open the saved HTML and screenshot without reproducing the issue live.
+
+Example VM commands:
+
+```bash
+grep -n "failed_step=" /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt | tail -20
+find /home/climate_dot_data/DataScraper_VahanParivahan/debug_artifacts/selenium/oem -type f | tail -20
+```
+
 ## Verification Checklist
 
 - Confirm the processed CSV exists before ingestion.

@@ -92,57 +92,92 @@ class RTODataScraper:
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browser_options
         )
+        context = {
+            "pipeline": "rto",
+            "state": state,
+            "action": "refresh_rto_mapping",
+        }
 
-        all_rto_office_names = []
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                browser.get(
-                    "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
-                )
-                time.sleep(5)
+        try:
+            all_rto_office_names = []
+            retries = 0
+            last_exception = None
+            while retries < self.max_retries:
+                try:
+                    open_page(
+                        browser,
+                        VAHAN_DASHBOARD_URL,
+                        step="initial_page_load",
+                        context=context,
+                    )
+                    time.sleep(5)
 
-                # click on state drop down
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running States")]',
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        '//label[starts-with(text(), "All Vahan4 Running States")]',
+                        step="open_state_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # click on state label
-                find_element(
-                    browser, "xpath", f'//li[starts-with(text(), "{state}")]'
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        f'//li[starts-with(text(), "{state}")]',
+                        step="select_state",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # click on the rto drop down
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running Office")]',
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        '//label[starts-with(text(), "All Vahan4 Running Office")]',
+                        step="open_rto_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # get list of rtos
-                rto_list = find_element(
-                    browser,
-                    "xpath",
-                    "//ul[@id='selectedRto_items']",
-                )
-                for elem in rto_list.find_elements(By.TAG_NAME, "li"):
-                    if "All Vahan4 Running Office" not in elem.text:
-                        all_rto_office_names.append(elem.text)
-                return {state: all_rto_office_names}
+                    rto_list = find_element(
+                        browser,
+                        "xpath",
+                        "//ul[@id='selectedRto_items']",
+                        step="read_rto_list",
+                        context=context,
+                    )
+                    for elem in rto_list.find_elements(By.TAG_NAME, "li"):
+                        if "All Vahan4 Running Office" not in elem.text:
+                            all_rto_office_names.append(elem.text)
 
-            except (
-                TimeoutException,
-                StaleElementReferenceException,
-                WebDriverException,
-            ) as e:
-                logging.warning(f"rto category element function threw exception {e}")
-                retries += 1
-                logging.warning(f"retrying attempt {retries} for rto label")
+                    logging.info(
+                        "Fetched RTO mapping state=%s offices=%s",
+                        state,
+                        len(all_rto_office_names),
+                    )
+                    return {state: all_rto_office_names}
+
+                except (
+                    SeleniumStepError,
+                    TimeoutException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                ) as e:
+                    last_exception = e
+                    retries += 1
+                    logging.warning(
+                        "Retrying RTO mapping fetch attempt=%s/%s context=%s failed_step=%s error=%s",
+                        retries,
+                        self.max_retries,
+                        format_log_context(context),
+                        getattr(e, "step", "refresh_rto_mapping"),
+                        summarize_exception(e),
+                    )
+                    time.sleep(self.retry_delay)
+
+            raise last_exception
+        finally:
+            browser.quit()
 
     def extract_rto_level_data(
         self,
@@ -158,7 +193,6 @@ class RTODataScraper:
         :param month_label: Month label for data
         :return downloads csv file in directory set up by chrome
         """
-        # create data download directory
         browserOpts = webdriver.ChromeOptions()
         browserOpts.browser_version = "stable"
         browserPrefs = {
@@ -167,7 +201,6 @@ class RTODataScraper:
         }
         browserOpts.add_argument("--headless")
 
-        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         rto_folder_name = self.build_rto_folder_name(rto_label)
         if not rto_folder_name:
@@ -184,118 +217,185 @@ class RTODataScraper:
             month_label,
         )
 
+        create_directory_if_not_exists(download_path)
+
         browserPrefs.update({"download.default_directory": download_path})
         browserOpts.add_experimental_option("prefs", browserPrefs)
-
-        create_directory_if_not_exists(download_path)
 
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
-        retries = 0
-        while retries < self.max_retries:
-            try:
-                browser.get(
-                    "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
-                )
+        context = {
+            "pipeline": "rto",
+            "state": state_label,
+            "rto_label": rto_label,
+            "rto_code": rto_office_code,
+            "year": year_label,
+            "month": month_label,
+        }
 
-                # select the state
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running States")]',
-                ).click()
-                time.sleep(2)
+        try:
+            retries = 0
+            last_exception = None
+            while retries < self.max_retries:
+                try:
+                    open_page(
+                        browser,
+                        VAHAN_DASHBOARD_URL,
+                        step="initial_page_load",
+                        context=context,
+                    )
 
-                find_element(
-                    browser, "xpath", f'//li[starts-with(text(), "{state_label}")]'
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        '//label[starts-with(text(), "All Vahan4 Running States")]',
+                        step="open_state_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                find_element(
-                    browser,
-                    "xpath",
-                    '//label[starts-with(text(), "All Vahan4 Running Office")]',
-                ).click()
-                time.sleep(1)
+                    find_element(
+                        browser,
+                        "xpath",
+                        f'//li[starts-with(text(), "{state_label}")]',
+                        step="select_state",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                find_element(
-                    browser,
-                    "xpath",
-                    f'//ul[@id="selectedRto_items"]/li[contains(text(), "{rto_office_code}")]',
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        '//label[starts-with(text(), "All Vahan4 Running Office")]',
+                        step="open_rto_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(1)
 
-                # selecting y_axis entering vehicle class as parameter
-                find_element(browser, "id", "yaxisVar_label").click()
-                time.sleep(2)
-                find_element(browser, "id", "yaxisVar_1").click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        f'//ul[@id="selectedRto_items"]/li[contains(text(), "{rto_office_code}")]',
+                        step="select_rto_office",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # selecting x_axis entering fuel as parameter
-                find_element(browser, "id", "xaxisVar_label").click()
-                time.sleep(1)
-                find_element(
-                    browser, "xpath", "//ul[@id='xaxisVar_items']/li[text()='Fuel']"
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "id",
+                        "yaxisVar_label",
+                        step="open_y_axis_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    find_element(
+                        browser,
+                        "id",
+                        "yaxisVar_1",
+                        step="select_y_axis_vehicle_class",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                #  selecting year button and entering the value
-                find_element(browser, "id", "selectedYear_label").click()
-                time.sleep(2)
-                find_element(
-                    browser,
-                    "xpath",
-                    f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
-                ).click()
-                time.sleep(5)
+                    find_element(
+                        browser,
+                        "id",
+                        "xaxisVar_label",
+                        step="open_x_axis_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(1)
+                    find_element(
+                        browser,
+                        "xpath",
+                        "//ul[@id='xaxisVar_items']/li[text()='Fuel']",
+                        step="select_x_axis_fuel",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
 
-                # click on main refresh button
-                find_element(
-                    browser,
-                    "css",
-                    "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
-                ).click()
-                time.sleep(5)
+                    find_element(
+                        browser,
+                        "id",
+                        "selectedYear_label",
+                        step="open_year_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        f"//ul[@id='selectedYear_items']/li[text()='{year_label}']",
+                        step="select_year",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
 
-                # click on month button
-                find_element(browser, "id", "groupingTable:selectMonth_label").click()
-                time.sleep(2)
-                # Enter month
-                find_element(
-                    browser,
-                    "xpath",
-                    f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
-                ).click()
-                time.sleep(2)
+                    find_element(
+                        browser,
+                        "css",
+                        "button[class='ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-left button']",
+                        step="click_main_refresh",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
 
-                # click on download button for downloading report
-                find_element(browser, "id", "groupingTable:xls").click()
-                time.sleep(5)
-                browser.quit()
-                logging.info(
-                    "Downloaded RTO report for state=%s rto=%s year=%s month=%s",
-                    state_folder_name,
-                    rto_folder_name,
-                    year_label,
-                    month_label,
-                )
-                return
-            except (
-                TimeoutException,
-                StaleElementReferenceException,
-                WebDriverException,
-            ) as e:
-                retries += 1
-                logging.info(
-                    "Retrying RTO download attempt %s for state=%s rto=%s year=%s month=%s",
-                    retries,
-                    state_label,
-                    rto_label,
-                    year_label,
-                    month_label,
-                )
-                time.sleep(self.retry_delay)
+                    find_element(
+                        browser,
+                        "id",
+                        "groupingTable:selectMonth_label",
+                        step="open_month_dropdown",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+                    find_element(
+                        browser,
+                        "xpath",
+                        f"//ul[@id='groupingTable:selectMonth_items']/li[text()='{month_label}']",
+                        step="select_month",
+                        context=context,
+                    ).click()
+                    time.sleep(2)
+
+                    find_element(
+                        browser,
+                        "id",
+                        "groupingTable:xls",
+                        step="download_report",
+                        context=context,
+                    ).click()
+                    time.sleep(5)
+                    logging.info(
+                        "Downloaded RTO report state=%s rto=%s year=%s month=%s",
+                        state_folder_name,
+                        rto_folder_name,
+                        year_label,
+                        month_label,
+                    )
+                    return
+                except (
+                    SeleniumStepError,
+                    TimeoutException,
+                    StaleElementReferenceException,
+                    WebDriverException,
+                ) as e:
+                    last_exception = e
+                    retries += 1
+                    logging.warning(
+                        "Retrying RTO download attempt=%s/%s context=%s failed_step=%s error=%s",
+                        retries,
+                        self.max_retries,
+                        format_log_context(context),
+                        getattr(e, "step", "download_flow"),
+                        summarize_exception(e),
+                    )
+                    time.sleep(self.retry_delay)
+
+            raise last_exception
+        finally:
+            browser.quit()
 
     # define a function to wrap the selenium function for argument unpacking
     def run_selenium(self, args):
@@ -322,7 +422,13 @@ class RTODataScraper:
                             state,
                         )
                 except Exception as e:
-                    logging.warning(f"Error fetching offices for {state}: {e}")
+                    logging.warning(
+                        "RTO mapping refresh failed state=%s failed_step=%s diagnostics=%s error=%s",
+                        state,
+                        getattr(e, "step", "refresh_rto_mapping"),
+                        getattr(e, "diagnostics", {}).get("metadata_path", ""),
+                        summarize_exception(getattr(e, "original_exception", e)),
+                    )
         return results
 
     @staticmethod
@@ -457,13 +563,15 @@ def main():
                 successful_downloads += 1
             except Exception as e:
                 failed_downloads.append((state_label, rto_label))
-                logging.warning(
-                    "RTO download failed for state=%s rto=%s year=%s month=%s: %s",
+                logging.error(
+                    "RTO download failed state=%s rto=%s year=%s month=%s failed_step=%s diagnostics=%s error=%s",
                     state_label,
                     rto_label,
                     year_label,
                     month_label,
-                    e,
+                    getattr(e, "step", "download_flow"),
+                    getattr(e, "diagnostics", {}).get("metadata_path", ""),
+                    summarize_exception(getattr(e, "original_exception", e)),
                 )
 
     logging.info(
