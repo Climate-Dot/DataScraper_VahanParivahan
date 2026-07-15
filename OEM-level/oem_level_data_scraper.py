@@ -23,6 +23,7 @@ if repo_path not in sys.path:
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
 from utils import (
+    BlockedPageError,
     SeleniumStepError,
     find_element as shared_find_element,
     format_log_context,
@@ -282,6 +283,15 @@ class OEMDataScraper:
                         month_label,
                     )
                     return
+                except BlockedPageError as e:
+                    logging.error(
+                        "OEM page access blocked context=%s page_title=%s diagnostics=%s error=%s",
+                        format_log_context(context),
+                        e.page_title,
+                        e.diagnostics.get("metadata_path", ""),
+                        e,
+                    )
+                    raise
                 except (
                     SeleniumStepError,
                     TimeoutException,
@@ -366,6 +376,15 @@ class OEMDataScraper:
                     )
                     return vehicle_category_lst
 
+                except BlockedPageError as e:
+                    logging.error(
+                        "OEM vehicle-category bootstrap blocked context=%s page_title=%s diagnostics=%s error=%s",
+                        format_log_context(context),
+                        e.page_title,
+                        e.diagnostics.get("metadata_path", ""),
+                        e,
+                    )
+                    raise
                 except (
                     SeleniumStepError,
                     TimeoutException,

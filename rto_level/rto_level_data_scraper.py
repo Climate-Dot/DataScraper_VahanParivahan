@@ -157,6 +157,15 @@ class RTODataScraper:
                     )
                     return {state: all_rto_office_names}
 
+                except BlockedPageError as e:
+                    logging.error(
+                        "RTO mapping refresh blocked context=%s page_title=%s diagnostics=%s error=%s",
+                        format_log_context(context),
+                        e.page_title,
+                        e.diagnostics.get("metadata_path", ""),
+                        e,
+                    )
+                    raise
                 except (
                     SeleniumStepError,
                     TimeoutException,
@@ -375,6 +384,15 @@ class RTODataScraper:
                         month_label,
                     )
                     return
+                except BlockedPageError as e:
+                    logging.error(
+                        "RTO page access blocked context=%s page_title=%s diagnostics=%s error=%s",
+                        format_log_context(context),
+                        e.page_title,
+                        e.diagnostics.get("metadata_path", ""),
+                        e,
+                    )
+                    raise
                 except (
                     SeleniumStepError,
                     TimeoutException,

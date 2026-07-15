@@ -68,6 +68,9 @@ class DummyDriver:
     title = "Example Report"
     page_source = "<html><body>broken page</body></html>"
 
+    def get(self, url):
+        self.current_url = url
+
     def save_screenshot(self, path):
         Path(path).write_bytes(b"png")
         return True
@@ -91,6 +94,42 @@ class SeleniumLoggingTests(unittest.TestCase):
             summary,
             "RuntimeError: Element not found xpath: //label[text()='Fuel']",
         )
+
+    def test_open_page_detects_blocked_page_and_raises_blocked_error(self):
+        class BlockedDriver(DummyDriver):
+            title = "Access Forbidden"
+            page_source = (
+                "<html><head><title>Access Forbidden</title></head>"
+                "<body>You don’t have permission to access this page</body></html>"
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch.object(self.module.os, "getcwd", return_value=tmpdir):
+                with self.assertRaises(self.module.BlockedPageError) as error_context:
+                    self.module.open_page(
+                        BlockedDriver(),
+                        "https://blocked.example.test/report",
+                        step="initial_page_load",
+                        context={"pipeline": "oem", "action": "load_vehicle_categories"},
+                    )
+
+                error = error_context.exception
+                diagnostics = error.diagnostics
+
+                self.assertTrue(error.blocked_by_site)
+                self.assertEqual(error.page_title, "Access Forbidden")
+                self.assertEqual(
+                    error.blocked_reason,
+                    "page_title_access_forbidden",
+                )
+                self.assertTrue(Path(diagnostics["metadata_path"]).exists())
+
+                metadata = json.loads(Path(diagnostics["metadata_path"]).read_text())
+                self.assertEqual(metadata["title"], "Access Forbidden")
+                self.assertEqual(
+                    metadata["exception"],
+                    "RuntimeError: blocked_by_site=true page_title=Access Forbidden blocked_reason=page_title_access_forbidden",
+                )
 
     def test_find_element_writes_debug_artifacts_and_raises_step_error(self):
         class FailingWebDriverWait:

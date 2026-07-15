@@ -92,6 +92,7 @@ dbt run --select state_wise_ev_data
   - the page source `.html`
   - a metadata `.json` file with step name, locator, URL, and run context
 - If a run fails, search the log for `failed_step=` first. That tells you whether the breakage was at initial page load, state selection, axis selection, year selection, refresh, or download.
+- If the page title in the diagnostics JSON is `Access Forbidden`, treat it as a site-side block on the automated browser session, not selector drift.
 - The metadata JSON path is included directly in the error log line, so you can open the saved HTML and screenshot without reproducing the issue live.
 
 Example VM commands:

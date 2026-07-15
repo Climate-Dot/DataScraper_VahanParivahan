@@ -21,6 +21,12 @@ SELENIUM_DEBUG_ROOT = os.path.join("debug_artifacts", "selenium")
 VAHAN_DASHBOARD_URL = (
     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
 )
+BLOCKED_PAGE_TITLE = "Access Forbidden"
+BLOCKED_PAGE_MARKERS = (
+    "Access Forbidden",
+    "You don’t have permission to access this page",
+    "You don't have permission to access this page",
+)
 
 state_lst = STATE_LIST
 
@@ -95,6 +101,35 @@ class SeleniumStepError(RuntimeError):
         message += f" error={summarize_exception(original_exception)}"
 
         super().__init__(message)
+
+
+class BlockedPageError(SeleniumStepError):
+    """Raised when the target site serves a block page instead of the dashboard."""
+
+    def __init__(
+        self,
+        step,
+        identifier,
+        value,
+        context,
+        page_title,
+        blocked_reason,
+        diagnostics=None,
+    ):
+        self.page_title = page_title or ""
+        self.blocked_reason = blocked_reason or "blocked_page"
+        self.blocked_by_site = True
+        super().__init__(
+            step=step,
+            identifier=identifier,
+            value=value,
+            context=context,
+            original_exception=RuntimeError(
+                f"blocked_by_site=true page_title={self.page_title or 'unknown'} "
+                f"blocked_reason={self.blocked_reason}"
+            ),
+            diagnostics=diagnostics,
+        )
 
 
 def sanitize_artifact_label(value, max_length=80):
@@ -181,6 +216,20 @@ def capture_browser_diagnostics(driver, step, identifier, value, context, exc):
     return diagnostics
 
 
+def detect_blocked_page(driver):
+    title = (getattr(driver, "title", "") or "").strip()
+    page_source = getattr(driver, "page_source", "") or ""
+
+    if title == BLOCKED_PAGE_TITLE:
+        return "page_title_access_forbidden"
+
+    for marker in BLOCKED_PAGE_MARKERS:
+        if marker in page_source:
+            return f"page_source_contains_{sanitize_artifact_label(marker.lower())}"
+
+    return None
+
+
 def open_page(driver, url, step="initial_page_load", context=None):
     try:
         driver.get(url)
@@ -209,6 +258,38 @@ def open_page(driver, url, step="initial_page_load", context=None):
             original_exception=e,
             diagnostics=diagnostics,
         ) from e
+
+    blocked_reason = detect_blocked_page(driver)
+    if blocked_reason:
+        diagnostics = capture_browser_diagnostics(
+            driver=driver,
+            step=step,
+            identifier="url",
+            value=url,
+            context=context,
+            exc=RuntimeError(
+                f"blocked_by_site=true page_title={getattr(driver, 'title', '') or 'unknown'} "
+                f"blocked_reason={blocked_reason}"
+            ),
+        )
+        logging.error(
+            "Blocked page detected step=%s url=%s context=%s title=%s diagnostics=%s blocked_by_site=true reason=%s",
+            step,
+            url,
+            format_log_context(context),
+            getattr(driver, "title", ""),
+            diagnostics.get("metadata_path", ""),
+            blocked_reason,
+        )
+        raise BlockedPageError(
+            step=step,
+            identifier="url",
+            value=url,
+            context=context,
+            page_title=getattr(driver, "title", ""),
+            blocked_reason=blocked_reason,
+            diagnostics=diagnostics,
+        )
 
 
 def find_element(driver, identifier, value, timeout=10, step=None, context=None):
