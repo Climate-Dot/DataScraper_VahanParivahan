@@ -23,6 +23,14 @@ Current note:
 - The dbt output is written to `dbt_oem_wise_logs.txt` on the VM.
 - The active state and OEM scrapers now share one centralized state list, including `Telangana`.
 
+## Browser Runtime
+
+- The shell script defaults to `VAHAN_HEADLESS=false`.
+- Selenium steps in [`oem_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/oem_data_etl.sh) are routed through [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh).
+- When headless mode is disabled, the Selenium steps run under `xvfb-run -a`.
+- `xvfb-run` must be installed on the production VM.
+- Only the Selenium steps use the `xvfb` wrapper. Preprocessing, ingestion, blob upload, and dbt run normally.
+
 ## Default Execution Behavior
 
 - If no arguments are provided, the script targets the previous calendar month.
@@ -59,6 +67,13 @@ Specific month:
 ./oem_data_etl.sh OCT 2024
 ```
 
+Check VM browser prerequisites:
+
+```bash
+command -v xvfb-run
+echo "${VAHAN_HEADLESS:-false}"
+```
+
 dbt only:
 
 ```bash
@@ -83,6 +98,7 @@ dbt run --select oem_wise_ev_data
 - dbt model path drift on the VM after folder renames
 - Raw SQL tables on the VM not yet migrated to the newer shared schema
 - Mapping file drift in [`Table and Mapping V2.xlsx`](/Users/monish/DataScraper_VahanParivahan/Table%20and%20Mapping%20V2.xlsx)
+- `xvfb-run` missing on the VM while `VAHAN_HEADLESS=false`
 
 ## Selenium Failure Triage
 
@@ -94,6 +110,7 @@ dbt run --select oem_wise_ev_data
   - a metadata `.json` file with step name, locator, URL, and run context
 - If a run fails, search the log for `failed_step=` first. That tells you whether the breakage was at initial page load, state selection, category selection, year selection, refresh, or download.
 - If the page title in the diagnostics JSON is `Access Forbidden`, treat it as a site-side block on the automated browser session, not selector drift.
+- If `Access Forbidden` appears at `initial_page_load` while `VAHAN_HEADLESS=true`, switch back to the default non-headless `xvfb` runtime before changing selectors.
 - The metadata JSON path is included directly in the error log line, so you can open the saved HTML and screenshot without reproducing the issue live.
 
 Example VM commands:

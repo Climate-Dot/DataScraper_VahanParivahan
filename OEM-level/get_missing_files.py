@@ -22,6 +22,7 @@ if repo_path not in sys.path:
 
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
+from utils import configure_chrome_options
 
 configure_pipeline_logging()
 
@@ -113,23 +114,6 @@ class OEMDataScraper:
         :return: Downloads csv file in directory set up by chrome
         """
         # create data download directory
-        browser_opts = webdriver.ChromeOptions()
-
-        browser_opts.browser_version = "stable"
-        browser_prefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browser_opts.add_experimental_option(
-            "excludeSwitches", ["enable-automation", "enable-logging"]
-        )
-        browser_opts.add_experimental_option("prefs", browser_prefs)
-        browser_opts.add_argument("--headless")
-        browser_opts.add_argument("--no-sandbox")
-        browser_opts.add_argument("--disable-dev-shm-usage")
-        browser_opts.add_argument("--disable-single-click-autofill")
-        browser_opts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         vehicle_category_folder_name = re.sub(
             r"\W+", " ", vehicle_category_label
@@ -144,8 +128,8 @@ class OEMDataScraper:
             month_label,
         )
         self.create_directory_if_not_exists(download_path)
-        browser_prefs.update({"download.default_directory": download_path})
-        browser_opts.add_experimental_option("prefs", browser_prefs)
+        browser_opts = webdriver.ChromeOptions()
+        configure_chrome_options(browser_opts, download_path)
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browser_opts
         )
@@ -252,21 +236,7 @@ class OEMDataScraper:
 
     def get_all_vehicle_category_elements(self):
         browser_opts = webdriver.ChromeOptions()
-
-        browser_opts.browser_version = "stable"
-        browser_prefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browser_opts.add_experimental_option(
-            "excludeSwitches", ["enable-automation", "enable-logging"]
-        )
-        browser_opts.add_experimental_option("prefs", browser_prefs)
-        browser_opts.add_argument("--headless")
-        browser_opts.add_argument("--no-sandbox")
-        browser_opts.add_argument("--disable-dev-shm-usage")
-        browser_opts.add_argument("--disable-single-click-autofill")
-        browser_opts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        configure_chrome_options(browser_opts)
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browser_opts
         )

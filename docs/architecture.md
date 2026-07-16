@@ -19,7 +19,7 @@ Each pipeline follows roughly the same high-level shape:
 7. Upload downloaded XLSX files and the processed CSV to Azure Blob Storage.
 8. Remove local downloaded files after successful blob upload.
 
-Only the `RTO` orchestration script currently runs dbt automatically at the end of the shell script. `OEM` and `State` have curated dbt models in the repo, but they are not yet wired into their shell scripts.
+The `RTO` and `OEM` orchestration scripts now run dbt automatically at the end of the shell script. `State` still has a curated dbt model in the repo, but it is not yet wired into its shell script.
 
 The active preprocessing scripts now share:
 
@@ -37,6 +37,19 @@ Important consequences:
 - Changes made directly on the VM can survive independently from git history.
 - dbt parsing issues can occur if stale model directories remain on disk.
 - Any production change should assume VM drift is possible until proven otherwise.
+
+## Browser Runtime
+
+The Vahan site currently blocks headless Selenium sessions in production-like runs, even when the same selectors work in an interactive browser.
+
+Current operating policy:
+
+- monthly ETL entrypoints default to `VAHAN_HEADLESS=false`
+- Selenium stages are routed through [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh)
+- when headless mode is disabled, Selenium runs under `xvfb-run -a`
+- `xvfb` must be installed on the VM before relying on the cron jobs
+
+This means `Access Forbidden` during `initial_page_load` should be treated as a browser-runtime or access-policy problem first, not immediate evidence of selector drift.
 
 ## Code Layout
 
@@ -57,6 +70,9 @@ All three scripts:
 - change into `/home/climate_dot_data/DataScraper_VahanParivahan`
 - accept optional `MONTH YEAR` arguments
 - default to the previous calendar month if no arguments are passed
+- default `VAHAN_HEADLESS` to `false`
+- source [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh)
+- wrap Selenium-only Python stages with `xvfb-run` when headless mode is disabled
 
 ## Data Flow By Pipeline
 
@@ -167,7 +183,7 @@ After upload, the scripts remove local files and directories. That means reruns 
 
 ## Known Inconsistencies
 
-- `RTO` shell orchestration runs dbt automatically, while `OEM` and `State` do not.
+- `RTO` and `OEM` shell orchestration run dbt automatically, while `State` still does not.
 - Legacy raw tables on the VM may still be on the pre-migration schema until the SQL migration is applied.
 - The SQL used in dbt models is not fully standardized yet across `RTO`, `OEM`, and `State`.
 - VM contents can drift from the repository, especially around dbt model directories.

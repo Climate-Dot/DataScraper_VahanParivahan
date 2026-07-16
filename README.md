@@ -9,7 +9,7 @@ Today the project is operated from an Azure VM. The VM is started and stopped by
 The repo currently contains three ingestion pipelines:
 
 - `RTO` pipeline: scrapes RTO-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
-- `OEM` pipeline: scrapes OEM-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and has a dbt curated model available for manual execution.
+- `OEM` pipeline: scrapes OEM-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
 - `State` pipeline: scrapes state-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and keeps a repo dbt model available for manual or future use.
 
 ## Important Operating Assumptions
@@ -19,6 +19,7 @@ The repo currently contains three ingestion pipelines:
 - `config.yaml` is required at runtime for database and Azure Blob credentials, but is not committed here.
 - The monthly run convention is "previous month by default" unless a month and year are passed on the command line.
 - Vahan source schemas can drift over time, so preprocessing should be treated as a schema boundary, not just a file conversion step.
+- Vahan currently blocks headless Selenium sessions in production-like runs, so the monthly ETL scripts default to `VAHAN_HEADLESS=false` and expect `xvfb-run` to be available on the VM.
 
 ## Repository Map
 
@@ -35,8 +36,20 @@ The repo currently contains three ingestion pipelines:
 - [`docs/architecture.md`](/Users/monish/DataScraper_VahanParivahan/docs/architecture.md): current-state architecture and operational notes
 - [`docs/runbooks`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks): pipeline-specific operational runbooks
 - [`docs/runbooks/raw_schema_migration.md`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks/raw_schema_migration.md): one-time raw schema migration runbook
+- [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh): shared shell helper that applies the Selenium browser runtime policy
 - [`ops/production_vm.crontab`](/Users/monish/DataScraper_VahanParivahan/ops/production_vm.crontab): current production cron snapshot for the Azure VM
 - [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql): one-time SQL Server migration for the shared raw fuel taxonomy
+
+## Browser Runtime
+
+The Vahan site currently behaves differently for interactive and headless browser sessions. In practice:
+
+- the monthly ETL shell scripts default to `VAHAN_HEADLESS=false`
+- Selenium-based steps are wrapped through [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh)
+- when headless mode is disabled, Selenium steps run under `xvfb-run -a`
+- `xvfb` is therefore a production VM prerequisite
+
+If a Selenium failure writes diagnostics with page title `Access Forbidden`, treat that as a browser-session access issue first, not an immediate selector regression.
 
 ## Pipeline Summary
 

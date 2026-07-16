@@ -24,6 +24,7 @@ if repo_path not in sys.path:
 
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
+from utils import configure_chrome_options
 
 # Set up logging
 logging.basicConfig(
@@ -120,24 +121,6 @@ class StateLevelDataScraper:
         :return: Downloads csv file in directory set up by chrome
         """
         # create data download directory
-        browserOpts = webdriver.ChromeOptions()
-
-        browserOpts.browser_version = "stable"
-        browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browserOpts.add_experimental_option(
-            "excludeSwitches", ["enable-automation", "enable-logging"]
-        )
-        browserOpts.add_experimental_option("prefs", browserPrefs)
-        browserOpts.add_argument("--headless")
-        browserOpts.add_argument("--no-sandbox")
-        browserOpts.add_argument("--disable-dev-shm-usage")
-        browserOpts.add_argument("--disable-single-click-autofill")
-        browserOpts.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-
-        # create data download directory
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
 
         download_path = os.path.join(
@@ -150,8 +133,8 @@ class StateLevelDataScraper:
         )
 
         self.create_directory_if_not_exists(download_path)
-        browserPrefs.update({"download.default_directory": download_path})
-        browserOpts.add_experimental_option("prefs", browserPrefs)
+        browserOpts = webdriver.ChromeOptions()
+        configure_chrome_options(browserOpts, download_path)
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )

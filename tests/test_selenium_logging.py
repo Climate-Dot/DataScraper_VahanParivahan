@@ -76,6 +76,23 @@ class DummyDriver:
         return True
 
 
+class DummyChromeOptions:
+    def __init__(self):
+        self.browser_version = None
+        self.arguments = []
+        self.experimental_options = {}
+        self.capabilities = {}
+
+    def add_argument(self, value):
+        self.arguments.append(value)
+
+    def add_experimental_option(self, key, value):
+        self.experimental_options[key] = value
+
+    def set_capability(self, key, value):
+        self.capabilities[key] = value
+
+
 class SeleniumLoggingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -182,6 +199,43 @@ class SeleniumLoggingTests(unittest.TestCase):
                     metadata["exception"],
                     "RuntimeError: Element not found xpath: //label[text()='Fuel']",
                 )
+
+    def test_configure_chrome_options_defaults_to_headless(self):
+        options = DummyChromeOptions()
+
+        with mock.patch.dict(self.module.os.environ, {}, clear=True):
+            self.module.configure_chrome_options(
+                options,
+                download_directory="/tmp/report-download",
+            )
+
+        self.assertEqual(options.browser_version, "stable")
+        self.assertIn("--headless", options.arguments)
+        self.assertIn("--no-sandbox", options.arguments)
+        self.assertIn("--disable-dev-shm-usage", options.arguments)
+        self.assertEqual(
+            options.experimental_options["prefs"]["download.default_directory"],
+            "/tmp/report-download",
+        )
+        self.assertFalse(
+            options.experimental_options["prefs"]["download.prompt_for_download"]
+        )
+        self.assertEqual(
+            options.capabilities["goog:loggingPrefs"],
+            {"performance": "ALL"},
+        )
+
+    def test_configure_chrome_options_respects_headless_override(self):
+        options = DummyChromeOptions()
+
+        with mock.patch.dict(
+            self.module.os.environ,
+            {self.module.VAHAN_HEADLESS_ENV_VAR: "false"},
+            clear=True,
+        ):
+            self.module.configure_chrome_options(options)
+
+        self.assertNotIn("--headless", options.arguments)
 
 
 if __name__ == "__main__":

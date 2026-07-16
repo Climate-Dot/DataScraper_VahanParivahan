@@ -23,6 +23,14 @@ The RTO pipeline collects monthly EV registration data at the RTO-office grain, 
 - If no arguments are provided, the script targets the previous calendar month.
 - If arguments are provided, they should be passed as `MON YEAR`, for example `OCT 2024`.
 
+## Browser Runtime
+
+- The shell script defaults to `VAHAN_HEADLESS=false`.
+- Selenium steps in [`rto_ev_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/rto_ev_data_etl.sh) are routed through [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh).
+- When headless mode is disabled, the Selenium steps run under `xvfb-run -a`.
+- `xvfb-run` must be installed on the production VM.
+- Only the Selenium steps use the `xvfb` wrapper. Preprocessing, ingestion, blob upload, and dbt run normally.
+
 ## Important Files
 
 - Preprocessing: [`rto_level/rto_level_data_pre_processing.py`](/Users/monish/DataScraper_VahanParivahan/rto_level/rto_level_data_pre_processing.py)
@@ -54,6 +62,13 @@ Specific month:
 ./rto_ev_data_etl.sh OCT 2024
 ```
 
+Check VM browser prerequisites:
+
+```bash
+command -v xvfb-run
+echo "${VAHAN_HEADLESS:-false}"
+```
+
 dbt only:
 
 ```bash
@@ -82,6 +97,7 @@ dbt run --select rto_wise_ev_data
 - Partial scrape output causing missing XLSX files
 - Folder naming drift that breaks `rto_name` and `rto_code` extraction
 - dbt duplicate model paths on the VM if stale model folders remain under `climate_dot_dbt/models`
+- `xvfb-run` missing on the VM while `VAHAN_HEADLESS=false`
 
 ## Selenium Failure Triage
 
@@ -93,6 +109,7 @@ dbt run --select rto_wise_ev_data
   - a metadata `.json` file with step name, locator, URL, and run context
 - If a run fails, search the log for `failed_step=` first. That tells you whether the breakage was at initial page load, state selection, RTO selection, year selection, refresh, or download.
 - If the page title in the diagnostics JSON is `Access Forbidden`, treat it as a site-side block on the automated browser session, not selector drift.
+- If `Access Forbidden` appears at `initial_page_load` while `VAHAN_HEADLESS=true`, switch back to the default non-headless `xvfb` runtime before changing selectors.
 - The metadata JSON path is included directly in the error log line, so you can open the saved HTML and screenshot without reproducing the issue live.
 
 Example VM commands:

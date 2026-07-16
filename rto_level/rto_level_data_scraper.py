@@ -82,13 +82,7 @@ class RTODataScraper:
         """
 
         browser_options = webdriver.ChromeOptions()
-        browser_options.browser_version = "stable"
-        browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browser_options.add_experimental_option("prefs", browserPrefs)
-        browser_options.add_argument("--headless")
+        configure_chrome_options(browser_options)
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browser_options
         )
@@ -202,14 +196,6 @@ class RTODataScraper:
         :param month_label: Month label for data
         :return downloads csv file in directory set up by chrome
         """
-        browserOpts = webdriver.ChromeOptions()
-        browserOpts.browser_version = "stable"
-        browserPrefs = {
-            "credentials_enable_service": False,
-            "profile.password_manager_enabled": False,
-        }
-        browserOpts.add_argument("--headless")
-
         state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
         rto_folder_name = self.build_rto_folder_name(rto_label)
         if not rto_folder_name:
@@ -228,8 +214,8 @@ class RTODataScraper:
 
         create_directory_if_not_exists(download_path)
 
-        browserPrefs.update({"download.default_directory": download_path})
-        browserOpts.add_experimental_option("prefs", browserPrefs)
+        browserOpts = webdriver.ChromeOptions()
+        configure_chrome_options(browserOpts, download_path)
 
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts

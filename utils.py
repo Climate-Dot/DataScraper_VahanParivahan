@@ -21,6 +21,8 @@ SELENIUM_DEBUG_ROOT = os.path.join("debug_artifacts", "selenium")
 VAHAN_DASHBOARD_URL = (
     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
 )
+VAHAN_HEADLESS_ENV_VAR = "VAHAN_HEADLESS"
+HEADLESS_FALSE_VALUES = {"0", "false", "no", "off"}
 BLOCKED_PAGE_TITLE = "Access Forbidden"
 BLOCKED_PAGE_MARKERS = (
     "Access Forbidden",
@@ -160,6 +162,44 @@ def summarize_exception(exc):
     ]
     summary = lines[0] if lines else exc.__class__.__name__
     return f"{exc.__class__.__name__}: {summary}"
+
+
+def should_run_headless():
+    value = os.getenv(VAHAN_HEADLESS_ENV_VAR, "true")
+    return str(value).strip().lower() not in HEADLESS_FALSE_VALUES
+
+
+def build_chrome_prefs(download_directory=None):
+    prefs = {
+        "credentials_enable_service": False,
+        "profile.password_manager_enabled": False,
+    }
+    if download_directory:
+        prefs.update(
+            {
+                "download.default_directory": download_directory,
+                "download.prompt_for_download": False,
+                "download.directory_upgrade": True,
+            }
+        )
+    return prefs
+
+
+def configure_chrome_options(browser_options, download_directory=None):
+    browser_options.browser_version = "stable"
+    browser_options.add_experimental_option(
+        "excludeSwitches", ["enable-automation", "enable-logging"]
+    )
+    browser_options.add_experimental_option(
+        "prefs", build_chrome_prefs(download_directory)
+    )
+    if should_run_headless():
+        browser_options.add_argument("--headless")
+    browser_options.add_argument("--no-sandbox")
+    browser_options.add_argument("--disable-dev-shm-usage")
+    browser_options.add_argument("--disable-single-click-autofill")
+    browser_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    return browser_options
 
 
 def capture_browser_diagnostics(driver, step, identifier, value, context, exc):

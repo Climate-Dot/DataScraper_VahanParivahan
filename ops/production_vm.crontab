@@ -4,7 +4,12 @@
 #
 # This file is documentation plus a reproducible install artifact.
 # It does not update the VM automatically when the repository changes.
+# These ETL entrypoints default to VAHAN_HEADLESS=false and wrap Selenium
+# steps with xvfb-run. Ensure xvfb is installed before relying on this file.
 
-30 18 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_etl_logs.txt 2>&1
-00 19 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/oem_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt 2>&1
-30 23 1 * * sh /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt 2>&1
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+30 18 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_etl_logs.txt 2>&1
+00 19 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/oem_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt 2>&1
+30 23 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt 2>&1
