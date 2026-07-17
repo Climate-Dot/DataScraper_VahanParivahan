@@ -18,6 +18,7 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from utils import *
+from blob_storage_utils import ensure_container_exists
 
 
 with open("config.yaml", "r") as config_file:
@@ -33,11 +34,7 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 # Initialize the container client
 container_client = blob_service_client.get_container_client(container_name)
 
-# Ensure the container exists
-try:
-    container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
+ensure_container_exists(container_client, container_name)
 
 # Local directory to scan
 years = [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]

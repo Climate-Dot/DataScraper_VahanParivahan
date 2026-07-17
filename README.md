@@ -17,6 +17,7 @@ The repo currently contains three ingestion pipelines:
 - Production is currently the only real environment.
 - The Azure VM can drift from the repository if changes are made directly on the machine.
 - `config.yaml` is required at runtime for database and Azure Blob credentials, but is not committed here.
+- Google Chat failure alerts are optional, but if enabled the webhook secret should live in `config.yaml` or the `GOOGLE_CHAT_WEBHOOK_URL` environment variable, never in git.
 - The monthly run convention is "previous month by default" unless a month and year are passed on the command line.
 - Vahan source schemas can drift over time, so preprocessing should be treated as a schema boundary, not just a file conversion step.
 - Vahan currently blocks headless Selenium sessions in production-like runs, so the monthly ETL scripts default to `VAHAN_HEADLESS=false` and expect `xvfb-run` to be available on the VM.
@@ -50,6 +51,42 @@ The Vahan site currently behaves differently for interactive and headless browse
 - `xvfb` is therefore a production VM prerequisite
 
 If a Selenium failure writes diagnostics with page title `Access Forbidden`, treat that as a browser-session access issue first, not an immediate selector regression.
+
+## Operational Alerts
+
+The ETL shell scripts can now send fail-only Google Chat alerts when a step exits non-zero.
+
+Supported webhook configuration:
+
+- preferred in `config.yaml`:
+
+```yaml
+alerts:
+  google_chat_webhook_url: https://chat.googleapis.com/v1/spaces/...
+```
+
+- or via environment variable:
+
+```bash
+export GOOGLE_CHAT_WEBHOOK_URL='https://chat.googleapis.com/v1/spaces/...'
+```
+
+Manual alert smoke test:
+
+```bash
+python3 ops/send_chat_alert.py \
+  --pipeline test \
+  --status TEST \
+  --run-label "manual smoke test" \
+  --step setup \
+  --details "Google Chat webhook is configured correctly."
+```
+
+Notes:
+
+- The ETL scripts only send alerts on failure, not on success.
+- The alert includes pipeline, run label, failed step, exit code, host, browser mode, and the main cron log path.
+- OEM and RTO dbt failures also include the dedicated dbt log file path in the alert details.
 
 ## Pipeline Summary
 
@@ -91,6 +128,7 @@ If you are onboarding yourself back into this project, read in this order:
 - No infrastructure-as-code for the Azure VM lifecycle
 - No committed environment/profile documentation for dbt targets
 - No lower environment for safe end-to-end testing
+- Google Chat webhook delivery is only as reliable as the configured webhook secret and network path on the VM
 - Legacy raw tables on the VM may still reflect pre-migration schemas until the SQL migration is applied
 - Example dbt starter models still exist under [`climate_dot_dbt/models/example`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/example)
 

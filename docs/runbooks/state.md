@@ -73,6 +73,16 @@ command -v xvfb-run
 echo "${VAHAN_HEADLESS:-false}"
 ```
 
+Google Chat alert smoke test:
+
+```bash
+python3 /home/climate_dot_data/DataScraper_VahanParivahan/ops/send_chat_alert.py \
+  --pipeline state \
+  --status TEST \
+  --run-label "manual smoke test" \
+  --step setup
+```
+
 dbt only, if you intentionally maintain this table:
 
 ```bash
@@ -90,10 +100,12 @@ dbt run --select state_wise_ev_data
 - The current `state_wise_ev_data` dbt model reads from the state raw table directly.
 - The model should only be full-refreshed if you intentionally choose to maintain it in your environment.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
+- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
 
 ## Common Failure Points
 
 - `config.yaml` missing or stale on the VM
+- Google Chat webhook missing or stale in `config.yaml` if alerting is expected
 - Missing downloaded XLSX files for a target month
 - Mapping workbook drift
 - Raw SQL tables on the VM not yet migrated to the newer shared schema

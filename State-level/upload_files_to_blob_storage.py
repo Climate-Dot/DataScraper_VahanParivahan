@@ -2,9 +2,23 @@ import os
 import glob
 import sys
 import shutil
+import logging
 import yaml
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+
+repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if repo_path not in sys.path:
+    sys.path.append(repo_path)
+
+from blob_storage_utils import ensure_container_exists
 
 
 def get_year_month_label():
@@ -48,17 +62,8 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 container_client = blob_service_client.get_container_client(container_name)
 csv_container_client = blob_service_client.get_container_client(csv_container_name)
 
-# Ensure the container exists
-try:
-    container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
-
-# Ensure processed data container exists
-try:
-    csv_container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
+ensure_container_exists(container_client, container_name)
+ensure_container_exists(csv_container_client, csv_container_name)
 
 
 # Local directory to scan

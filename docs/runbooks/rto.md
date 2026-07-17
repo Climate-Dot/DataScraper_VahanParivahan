@@ -69,6 +69,16 @@ command -v xvfb-run
 echo "${VAHAN_HEADLESS:-false}"
 ```
 
+Google Chat alert smoke test:
+
+```bash
+python3 /home/climate_dot_data/DataScraper_VahanParivahan/ops/send_chat_alert.py \
+  --pipeline rto \
+  --status TEST \
+  --run-label "manual smoke test" \
+  --step setup
+```
+
 dbt only:
 
 ```bash
@@ -90,10 +100,12 @@ dbt run --select rto_wise_ev_data
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
 - The dbt model enriches raw rows with district via `rto_code_to_district_mapping`.
 - If the raw SQL tables have not been migrated yet, apply the raw schema migration before relying on the newer shared fuel columns.
+- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
 
 ## Common Failure Points
 
 - `config.yaml` missing or stale on the VM
+- Google Chat webhook missing or stale in `config.yaml` if alerting is expected
 - Partial scrape output causing missing XLSX files
 - Folder naming drift that breaks `rto_name` and `rto_code` extraction
 - dbt duplicate model paths on the VM if stale model folders remain under `climate_dot_dbt/models`

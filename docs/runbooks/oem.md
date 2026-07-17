@@ -74,6 +74,16 @@ command -v xvfb-run
 echo "${VAHAN_HEADLESS:-false}"
 ```
 
+Google Chat alert smoke test:
+
+```bash
+python3 /home/climate_dot_data/DataScraper_VahanParivahan/ops/send_chat_alert.py \
+  --pipeline oem \
+  --status TEST \
+  --run-label "manual smoke test" \
+  --step setup
+```
+
 dbt only:
 
 ```bash
@@ -91,10 +101,12 @@ dbt run --select oem_wise_ev_data
 - The curated model reads from the newer raw fuel taxonomy directly.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
 - The shell entrypoint now stops on the first failed step and will not continue into dbt after an upstream failure.
+- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
 
 ## Common Failure Points
 
 - `config.yaml` missing or stale on the VM
+- Google Chat webhook missing or stale in `config.yaml` if alerting is expected
 - dbt model path drift on the VM after folder renames
 - Raw SQL tables on the VM not yet migrated to the newer shared schema
 - Mapping file drift in [`Table and Mapping V2.xlsx`](/Users/monish/DataScraper_VahanParivahan/Table%20and%20Mapping%20V2.xlsx)

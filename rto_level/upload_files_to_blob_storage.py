@@ -16,6 +16,7 @@ if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from utils import *
+from blob_storage_utils import ensure_container_exists
 
 if len(sys.argv) > 2:
     # If month and year are passed as command-line arguments
@@ -41,17 +42,8 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 container_client = blob_service_client.get_container_client(container_name)
 csv_container_client = blob_service_client.get_container_client(csv_container_name)
 
-# Ensure the container exists
-try:
-    container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
-
-# Ensure processed data container exists
-try:
-    csv_container_client.create_container()
-except Exception as e:
-    print(f"Container may already exist: {e}")
+ensure_container_exists(container_client, container_name)
+ensure_container_exists(csv_container_client, csv_container_name)
 
 
 # Local directory to scan
