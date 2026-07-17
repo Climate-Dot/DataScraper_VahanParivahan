@@ -220,6 +220,11 @@ class RTODataScraper:
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
+        expected_report_path = os.path.join(download_path, "reportTable.xlsx")
+        if os.path.exists(expected_report_path) and not is_valid_excel_download(
+            expected_report_path
+        ):
+            os.remove(expected_report_path)
         context = {
             "pipeline": "rto",
             "state": state_label,
@@ -361,7 +366,7 @@ class RTODataScraper:
                         step="download_report",
                         context=context,
                     ).click()
-                    time.sleep(5)
+                    wait_for_expected_download(download_path)
                     logging.info(
                         "Downloaded RTO report state=%s rto=%s year=%s month=%s",
                         state_folder_name,
@@ -383,10 +388,18 @@ class RTODataScraper:
                     SeleniumStepError,
                     TimeoutException,
                     StaleElementReferenceException,
+                    TimeoutError,
                     WebDriverException,
                 ) as e:
                     last_exception = e
                     retries += 1
+                    if os.path.exists(expected_report_path) and not is_valid_excel_download(
+                        expected_report_path
+                    ):
+                        try:
+                            os.remove(expected_report_path)
+                        except OSError:
+                            pass
                     logging.warning(
                         "Retrying RTO download attempt=%s/%s context=%s failed_step=%s error=%s",
                         retries,

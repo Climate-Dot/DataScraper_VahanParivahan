@@ -28,9 +28,11 @@ from utils import (
     configure_chrome_options,
     find_element as shared_find_element,
     format_log_context,
+    is_valid_excel_download,
     open_page,
     summarize_exception,
     VAHAN_DASHBOARD_URL,
+    wait_for_expected_download,
 )
 
 configure_pipeline_logging()
@@ -109,6 +111,11 @@ class OEMDataScraper:
         browser = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
+        expected_report_path = os.path.join(download_path, "reportTable.xlsx")
+        if os.path.exists(expected_report_path) and not is_valid_excel_download(
+            expected_report_path
+        ):
+            os.remove(expected_report_path)
         context = {
             "pipeline": "oem",
             "state": state_label,
@@ -258,7 +265,7 @@ class OEMDataScraper:
                         step="download_report",
                         context=context,
                     ).click()
-                    time.sleep(5)
+                    wait_for_expected_download(download_path)
                     logging.info(
                         "Downloaded OEM report state=%s vehicle_category=%s year=%s month=%s",
                         state_folder_name,
@@ -280,10 +287,18 @@ class OEMDataScraper:
                     SeleniumStepError,
                     TimeoutException,
                     StaleElementReferenceException,
+                    TimeoutError,
                     WebDriverException,
                 ) as e:
                     last_exception = e
                     retries += 1
+                    if os.path.exists(expected_report_path) and not is_valid_excel_download(
+                        expected_report_path
+                    ):
+                        try:
+                            os.remove(expected_report_path)
+                        except OSError:
+                            pass
                     logging.warning(
                         "Retrying OEM download attempt=%s/%s context=%s failed_step=%s error=%s",
                         retries,

@@ -68,7 +68,16 @@ class RTOLevelDataPreProcessor:
                 )
                 if os.path.exists(raw_file_path):
                     files_found += 1
-                    temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
+                    if not is_valid_excel_download(raw_file_path):
+                        raise ValueError(
+                            f"Invalid RTO Excel report file: {raw_file_path}"
+                        )
+                    temp_df = pd.read_excel(
+                        raw_file_path,
+                        skiprows=3,
+                        index_col=0,
+                        engine="openpyxl",
+                    )
                     if temp_df.empty:
                         empty_reports += 1
                         logging.warning(

@@ -4,6 +4,7 @@ import sys
 import tempfile
 import types
 import unittest
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -236,6 +237,29 @@ class SeleniumLoggingTests(unittest.TestCase):
             self.module.configure_chrome_options(options)
 
         self.assertNotIn("--headless", options.arguments)
+
+    def test_is_valid_excel_download_rejects_zero_byte_files(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "reportTable.xlsx"
+            path.write_bytes(b"")
+
+            self.assertFalse(self.module.is_valid_excel_download(path))
+
+    def test_wait_for_expected_download_returns_when_valid_xlsx_exists(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "reportTable.xlsx"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("[Content_Types].xml", "<Types/>")
+                archive.writestr("xl/workbook.xml", "<workbook/>")
+
+            resolved = self.module.wait_for_expected_download(
+                tmpdir,
+                timeout_seconds=1,
+                poll_interval_seconds=0.01,
+                stable_seconds=0,
+            )
+
+            self.assertEqual(resolved, str(path))
 
 
 if __name__ == "__main__":

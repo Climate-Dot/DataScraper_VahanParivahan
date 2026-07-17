@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import re
+import time
+import zipfile
 
 from pipeline_constants import STATE_LIST
 
@@ -200,6 +202,79 @@ def configure_chrome_options(browser_options, download_directory=None):
     browser_options.add_argument("--disable-single-click-autofill")
     browser_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
     return browser_options
+
+
+def is_valid_excel_download(file_path):
+    if not os.path.exists(file_path):
+        return False
+
+    try:
+        if os.path.getsize(file_path) <= 0:
+            return False
+    except OSError:
+        return False
+
+    if not zipfile.is_zipfile(file_path):
+        return False
+
+    try:
+        with zipfile.ZipFile(file_path) as workbook_archive:
+            archive_names = set(workbook_archive.namelist())
+    except (OSError, zipfile.BadZipFile):
+        return False
+
+    return "[Content_Types].xml" in archive_names and "xl/workbook.xml" in archive_names
+
+
+def wait_for_expected_download(
+    download_directory,
+    expected_filename="reportTable.xlsx",
+    timeout_seconds=90,
+    poll_interval_seconds=1,
+    stable_seconds=2,
+):
+    expected_path = os.path.join(download_directory, expected_filename)
+    deadline = time.monotonic() + timeout_seconds
+    last_size = None
+    stable_since = None
+
+    while time.monotonic() < deadline:
+        crdownload_files = [
+            filename
+            for filename in os.listdir(download_directory)
+            if filename.endswith(".crdownload")
+        ]
+
+        if is_valid_excel_download(expected_path) and not crdownload_files:
+            current_size = os.path.getsize(expected_path)
+            if current_size != last_size:
+                last_size = current_size
+                stable_since = time.monotonic()
+            elif stable_since is not None and (
+                time.monotonic() - stable_since
+            ) >= stable_seconds:
+                return expected_path
+        else:
+            if os.path.exists(expected_path):
+                try:
+                    last_size = os.path.getsize(expected_path)
+                except OSError:
+                    last_size = None
+            stable_since = None
+
+        time.sleep(poll_interval_seconds)
+
+    size_text = "missing"
+    if os.path.exists(expected_path):
+        try:
+            size_text = str(os.path.getsize(expected_path))
+        except OSError:
+            size_text = "unreadable"
+
+    raise TimeoutError(
+        "Timed out waiting for a valid Excel download "
+        f"file={expected_path} size_bytes={size_text}"
+    )
 
 
 def capture_browser_diagnostics(driver, step, identifier, value, context, exc):

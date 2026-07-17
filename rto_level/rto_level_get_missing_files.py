@@ -55,7 +55,7 @@ def get_missing_files():
                 "reportTable.xlsx",
             )
 
-            if not os.path.exists(directory_path):
+            if not is_valid_excel_download(directory_path):
                 parameters.append((state, rto_office_name, year, month))
 
     if invalid_rto_labels:
@@ -71,11 +71,27 @@ def get_missing_files():
 
 
 def get_existing_file_count():
-    """Count the number of .xlsx files in the output directory."""
+    """Count valid .xlsx files for the target month/year and valid RTO labels only."""
     file_count = 0
-    directory = os.path.join(os.getcwd(), "rto_level", "rto_level_ev_data")
-    for root, _, files in os.walk(directory):
-        file_count += sum(1 for file in files if file.endswith(".xlsx"))
+    for state in state_lst:
+        all_rto_office_names = state_rto_mapping.get(state, [])
+        for rto_office_name in all_rto_office_names:
+            rto_folder_name = rto_data_scraper.build_rto_folder_name(rto_office_name)
+            if not rto_folder_name:
+                continue
+
+            file_path = os.path.join(
+                os.getcwd(),
+                "rto_level",
+                "rto_level_ev_data",
+                re.sub(r"[^a-zA-Z\s]", " ", state).rstrip(),
+                rto_folder_name,
+                str(year),
+                month,
+                "reportTable.xlsx",
+            )
+            if is_valid_excel_download(file_path):
+                file_count += 1
     return file_count
 
 
@@ -125,7 +141,12 @@ def extract_missing_files():
 
 # Retry extraction until all files are downloaded
 while True:
-    expected_file_count = sum(len(v) for v in state_rto_mapping.values())
+    expected_file_count = sum(
+        1
+        for rto_labels in state_rto_mapping.values()
+        for rto_label in rto_labels
+        if rto_data_scraper.build_rto_folder_name(rto_label)
+    )
     existing_file_count = get_existing_file_count()
 
     if existing_file_count == expected_file_count:

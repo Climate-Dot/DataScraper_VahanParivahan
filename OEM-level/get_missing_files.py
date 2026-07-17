@@ -22,7 +22,11 @@ if repo_path not in sys.path:
 
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
-from utils import configure_chrome_options
+from utils import (
+    configure_chrome_options,
+    is_valid_excel_download,
+    wait_for_expected_download,
+)
 
 configure_pipeline_logging()
 
@@ -134,8 +138,10 @@ class OEMDataScraper:
             service=Service(ChromeDriverManager().install()), options=browser_opts
         )
         file_path = os.path.join(download_path, "reportTable.xlsx")
+        if os.path.exists(file_path) and not is_valid_excel_download(file_path):
+            os.remove(file_path)
         retries = 0
-        while not os.path.exists(file_path):
+        while not is_valid_excel_download(file_path):
             try:
                 browser.get(
                     "https://vahan.parivahan.gov.in/vahan4dashboard/vahan/view/reportview.xhtml"
@@ -219,16 +225,22 @@ class OEMDataScraper:
 
                 # click on download button for downloading report
                 self.find_element(browser, "id", "groupingTable:xls").click()
-                time.sleep(5)
+                wait_for_expected_download(download_path)
                 browser.quit()
                 break
 
             except (
                 TimeoutException,
                 StaleElementReferenceException,
+                TimeoutError,
                 WebDriverException,
             ) as e:
                 retries += 1
+                if os.path.exists(file_path) and not is_valid_excel_download(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError:
+                        pass
                 print(
                     f"Retrying attempt {retries} for {state_label}, {year_label}, {month_label} and {vehicle_category_label}"
                 )
@@ -279,6 +291,10 @@ def main():
 
     # get all state and vehicle category elements
     vehicle_category_lst = data_extract_class.get_all_vehicle_category_elements()
+    if not vehicle_category_lst:
+        raise RuntimeError(
+            "Unable to fetch OEM vehicle categories from Vahan. Missing-file recovery cannot continue."
+        )
     state_lst = STATE_LIST
 
     if len(sys.argv) > 2:
@@ -301,7 +317,7 @@ def main():
                 month,
             )
             file_path = os.path.join(directory_path, "reportTable.xlsx")
-            if not os.path.exists(file_path):
+            if not is_valid_excel_download(file_path):
                 parameters.append((state, year, month, category))
 
     if not parameters:

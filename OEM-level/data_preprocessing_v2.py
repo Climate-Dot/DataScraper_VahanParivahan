@@ -18,6 +18,7 @@ from preprocessing_schema_utils import (
     find_unexpected_source_columns,
 )
 from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
+from utils import is_valid_excel_download
 
 configure_pipeline_logging()
 
@@ -99,7 +100,16 @@ class OEMDataPreProcessor:
                     state_path, vehicle_class, year, month, "reportTable.xlsx"
                 )
                 if os.path.exists(raw_file_path):
-                    temp_df = pd.read_excel(raw_file_path, skiprows=3, index_col=0)
+                    if not is_valid_excel_download(raw_file_path):
+                        raise ValueError(
+                            f"Invalid OEM Excel report file: {raw_file_path}"
+                        )
+                    temp_df = pd.read_excel(
+                        raw_file_path,
+                        skiprows=3,
+                        index_col=0,
+                        engine="openpyxl",
+                    )
                     if temp_df.empty:
                         print(
                             f"No records found in report for {vehicle_class}, {state}, {year}, {month}"
