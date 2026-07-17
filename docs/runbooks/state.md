@@ -10,11 +10,11 @@ The State pipeline collects monthly EV registration data at the state grain, loa
 
 ## Current Flow
 
-1. `State-level/state_level_data_scraper.py`
-2. `State-level/state_level_get_missing_files.py`
-3. `State-level/state_level_data_pre_processing.py`
-4. `State-level/state_level_data_ingestion.py`
-5. `State-level/upload_files_to_blob_storage.py`
+1. `state_level/state_level_data_scraper.py`
+2. `state_level/state_level_get_missing_files.py`
+3. `state_level/state_level_data_pre_processing.py`
+4. `state_level/state_level_data_ingestion.py`
+5. `state_level/upload_files_to_blob_storage.py`
 
 Current note:
 
@@ -37,16 +37,16 @@ Current note:
 
 ## Important Files
 
-- Preprocessing: [`State-level/state_level_data_pre_processing.py`](/Users/monish/DataScraper_VahanParivahan/State-level/state_level_data_pre_processing.py)
-- Ingestion: [`State-level/state_level_data_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/State-level/state_level_data_ingestion.py)
-- Blob upload: [`State-level/upload_files_to_blob_storage.py`](/Users/monish/DataScraper_VahanParivahan/State-level/upload_files_to_blob_storage.py)
+- Preprocessing: [`state_level/state_level_data_pre_processing.py`](/Users/monish/DataScraper_VahanParivahan/state_level/state_level_data_pre_processing.py)
+- Ingestion: [`state_level/state_level_data_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/state_level/state_level_data_ingestion.py)
+- Blob upload: [`state_level/upload_files_to_blob_storage.py`](/Users/monish/DataScraper_VahanParivahan/state_level/upload_files_to_blob_storage.py)
 - Curated model in repo: [`climate_dot_dbt/models/curated/state_wise_ev_data.sql`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated/state_wise_ev_data.sql)
 - Shared constants: [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
 - Shared schema helpers: [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py)
 
 ## Files and Tables Touched
 
-- Downloaded XLSX files: `State-level/state_level_ev_data/<state>/<year>/<month>/reportTable.xlsx`
+- Downloaded XLSX files: `state_level/state_level_ev_data/<state>/<year>/<month>/reportTable.xlsx`
 - Processed CSV: `state_level_ev_data_<MON>_<YEAR>.csv`
 - Staging table: `staging_fact_ev_data_by_state`
 - Raw final table: `fact_ev_data_by_state`
@@ -100,7 +100,8 @@ dbt run --select state_wise_ev_data
 - The current `state_wise_ev_data` dbt model reads from the state raw table directly.
 - The model should only be full-refreshed if you intentionally choose to maintain it in your environment.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
-- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
+- If a Google Chat webhook is configured, the shell entrypoint sends one alert on failure and one celebratory alert on successful completion.
+- Failure alerts include the failed step, host, and cron log path.
 
 ## Common Failure Points
 

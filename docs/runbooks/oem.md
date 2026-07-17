@@ -10,11 +10,11 @@ The OEM pipeline collects monthly EV registration data at the OEM-by-state-and-c
 
 ## Current Flow
 
-1. `OEM-level/oem_level_data_scraper.py`
-2. `OEM-level/get_missing_files.py`
-3. `OEM-level/data_preprocessing_v2.py`
-4. `OEM-level/data_ingestion.py`
-5. `OEM-level/upload_files_to_blob_storage.py`
+1. `oem_level/oem_level_data_scraper.py`
+2. `oem_level/get_missing_files.py`
+3. `oem_level/data_preprocessing_v2.py`
+4. `oem_level/data_ingestion.py`
+5. `oem_level/upload_files_to_blob_storage.py`
 6. `dbt run --select oem_wise_ev_data`
 
 Current note:
@@ -38,16 +38,16 @@ Current note:
 
 ## Important Files
 
-- Preprocessing: [`OEM-level/data_preprocessing_v2.py`](/Users/monish/DataScraper_VahanParivahan/OEM-level/data_preprocessing_v2.py)
-- Ingestion: [`OEM-level/data_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/OEM-level/data_ingestion.py)
-- Blob upload: [`OEM-level/upload_files_to_blob_storage.py`](/Users/monish/DataScraper_VahanParivahan/OEM-level/upload_files_to_blob_storage.py)
+- Preprocessing: [`oem_level/data_preprocessing_v2.py`](/Users/monish/DataScraper_VahanParivahan/oem_level/data_preprocessing_v2.py)
+- Ingestion: [`oem_level/data_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/oem_level/data_ingestion.py)
+- Blob upload: [`oem_level/upload_files_to_blob_storage.py`](/Users/monish/DataScraper_VahanParivahan/oem_level/upload_files_to_blob_storage.py)
 - Curated model: [`climate_dot_dbt/models/curated/oem_wise_ev_data.sql`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated/oem_wise_ev_data.sql)
 - Shared constants: [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
 - Shared schema helpers: [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py)
 
 ## Files and Tables Touched
 
-- Downloaded XLSX files: `OEM-level/oem_data_by_state_and_category/<state>/<vehicle_class>/<year>/<month>/reportTable.xlsx`
+- Downloaded XLSX files: `oem_level/oem_data_by_state_and_category/<state>/<vehicle_class>/<year>/<month>/reportTable.xlsx`
 - Processed CSV: `oem_data_by_state_and_category_<MON>_<YEAR>.csv`
 - Staging table: `staging_fact_oem_data_by_state_and_category`
 - Raw final table: `fact_oem_data_by_state_and_category`
@@ -101,7 +101,8 @@ dbt run --select oem_wise_ev_data
 - The curated model reads from the newer raw fuel taxonomy directly.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
 - The shell entrypoint now stops on the first failed step and will not continue into dbt after an upstream failure.
-- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
+- If a Google Chat webhook is configured, the shell entrypoint sends one alert on failure and one celebratory alert on successful completion.
+- Failure alerts include the failed step, host, cron log path, and dbt excerpts when the dbt step fails.
 
 ## Common Failure Points
 

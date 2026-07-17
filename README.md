@@ -9,7 +9,7 @@ Today the project is operated from an Azure VM. The VM is started and stopped by
 The repo currently contains three ingestion pipelines:
 
 - `RTO` pipeline: scrapes RTO-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
-- `OEM` pipeline: scrapes OEM-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
+- `OEM` pipeline: scrapes OEM data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and runs a dbt curated model.
 - `State` pipeline: scrapes state-level data, loads raw data into SQL Server, uploads source files to Azure Blob Storage, and keeps a repo dbt model available for manual or future use.
 
 ## Important Operating Assumptions
@@ -27,12 +27,15 @@ The repo currently contains three ingestion pipelines:
 - [`oem_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/oem_data_etl.sh): OEM monthly orchestration script
 - [`rto_ev_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/rto_ev_data_etl.sh): RTO monthly orchestration script
 - [`state_ev_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/state_ev_data_etl.sh): State monthly orchestration script
-- [`OEM-level`](/Users/monish/DataScraper_VahanParivahan/OEM-level): OEM scraping, preprocessing, ingestion, and blob upload code
+- [`oem_level`](/Users/monish/DataScraper_VahanParivahan/oem_level): OEM scraping, preprocessing, ingestion, and blob upload code
 - [`rto_level`](/Users/monish/DataScraper_VahanParivahan/rto_level): RTO scraping, preprocessing, ingestion, and blob upload code
-- [`State-level`](/Users/monish/DataScraper_VahanParivahan/State-level): State scraping, preprocessing, ingestion, and blob upload code
+- [`state_level`](/Users/monish/DataScraper_VahanParivahan/state_level): State scraping, preprocessing, ingestion, and blob upload code
 - [`climate_dot_dbt`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt): dbt project for curated SQL models
 - [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py): shared state list and shared raw fuel column mapping
+- [`runtime_config.py`](/Users/monish/DataScraper_VahanParivahan/runtime_config.py): shared helpers for default month/year resolution and runtime `config.yaml` loading
+- [`sqlserver_utils.py`](/Users/monish/DataScraper_VahanParivahan/sqlserver_utils.py): shared SQL Server connection retry helper for ingestion scripts
 - [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py): shared preprocessing safeguards for schema drift
+- [`blob_storage_utils.py`](/Users/monish/DataScraper_VahanParivahan/blob_storage_utils.py): shared blob container setup and upload/cleanup helpers
 - [`Table and Mapping V2.xlsx`](/Users/monish/DataScraper_VahanParivahan/Table%20and%20Mapping%20V2.xlsx): mapping file used by preprocessing scripts to derive vehicle dimensions
 - [`docs/architecture.md`](/Users/monish/DataScraper_VahanParivahan/docs/architecture.md): current-state architecture and operational notes
 - [`docs/runbooks`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks): pipeline-specific operational runbooks
@@ -54,7 +57,7 @@ If a Selenium failure writes diagnostics with page title `Access Forbidden`, tre
 
 ## Operational Alerts
 
-The ETL shell scripts can now send fail-only Google Chat alerts when a step exits non-zero.
+The ETL shell scripts can now send Google Chat alerts for both failed and successful runs.
 
 Supported webhook configuration:
 
@@ -84,8 +87,8 @@ python3 ops/send_chat_alert.py \
 
 Notes:
 
-- The ETL scripts only send alerts on failure, not on success.
-- The alert includes pipeline, run label, failed step, exit code, host, browser mode, and the main cron log path.
+- Failure alerts include pipeline, run label, failed step, exit code, host, browser mode, the main cron log path, and log excerpts when available.
+- Success alerts send a shorter celebratory summary with emoji, the completed step, and the main cron log path.
 - OEM and RTO dbt failures also include the dedicated dbt log file path in the alert details.
 
 ## Pipeline Summary

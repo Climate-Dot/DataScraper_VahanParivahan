@@ -100,7 +100,8 @@ dbt run --select rto_wise_ev_data
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
 - The dbt model enriches raw rows with district via `rto_code_to_district_mapping`.
 - If the raw SQL tables have not been migrated yet, apply the raw schema migration before relying on the newer shared fuel columns.
-- If a step fails and a Google Chat webhook is configured, the shell entrypoint sends one fail-only alert with the pipeline name, run label, failed step, host, and cron log path.
+- If a Google Chat webhook is configured, the shell entrypoint sends one alert on failure and one celebratory alert on successful completion.
+- Failure alerts include the failed step, host, cron log path, and dbt excerpts when the dbt step fails.
 
 ## Common Failure Points
 

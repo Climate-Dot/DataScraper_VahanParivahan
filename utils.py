@@ -6,18 +6,13 @@ import time
 import zipfile
 
 from pipeline_constants import STATE_LIST
+from runtime_config import get_previous_month_year_label
 
 
 from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-
-# configure logging to write to both the console and a file
-logging.basicConfig(
-    level=logging.INFO,  # set the logging level (INFO, DEBUG, etc.)
-    format='%(asctime)s - %(levelname)s - %(message)s',  # log message format
-)
 
 SELENIUM_DEBUG_ROOT = os.path.join("debug_artifacts", "selenium")
 VAHAN_DASHBOARD_URL = (
@@ -50,20 +45,7 @@ month_mapping = {
         }
 
 def get_year_month_label():
-    """
-    Get month and year label for OEM scraper.
-    :return:
-    """
-    # Get the current date
-    current_date = datetime.now()
-    # Calculate the first day of the current month
-    first_day_of_current_month = current_date.replace(day=1)
-    # Calculate the last day of the previous month
-    last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
-    # Get the month abbreviation and year for the last day of the previous month
-    month_abbreviation = last_day_of_previous_month.strftime("%b")
-    year = last_day_of_previous_month.strftime("%Y")
-    return month_abbreviation.upper(), year
+    return get_previous_month_year_label()
 
 def create_directory_if_not_exists(directory_path):
     """

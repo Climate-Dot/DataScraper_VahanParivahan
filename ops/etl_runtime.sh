@@ -56,6 +56,21 @@ send_failure_alert() {
         return 1
     fi
 
+    if [ -n "${ETL_ALERT_DETAILS:-}" ] && [ -n "${ETL_ALERT_DETAILS_FILE:-}" ]; then
+        python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
+            --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
+            --status FAILED \
+            --run-label "${RUN_LABEL:-unknown}" \
+            --step "${CURRENT_STEP:-unknown}" \
+            --exit-code "$1" \
+            --hostname "$(hostname 2>/dev/null || printf '%s' 'unknown-host')" \
+            --headless "${VAHAN_HEADLESS:-unknown}" \
+            --log-file "${ETL_LOG_FILE:-}" \
+            --details "${ETL_ALERT_DETAILS}" \
+            --details-file "${ETL_ALERT_DETAILS_FILE}"
+        return $?
+    fi
+
     if [ -n "${ETL_ALERT_DETAILS:-}" ]; then
         python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
             --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
@@ -70,12 +85,64 @@ send_failure_alert() {
         return $?
     fi
 
+    if [ -n "${ETL_ALERT_DETAILS_FILE:-}" ]; then
+        python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
+            --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
+            --status FAILED \
+            --run-label "${RUN_LABEL:-unknown}" \
+            --step "${CURRENT_STEP:-unknown}" \
+            --exit-code "$1" \
+            --hostname "$(hostname 2>/dev/null || printf '%s' 'unknown-host')" \
+            --headless "${VAHAN_HEADLESS:-unknown}" \
+            --log-file "${ETL_LOG_FILE:-}" \
+            --details-file "${ETL_ALERT_DETAILS_FILE}"
+        return $?
+    fi
+
     python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
         --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
         --status FAILED \
         --run-label "${RUN_LABEL:-unknown}" \
         --step "${CURRENT_STEP:-unknown}" \
         --exit-code "$1" \
+        --hostname "$(hostname 2>/dev/null || printf '%s' 'unknown-host')" \
+        --headless "${VAHAN_HEADLESS:-unknown}" \
+        --log-file "${ETL_LOG_FILE:-}"
+}
+
+send_success_alert() {
+    if [ -z "${PROJECT_ROOT:-}" ]; then
+        printf '%s - WARNING - PROJECT_ROOT is not set. Skipping Google Chat alert.\n' \
+            "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+        return 1
+    fi
+
+    if [ ! -f "${PROJECT_ROOT}/ops/send_chat_alert.py" ]; then
+        printf '%s - WARNING - Google Chat alert script not found at %s.\n' \
+            "$(date '+%Y-%m-%d %H:%M:%S')" "${PROJECT_ROOT}/ops/send_chat_alert.py" >&2
+        return 1
+    fi
+
+    if [ -n "${ETL_SUCCESS_DETAILS:-}" ]; then
+        python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
+            --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
+            --status SUCCESS \
+            --run-label "${RUN_LABEL:-unknown}" \
+            --step "${CURRENT_STEP:-completed}" \
+            --exit-code 0 \
+            --hostname "$(hostname 2>/dev/null || printf '%s' 'unknown-host')" \
+            --headless "${VAHAN_HEADLESS:-unknown}" \
+            --log-file "${ETL_LOG_FILE:-}" \
+            --details "${ETL_SUCCESS_DETAILS}"
+        return $?
+    fi
+
+    python3 "${PROJECT_ROOT}/ops/send_chat_alert.py" \
+        --pipeline "${ETL_PIPELINE_NAME:-unknown}" \
+        --status SUCCESS \
+        --run-label "${RUN_LABEL:-unknown}" \
+        --step "${CURRENT_STEP:-completed}" \
+        --exit-code 0 \
         --hostname "$(hostname 2>/dev/null || printf '%s' 'unknown-host')" \
         --headless "${VAHAN_HEADLESS:-unknown}" \
         --log-file "${ETL_LOG_FILE:-}"

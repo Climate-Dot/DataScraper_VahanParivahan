@@ -3,23 +3,18 @@ import os
 import pandas as pd
 import sys
 
-# configure logging to write to both the console and a file
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level (INFO, DEBUG, etc.)
-    format="%(asctime)s - %(levelname)s - %(message)s",  # log message format
-)
-
 repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
 from pipeline_logging import configure_pipeline_logging
-from utils import *
 from preprocessing_schema_utils import (
     ensure_expected_output_columns,
     find_unexpected_source_columns,
 )
-from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
+from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP, MONTH_NAME_TO_NUMBER
+from runtime_config import resolve_month_year_args
+from utils import convert_date, get_year_month_label, is_valid_excel_download
 
 configure_pipeline_logging()
 
@@ -137,7 +132,7 @@ class RTOLevelDataPreProcessor:
         final_df = final_df.rename(self.column_rename_map, axis=1)
 
         final_df["date"] = final_df["date"].apply(convert_date)
-        final_df["month"] = final_df["month"].map(month_mapping)
+        final_df["month"] = final_df["month"].map(MONTH_NAME_TO_NUMBER)
         final_df = ensure_expected_output_columns(
             final_df,
             self.column_rename_map.values(),
@@ -160,13 +155,7 @@ class RTOLevelDataPreProcessor:
 
 def main():
     rto_level_data_preprocessor = RTOLevelDataPreProcessor()
-    if len(sys.argv) > 2:
-        # If month and year are passed as command-line arguments
-        month = sys.argv[1]
-        year = sys.argv[2]
-    else:
-        # Use the default function to get the month and year
-        month, year = get_year_month_label()
+    month, year = resolve_month_year_args(sys.argv[1:])
     final_df = rto_level_data_preprocessor.data_preprocessing(month, year)
     final_df.to_csv(f"rto_level_ev_data_{month}_{year}.csv", header=True, index=False)
 

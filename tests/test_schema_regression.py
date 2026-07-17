@@ -176,14 +176,14 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
 
     def test_state_preprocessing_outputs_expected_columns(self):
         module = load_module(
-            "State-level/state_level_data_pre_processing.py", "state_pre"
+            "state_level/state_level_data_pre_processing.py", "state_pre"
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             write_mapping_workbook(root)
             report_path = (
                 root
-                / "State-level"
+                / "state_level"
                 / "state_level_ev_data"
                 / "Test State"
                 / "2026"
@@ -209,7 +209,7 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertTrue(pd.isna(result.loc[0, "petrol_hybrid_cng"]))
 
     def test_oem_preprocessing_outputs_expected_columns(self):
-        module = load_module("OEM-level/data_preprocessing_v2.py", "oem_pre")
+        module = load_module("oem_level/data_preprocessing_v2.py", "oem_pre")
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             write_mapping_workbook(root)
@@ -217,7 +217,7 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             raw_df["Unnamed: 1"] = "Test Maker"
             report_path = (
                 root
-                / "OEM-level"
+                / "oem_level"
                 / "oem_data_by_state_and_category"
                 / "Test State"
                 / "MOTOR CAR"

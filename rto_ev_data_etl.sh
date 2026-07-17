@@ -21,6 +21,8 @@ RUN_LABEL="$(describe_run_args "$@")"
 ETL_PIPELINE_NAME="rto"
 ETL_LOG_FILE="${PROJECT_ROOT}/rto_ev_etl_logs.txt"
 ETL_ALERT_DETAILS=""
+ETL_ALERT_DETAILS_FILE=""
+ETL_SUCCESS_DETAILS="RTO run crossed the finish line cleanly. The data convoy is looking sharp."
 CURRENT_STEP="bootstrap"
 install_failure_alert_trap
 
@@ -53,8 +55,20 @@ python3 rto_level/upload_files_to_blob_storage.py "$@"
 
 # Run dbt model
 CURRENT_STEP="dbt_model"
-ETL_ALERT_DETAILS="Detailed dbt output: ${PROJECT_ROOT}/dbt_rto_wise_logs.txt"
+ETL_ALERT_DETAILS="dbt model failure. Check the ETL log and dbt excerpt below."
+ETL_ALERT_DETAILS_FILE="${PROJECT_ROOT}/dbt_rto_wise_logs.txt"
 log_step "Running RTO dbt model for ${RUN_LABEL}"
 cd "${PROJECT_ROOT}/climate_dot_dbt"
 dbt run --select rto_wise_ev_data >> "${PROJECT_ROOT}/dbt_rto_wise_logs.txt" 2>&1
 CURRENT_STEP="completed"
+
+set +e
+send_success_alert
+alert_exit_code="$?"
+set -e
+
+if [ "${alert_exit_code}" -ne 0 ]; then
+    printf '%s - WARNING - Google Chat success alert could not be delivered for pipeline=%s.\n' \
+        "$(date '+%Y-%m-%d %H:%M:%S')" \
+        "${ETL_PIPELINE_NAME:-unknown}" >&2
+fi

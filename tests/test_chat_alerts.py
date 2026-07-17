@@ -50,19 +50,76 @@ class ChatAlertTests(unittest.TestCase):
             hostname="climate-dot-vm",
             headless="false",
             log_file="/var/log/rto.log",
-            details="Detailed dbt output: /tmp/dbt_rto.log",
+            details="dbt model failure. Check the ETL log and dbt excerpt below.",
+            details_file="/tmp/dbt_rto.log",
+            log_excerpt="ERROR - No valid data fetched",
+            details_excerpt="Database Error in model rto_wise_ev_data",
             timestamp=timestamp,
         )
 
-        self.assertIn("[FAILED] RTO ETL failed", message_text)
-        self.assertIn("Run: JUN 2026", message_text)
-        self.assertIn("Step: preprocessing", message_text)
-        self.assertIn("Exit code: 1", message_text)
-        self.assertIn("Host: climate-dot-vm", message_text)
-        self.assertIn("Headless: false", message_text)
-        self.assertIn("Log file: /var/log/rto.log", message_text)
+        self.assertIn("[FAILED] RTO ETL pipeline", message_text)
+        self.assertIn("Summary:", message_text)
+        self.assertIn("- Run: JUN 2026", message_text)
+        self.assertIn("- Failed step: preprocessing", message_text)
+        self.assertIn("- Exit code: 1", message_text)
+        self.assertIn("- Host: climate-dot-vm", message_text)
+        self.assertIn("- Browser mode: headed (xvfb)", message_text)
         self.assertIn("Time (UTC): 2026-07-17 04:30:00", message_text)
-        self.assertIn("Detailed dbt output: /tmp/dbt_rto.log", message_text)
+        self.assertIn("- ETL log: /var/log/rto.log", message_text)
+        self.assertIn("- Extra log: /tmp/dbt_rto.log", message_text)
+        self.assertIn("Context:", message_text)
+        self.assertIn("dbt model failure. Check the ETL log and dbt excerpt below.", message_text)
+        self.assertIn("Recent ETL log lines:", message_text)
+        self.assertIn("ERROR - No valid data fetched", message_text)
+        self.assertIn("Recent extra log lines:", message_text)
+        self.assertIn("Database Error in model rto_wise_ev_data", message_text)
+
+    def test_build_message_text_success_uses_celebratory_defaults(self):
+        timestamp = datetime(2026, 7, 17, 5, 45, tzinfo=timezone.utc)
+
+        message_text = send_chat_alert.build_message_text(
+            pipeline="oem",
+            status="success",
+            run_label="JUN 2026",
+            step="completed",
+            exit_code=0,
+            hostname="climate-dot-vm",
+            headless="false",
+            log_file="/var/log/oem.log",
+            timestamp=timestamp,
+        )
+
+        self.assertIn("🎉 [SUCCESS] OEM ETL pipeline", message_text)
+        self.assertIn("- Run: JUN 2026", message_text)
+        self.assertIn("- Final step: completed", message_text)
+        self.assertIn("- Exit code: 0", message_text)
+        self.assertIn("- Browser mode: headed (xvfb)", message_text)
+        self.assertIn("- ETL log: /var/log/oem.log", message_text)
+        self.assertIn("Everything finished cleanly. The data gremlins stayed off duty this run.", message_text)
+        self.assertNotIn("Recent ETL log lines:", message_text)
+
+    def test_build_recent_excerpt_prefers_interesting_lines(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_path = Path(tmpdir) / "etl.log"
+            log_path.write_text(
+                "\n".join(
+                    [
+                        "INFO - start",
+                        "INFO - still running",
+                        "ERROR - element lookup failed",
+                        "Traceback (most recent call last):",
+                        "ValueError: File is not a zip file",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            excerpt = send_chat_alert.build_recent_excerpt(str(log_path))
+
+        self.assertIn("ERROR - element lookup failed", excerpt)
+        self.assertIn("Traceback (most recent call last):", excerpt)
+        self.assertIn("ValueError: File is not a zip file", excerpt)
+        self.assertNotIn("INFO - start", excerpt)
 
     @mock.patch("ops.send_chat_alert.request.urlopen")
     def test_send_google_chat_message_posts_expected_payload(self, mock_urlopen):

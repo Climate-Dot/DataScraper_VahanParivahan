@@ -37,6 +37,21 @@ STATE_LIST = [
     "West Bengal",
 ]
 
+MONTH_NAME_TO_NUMBER = {
+    "JAN": 1,
+    "FEB": 2,
+    "MAR": 3,
+    "APR": 4,
+    "MAY": 5,
+    "JUN": 6,
+    "JUL": 7,
+    "AUG": 8,
+    "SEP": 9,
+    "OCT": 10,
+    "NOV": 11,
+    "DEC": 12,
+}
+
 
 COMMON_FUEL_COLUMN_RENAME_MAP = {
     "BIO-CNG/BIO-GAS": "bio_cng_bio_gas",

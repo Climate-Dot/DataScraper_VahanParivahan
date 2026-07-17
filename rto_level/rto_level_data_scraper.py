@@ -6,6 +6,7 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     WebDriverException,
 )
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 
@@ -15,19 +16,29 @@ import os
 import sys
 import shutil
 import time
-
-# configure logging to write to both the console and a file
-logging.basicConfig(
-    level=logging.INFO,  # Set the logging level (INFO, DEBUG, etc.)
-    format="%(asctime)s - %(levelname)s - %(message)s",  # log message format
-)
+import re
 
 repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
-from utils import *
+from runtime_config import resolve_month_year_args
+from utils import (
+    BlockedPageError,
+    SeleniumStepError,
+    VAHAN_DASHBOARD_URL,
+    configure_chrome_options,
+    create_directory_if_not_exists,
+    find_element,
+    format_log_context,
+    is_valid_excel_download,
+    open_page,
+    summarize_exception,
+    get_year_month_label,
+    wait_for_expected_download,
+)
 
 configure_pipeline_logging()
 
@@ -462,13 +473,12 @@ class RTODataScraper:
                 logging.error("Previous output.json is corrupted. Starting fresh.")
         return {}
 
-
 def main():
     data_extract_class = RTODataScraper()
     previous_mapping = data_extract_class.load_previous_mapping()
 
     try:
-        fresh_mapping = data_extract_class.run_for_all_states(state_lst)
+        fresh_mapping = data_extract_class.run_for_all_states(STATE_LIST)
     except Exception as e:
         fresh_mapping = {}
         logging.error(
@@ -478,14 +488,14 @@ def main():
 
     state_rto_mapping = merge_state_rto_mappings(previous_mapping, fresh_mapping)
 
-    fresh_missing_states = get_missing_mapping_states(fresh_mapping, state_lst)
-    merged_missing_states = get_missing_mapping_states(state_rto_mapping, state_lst)
+    fresh_missing_states = get_missing_mapping_states(fresh_mapping, STATE_LIST)
+    merged_missing_states = get_missing_mapping_states(state_rto_mapping, STATE_LIST)
 
     if fresh_mapping:
         logging.info(
             "Fetched live RTO mapping for %s out of %s states.",
             len(fresh_mapping),
-            len(state_lst),
+            len(STATE_LIST),
         )
         if fresh_missing_states:
             logging.warning(
@@ -496,7 +506,7 @@ def main():
             json.dump(state_rto_mapping, rto_mapping_output, indent=4)
         logging.info(
             "Saved merged RTO mapping to output.json with coverage for %s states.",
-            len(state_lst) - len(merged_missing_states),
+            len(STATE_LIST) - len(merged_missing_states),
         )
     elif previous_mapping:
         logging.warning(
@@ -513,17 +523,11 @@ def main():
             + ", ".join(merged_missing_states)
         )
 
-    if len(sys.argv) > 2:
-        # if month and year are passed as command-line arguments
-        month = sys.argv[1]
-        year = sys.argv[2]
-    else:
-        # use the default function to get the month and year
-        month, year = get_year_month_label()
+    month, year = resolve_month_year_args(sys.argv[1:])
 
     parameters = []
     invalid_rto_labels = []
-    for state in state_lst:
+    for state in STATE_LIST:
         # get all RTO office names for state
         all_rto_office_names = state_rto_mapping.get(state, [])
         for rto_office_name in all_rto_office_names:

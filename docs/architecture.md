@@ -25,7 +25,10 @@ The active preprocessing scripts now share:
 
 - a centralized state list in [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
 - a shared raw fuel column mapping in [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
+- shared runtime month/year and `config.yaml` resolution in [`runtime_config.py`](/Users/monish/DataScraper_VahanParivahan/runtime_config.py)
+- shared SQL Server connection retry behavior in [`sqlserver_utils.py`](/Users/monish/DataScraper_VahanParivahan/sqlserver_utils.py)
 - shared schema-drift safeguards in [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py)
+- shared blob upload and cleanup helpers in [`blob_storage_utils.py`](/Users/monish/DataScraper_VahanParivahan/blob_storage_utils.py)
 
 ## Runtime Environment
 
@@ -53,9 +56,9 @@ This means `Access Forbidden` during `initial_page_load` should be treated as a 
 
 ## Code Layout
 
-- [`OEM-level`](/Users/monish/DataScraper_VahanParivahan/OEM-level): OEM pipeline code
+- [`oem_level`](/Users/monish/DataScraper_VahanParivahan/oem_level): OEM pipeline code
 - [`rto_level`](/Users/monish/DataScraper_VahanParivahan/rto_level): RTO pipeline code
-- [`State-level`](/Users/monish/DataScraper_VahanParivahan/State-level): State pipeline code
+- [`state_level`](/Users/monish/DataScraper_VahanParivahan/state_level): State pipeline code
 - [`climate_dot_dbt`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt): curated SQL layer
 
 ## Monthly Orchestration Scripts
@@ -86,7 +89,7 @@ All three scripts:
 
 ### OEM
 
-- Raw downloaded files live under `OEM-level/oem_data_by_state_and_category/...`
+- Raw downloaded files live under `oem_level/oem_data_by_state_and_category/...`
 - Processed monthly CSV is `oem_data_by_state_and_category_<MON>_<YEAR>.csv`
 - Staging table is `staging_fact_oem_data_by_state_and_category`
 - Raw final table is `fact_oem_data_by_state_and_category`
@@ -94,7 +97,7 @@ All three scripts:
 
 ### State
 
-- Raw downloaded files live under `State-level/state_level_ev_data/...`
+- Raw downloaded files live under `state_level/state_level_ev_data/...`
 - Processed monthly CSV is `state_level_ev_data_<MON>_<YEAR>.csv`
 - Staging table is `staging_fact_ev_data_by_state`
 - Raw final table is `fact_ev_data_by_state`
@@ -126,8 +129,8 @@ At the time of writing:
 
 These files are kept for reference only and are not part of the active monthly production flow:
 
-- [`OEM-level/data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/OEM-level/data_preprocessing.py)
-- [`State-level/state_level_historical_data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/State-level/state_level_historical_data_preprocessing.py)
+- [`oem_level/data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/oem_level/data_preprocessing.py)
+- [`state_level/state_level_historical_data_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/state_level/state_level_historical_data_preprocessing.py)
 - [`rto_level/rto_level_eda.py`](/Users/monish/DataScraper_VahanParivahan/rto_level/rto_level_eda.py)
 
 They still reflect older naming conventions such as `electric_vehicles`, `ethanol`, `petrol_ethanol`, or `insert_date` and should not be used as the starting point for new production changes.

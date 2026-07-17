@@ -21,6 +21,8 @@ RUN_LABEL="$(describe_run_args "$@")"
 ETL_PIPELINE_NAME="state"
 ETL_LOG_FILE="${PROJECT_ROOT}/state_ev_etl_logs.txt"
 ETL_ALERT_DETAILS=""
+ETL_ALERT_DETAILS_FILE=""
+ETL_SUCCESS_DETAILS="State pipeline landed cleanly. The dashboard dragons stayed asleep."
 CURRENT_STEP="bootstrap"
 install_failure_alert_trap
 
@@ -29,25 +31,36 @@ log_step "State browser runtime VAHAN_HEADLESS=${VAHAN_HEADLESS}"
 # Run the Extraction
 CURRENT_STEP="extraction"
 log_step "Starting state extraction for ${RUN_LABEL}"
-run_selenium_step python3 State-level/state_level_data_scraper.py "$@"
+run_selenium_step python3 state_level/state_level_data_scraper.py "$@"
 
 # Run missing files extraction
 CURRENT_STEP="missing_file_recovery"
 log_step "Running state missing-file recovery for ${RUN_LABEL}"
-run_selenium_step python3 State-level/state_level_get_missing_files.py "$@"
+run_selenium_step python3 state_level/state_level_get_missing_files.py "$@"
 
 # Run Pre Processing
 CURRENT_STEP="preprocessing"
 log_step "Running state preprocessing for ${RUN_LABEL}"
-python3 State-level/state_level_data_pre_processing.py "$@"
+python3 state_level/state_level_data_pre_processing.py "$@"
 
 # Ingestion
 CURRENT_STEP="ingestion"
 log_step "Running state ingestion for ${RUN_LABEL}"
-python3 State-level/state_level_data_ingestion.py "$@"
+python3 state_level/state_level_data_ingestion.py "$@"
 
 # File Upload and Cleanup
 CURRENT_STEP="blob_upload"
 log_step "Running state upload and cleanup for ${RUN_LABEL}"
-python3 State-level/upload_files_to_blob_storage.py "$@"
+python3 state_level/upload_files_to_blob_storage.py "$@"
 CURRENT_STEP="completed"
+
+set +e
+send_success_alert
+alert_exit_code="$?"
+set -e
+
+if [ "${alert_exit_code}" -ne 0 ]; then
+    printf '%s - WARNING - Google Chat success alert could not be delivered for pipeline=%s.\n' \
+        "$(date '+%Y-%m-%d %H:%M:%S')" \
+        "${ETL_PIPELINE_NAME:-unknown}" >&2
+fi
