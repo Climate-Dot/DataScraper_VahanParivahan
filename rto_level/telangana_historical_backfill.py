@@ -396,8 +396,11 @@ def main():
     BACKFILL_PROCESSED_ROOT.mkdir(parents=True, exist_ok=True)
     os.chdir(BACKFILL_WORKSPACE)
 
-    preprocessor = RTOLevelDataPreProcessor()
-    preprocessor.raw_files_directory = str(BACKFILL_RAW_ROOT)
+    preprocessor = RTOLevelDataPreProcessor(
+        base_directory=REPO_ROOT,
+        mapping_file_path=REPO_ROOT / "Table and Mapping V2.xlsx",
+        raw_files_directory=BACKFILL_RAW_ROOT,
+    )
     ingester = RtoDataIngest()
     processed_months = 0
 

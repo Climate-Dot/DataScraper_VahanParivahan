@@ -1,34 +1,31 @@
 from __future__ import annotations
 
-import logging
 import os
-import pandas as pd
 import sys
 from typing import Iterable
+
+import pandas as pd
 
 repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
     sys.path.append(repo_path)
 
+from etl_preprocessing import BaseExcelPreprocessor, ReportContext
+from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP
 from pipeline_logging import configure_pipeline_logging
-from preprocessing_schema_utils import (
-    ensure_expected_output_columns,
-    find_unexpected_source_columns,
-)
-from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP, MONTH_NAME_TO_NUMBER
 from runtime_config import resolve_month_year_args
-from utils import convert_date, get_year_month_label, is_valid_excel_download
 
 configure_pipeline_logging()
 
 
-class RTOLevelDataPreProcessor:
-    def __init__(self):
-        self.mapping_file_path = os.path.join(os.getcwd(), "Table and Mapping V2.xlsx")
-        self.mapping_df = pd.read_excel(self.mapping_file_path, sheet_name="Mapping")
-        self.raw_files_directory = os.path.join(
-            os.getcwd(), "rto_level", "rto_level_ev_data"
-        )
+class RTOLevelDataPreProcessor(BaseExcelPreprocessor):
+    def __init__(
+        self,
+        *,
+        base_directory: str | os.PathLike[str] | None = None,
+        raw_files_directory: str | os.PathLike[str] | None = None,
+        mapping_file_path: str | os.PathLike[str] | None = None,
+    ):
         self.column_rename_map = {
             "Year": "year",
             "Month": "month",
@@ -43,131 +40,70 @@ class RTOLevelDataPreProcessor:
             "Unnamed: 1": "vehicle_class",
             **COMMON_FUEL_COLUMN_RENAME_MAP,
         }
+        super().__init__(
+            pipeline_label="RTO",
+            base_directory=base_directory or os.getcwd(),
+            raw_relative_path=os.path.join("rto_level", "rto_level_ev_data"),
+            column_rename_map=self.column_rename_map,
+            mapping_file_path=mapping_file_path,
+            raw_files_directory=raw_files_directory,
+        )
 
-    def data_preprocessing(self, month, year, states: Iterable[str] | None = None):
-        """
-        function to process rto level data files
-        :param month: month of the file to pre_process
-        :param year: year of the file to pre_process
-        :param states: optional iterable of state folder names to include
-        :return: None
-        """
-        selected_states = set(states or [])
-        final_df = pd.DataFrame()
-        unexpected_source_columns = set()
-        files_found = 0
-        empty_reports = 0
-        for state in os.listdir(self.raw_files_directory):
-            if selected_states and state not in selected_states:
+    def iter_report_contexts(self, month, year, **kwargs):
+        selected_states = set(kwargs.get("states") or [])
+        if not self.raw_files_directory.exists():
+            return
+
+        for state_dir in sorted(
+            path for path in self.raw_files_directory.iterdir() if path.is_dir()
+        ):
+            if selected_states and state_dir.name not in selected_states:
                 continue
-            state_path = os.path.join(self.raw_files_directory, state)
-            for rto_office in os.listdir(state_path):
-                rto_office_path = os.path.join(
-                    self.raw_files_directory, state, rto_office
+
+            for rto_dir in sorted(path for path in state_dir.iterdir() if path.is_dir()):
+                rto_name, rto_code = self.split_rto_folder_name(rto_dir.name)
+                yield ReportContext(
+                    report_path=rto_dir / year / month / "reportTable.xlsx",
+                    metadata={
+                        "Month": month,
+                        "Year": year,
+                        "Day": 1,
+                        "Date": f"1/{month}/{year}",
+                        "rto_name": rto_name,
+                        "rto_code": rto_code,
+                        "State": state_dir.name,
+                    },
+                    labels={
+                        "state": state_dir.name,
+                        "office": rto_dir.name,
+                        "year": year,
+                        "month": month,
+                    },
                 )
-                raw_file_path = os.path.join(
-                    rto_office_path, year, month, "reportTable.xlsx"
-                )
-                if os.path.exists(raw_file_path):
-                    files_found += 1
-                    if not is_valid_excel_download(raw_file_path):
-                        raise ValueError(
-                            f"Invalid RTO Excel report file: {raw_file_path}"
-                        )
-                    temp_df = pd.read_excel(
-                        raw_file_path,
-                        skiprows=3,
-                        index_col=0,
-                        engine="openpyxl",
-                    )
-                    if temp_df.empty:
-                        empty_reports += 1
-                        logging.warning(
-                            "No records found in RTO report for state=%s office=%s year=%s month=%s",
-                            state,
-                            rto_office,
-                            year,
-                            month,
-                        )
-                    else:
-                        unexpected_source_columns.update(
-                            find_unexpected_source_columns(
-                                temp_df.columns,
-                                self.column_rename_map.keys(),
-                            )
-                        )
-                        temp_df["Month"] = month
-                        temp_df["Year"] = year
-                        temp_df["Day"] = 1
-                        temp_df["Date"] = f"{1}/{month}/{year}"
-                        temp_df["rto_name"] = rto_office.split("_")[0]
-                        temp_df["rto_code"] = rto_office.split("_")[1]
-                        temp_df["State"] = state
-                        final_df = pd.concat([final_df, temp_df], ignore_index=True)
-        if unexpected_source_columns:
-            logging.warning(
-                "Detected new RTO source columns for %s %s that are not mapped yet: %s",
-                month,
-                year,
-                ", ".join(sorted(unexpected_source_columns)),
-            )
-        output_columns = list(self.column_rename_map.values())
-        if final_df.empty:
-            target_states = ", ".join(sorted(selected_states)) if selected_states else "all states"
-            logging.warning(
-                "No non-empty RTO rows were produced for %s %s in %s.",
-                month,
-                year,
-                target_states,
-            )
-            return pd.DataFrame(columns=output_columns)
-        final_df = pd.merge(
-            final_df,
+
+    @staticmethod
+    def split_rto_folder_name(folder_name: str):
+        if "_" not in folder_name:
+            return folder_name, ""
+        return folder_name.rsplit("_", 1)
+
+    def apply_mapping(self, df):
+        return pd.merge(
+            df,
             self.mapping_df,
             left_on="Unnamed: 1",
             right_on="Vehicle Class",
             how="left",
         )
-        # Replace NaN values with 'Others' for 'Vehicle Category' and 'Vehicle Type' columns
-        final_df["Vehicle Type"] = (
-            final_df["Vehicle Type"].fillna("Others").replace("", "Others")
-        )
-        final_df["Vehicle Category"] = (
-            final_df["Vehicle Category"].fillna("Others").replace("", "Others")
-        )
-        final_df["Vehicle Use Type"] = (
-            final_df["Vehicle Use Type"].fillna("Others").replace("", "Others")
-        )
-        # Replace values in state column
-        value_replacements = {
-            "Andaman   Nicobar Island": "Andaman and Nicobar",
-            "UT of DNH and DD": "Dadara and Nagar Havelli",
-            # Add more replacements as needed
-        }
-        final_df["State"] = final_df["State"].replace(value_replacements)
-        # rename columns
-        final_df = final_df.rename(self.column_rename_map, axis=1)
 
-        final_df["date"] = final_df["date"].apply(convert_date)
-        final_df["month"] = final_df["month"].map(MONTH_NAME_TO_NUMBER)
-        final_df = ensure_expected_output_columns(
-            final_df,
-            self.column_rename_map.values(),
-            f"RTO preprocessing for {month} {year}",
-        )
+    def describe_scope(self, month: str, year: str, **kwargs) -> str:
+        selected_states = set(kwargs.get("states") or [])
+        if not selected_states:
+            return "all states"
+        return ", ".join(sorted(selected_states))
 
-        logging.info(
-            "RTO preprocessing summary for %s %s: files_found=%s empty_reports=%s output_rows=%s",
-            month,
-            year,
-            files_found,
-            empty_reports,
-            len(final_df),
-        )
-
-        # reorder columns
-        final_df = final_df[output_columns]
-        return final_df
+    def data_preprocessing(self, month, year, states: Iterable[str] | None = None):
+        return self.run_preprocessing(month, year, states=states)
 
 
 def main():

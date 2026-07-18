@@ -215,6 +215,40 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertEqual(result.loc[0, "state"], "Telangana")
             self.assertEqual(result.loc[0, "rto_code"], "TG01")
 
+    def test_rto_preprocessing_can_use_repo_mapping_with_isolated_raw_workspace(self):
+        module = load_module("rto_level/rto_level_data_pre_processing.py", "rto_pre_isolated")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            workspace_root = root / "workspace"
+            raw_root = root / "isolated_raw" / "rto_level" / "rto_level_ev_data"
+            workspace_root.mkdir(parents=True, exist_ok=True)
+            write_mapping_workbook(workspace_root)
+            report_path = (
+                raw_root
+                / "Telangana"
+                / "Hyderabad_TG01"
+                / "2026"
+                / "JUN"
+                / "reportTable.xlsx"
+            )
+            write_report_table(report_path, build_raw_dataframe())
+
+            processor = module.RTOLevelDataPreProcessor(
+                base_directory=workspace_root,
+                mapping_file_path=workspace_root / "Table and Mapping V2.xlsx",
+                raw_files_directory=raw_root,
+            )
+            result = processor.data_preprocessing(
+                "JUN",
+                "2026",
+                states=["Telangana"],
+            )
+
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result.loc[0, "state"], "Telangana")
+            self.assertEqual(result.loc[0, "rto_name"], "Hyderabad")
+            self.assertEqual(result.loc[0, "rto_code"], "TG01")
+
     def test_state_preprocessing_outputs_expected_columns(self):
         module = load_module(
             "state_level/state_level_data_pre_processing.py", "state_pre"
