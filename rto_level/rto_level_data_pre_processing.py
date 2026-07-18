@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import logging
 import os
 import pandas as pd
 import sys
+from typing import Iterable
 
 repo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if repo_path not in sys.path:
@@ -41,18 +44,22 @@ class RTOLevelDataPreProcessor:
             **COMMON_FUEL_COLUMN_RENAME_MAP,
         }
 
-    def data_preprocessing(self, month, year):
+    def data_preprocessing(self, month, year, states: Iterable[str] | None = None):
         """
         function to process rto level data files
         :param month: month of the file to pre_process
         :param year: year of the file to pre_process
+        :param states: optional iterable of state folder names to include
         :return: None
         """
+        selected_states = set(states or [])
         final_df = pd.DataFrame()
         unexpected_source_columns = set()
         files_found = 0
         empty_reports = 0
         for state in os.listdir(self.raw_files_directory):
+            if selected_states and state not in selected_states:
+                continue
             state_path = os.path.join(self.raw_files_directory, state)
             for rto_office in os.listdir(state_path):
                 rto_office_path = os.path.join(
@@ -104,6 +111,16 @@ class RTOLevelDataPreProcessor:
                 year,
                 ", ".join(sorted(unexpected_source_columns)),
             )
+        output_columns = list(self.column_rename_map.values())
+        if final_df.empty:
+            target_states = ", ".join(sorted(selected_states)) if selected_states else "all states"
+            logging.warning(
+                "No non-empty RTO rows were produced for %s %s in %s.",
+                month,
+                year,
+                target_states,
+            )
+            return pd.DataFrame(columns=output_columns)
         final_df = pd.merge(
             final_df,
             self.mapping_df,
@@ -149,7 +166,7 @@ class RTOLevelDataPreProcessor:
         )
 
         # reorder columns
-        final_df = final_df[self.column_rename_map.values()]
+        final_df = final_df[output_columns]
         return final_df
 
 

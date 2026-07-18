@@ -48,8 +48,8 @@ class RtoDataIngest:
             connection_error_types=(pyodbc.Error,),
         )
 
-    def data_ingest(self, month, year):
-        file_path = f"rto_level_ev_data_{month}_{year}.csv"
+    @staticmethod
+    def load_csv_rows(file_path):
         if not os.path.exists(file_path):
             raise FileNotFoundError(
                 f"the file {file_path} does not exist. did you run data_pre_processing yet?"
@@ -61,6 +61,16 @@ class RtoDataIngest:
             headers = next(csv_reader)
             for row in csv_reader:
                 data.append(tuple(value if value != "" else None for value in row))
+        return headers, data
+
+    def data_ingest_from_file(self, file_path):
+        headers, data = self.load_csv_rows(file_path)
+        if not data:
+            logger.warning(
+                "No rows found in %s. Skipping database ingestion for this file.",
+                file_path,
+            )
+            return 0
 
         logger.info("Connecting to the database...")
         conn = self.connect()
@@ -111,6 +121,12 @@ class RtoDataIngest:
         finally:
             cursor.close()
             conn.close()
+
+        return len(data)
+
+    def data_ingest(self, month, year):
+        file_path = f"rto_level_ev_data_{month}_{year}.csv"
+        return self.data_ingest_from_file(file_path)
 
 
 def main():

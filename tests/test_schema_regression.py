@@ -174,6 +174,47 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertTrue(pd.isna(result.loc[0, "petrol_e20_hybrid_cng"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_hybrid_cng"]))
 
+    def test_rto_preprocessing_can_filter_to_specific_state(self):
+        module = load_module("rto_level/rto_level_data_pre_processing.py", "rto_pre_filter")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            write_mapping_workbook(root)
+
+            telangana_report = (
+                root
+                / "rto_level"
+                / "rto_level_ev_data"
+                / "Telangana"
+                / "Hyderabad_TG01"
+                / "2026"
+                / "JUN"
+                / "reportTable.xlsx"
+            )
+            andhra_report = (
+                root
+                / "rto_level"
+                / "rto_level_ev_data"
+                / "Andhra Pradesh"
+                / "Adoni_AP01"
+                / "2026"
+                / "JUN"
+                / "reportTable.xlsx"
+            )
+            write_report_table(telangana_report, build_raw_dataframe())
+            write_report_table(andhra_report, build_raw_dataframe())
+
+            with mock.patch.object(module.os, "getcwd", return_value=str(root)):
+                processor = module.RTOLevelDataPreProcessor()
+                result = processor.data_preprocessing(
+                    "JUN",
+                    "2026",
+                    states=["Telangana"],
+                )
+
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result.loc[0, "state"], "Telangana")
+            self.assertEqual(result.loc[0, "rto_code"], "TG01")
+
     def test_state_preprocessing_outputs_expected_columns(self):
         module = load_module(
             "state_level/state_level_data_pre_processing.py", "state_pre"
