@@ -283,6 +283,21 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertTrue(pd.isna(result.loc[0, "petrol_e20_hybrid_cng"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_hybrid_cng"]))
 
+    def test_state_preprocessing_returns_empty_frame_with_expected_columns_when_no_reports_exist(self):
+        module = load_module(
+            "state_level/state_level_data_pre_processing.py", "state_pre_empty"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            write_mapping_workbook(root)
+
+            with mock.patch.object(module.os, "getcwd", return_value=str(root)):
+                processor = module.StateLevelDataPreProcessor()
+                result = processor.data_preprocessing("JUL", "2026")
+
+            self.assertEqual(list(result.columns), STATE_OUTPUT_COLUMNS)
+            self.assertTrue(result.empty)
+
     def test_oem_preprocessing_outputs_expected_columns(self):
         module = load_module("oem_level/data_preprocessing_v2.py", "oem_pre")
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -319,6 +334,19 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertTrue(pd.isna(result.loc[0, "flex_fuel_bio_diesel"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_e20_hybrid_cng"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_hybrid_cng"]))
+
+    def test_oem_preprocessing_returns_empty_frame_with_expected_columns_when_no_reports_exist(self):
+        module = load_module("oem_level/data_preprocessing_v2.py", "oem_pre_empty")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            write_mapping_workbook(root)
+
+            with mock.patch.object(module.os, "getcwd", return_value=str(root)):
+                processor = module.OEMDataPreProcessor()
+                result = processor.data_preprocessing("JUL", "2026")
+
+            self.assertEqual(list(result.columns), OEM_OUTPUT_COLUMNS)
+            self.assertTrue(result.empty)
 
 
 if __name__ == "__main__":
