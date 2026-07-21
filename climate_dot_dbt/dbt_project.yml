@@ -28,9 +28,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 #
 # Repo convention:
 # - models/curated contains the business-facing EV models used by the pipeline.
+# - Materialization choices live with each curated model so operational behavior
+#   stays close to the SQL being deployed.
 # - No schema override is defined here yet, so schema resolution continues to
 #   come from the active dbt profile and any per-model configuration.
-models:
-  climate_dot_dbt:
-    example:
-      +materialized: view

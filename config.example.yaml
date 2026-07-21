@@ -1,0 +1,21 @@
+general:
+  subscription_id: "00000000-0000-0000-0000-000000000000"
+  resource_group: "climate-dot-resource-group"
+
+database:
+  server: "climate-dot-sql-server"
+  database: "climate_dot"
+  username: "sql_username"
+  password: "sql_password"
+
+storage:
+  connection_string: "DefaultEndpointsProtocol=https;AccountName=account_name;AccountKey=account_key;EndpointSuffix=core.windows.net"
+  container_name: "oem-raw-reports"
+  csv_container_name: "oem-processed-csv"
+  state_wise_container_name: "state-raw-reports"
+  state_wise_csv_container_name: "state-processed-csv"
+  rto_wise_container_name: "rto-raw-reports"
+  rto_wise_csv_container_name: "rto-processed-csv"
+
+alerts:
+  google_chat_webhook_url: "https://chat.googleapis.com/v1/spaces/SPACE_ID/messages?key=API_KEY&token=TOKEN"

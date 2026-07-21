@@ -1,0 +1,67 @@
+name: Repo Checks
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  unit-and-shell-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install CI test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-ci.txt
+
+      - name: Run shell checks and unit tests
+        run: PYTHON_BIN=python bash ops/run_repo_checks.sh
+
+  dbt-parse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dbt parser dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-core==1.8.9 dbt-sqlserver==1.8.7
+
+      - name: Write CI dbt profile
+        run: |
+          mkdir -p "${RUNNER_TEMP}/dbt-profile"
+          cat > "${RUNNER_TEMP}/dbt-profile/profiles.yml" <<'EOF'
+          climate_dot_dbt:
+            target: ci
+            outputs:
+              ci:
+                type: sqlserver
+                driver: "ODBC Driver 18 for SQL Server"
+                server: "example.invalid"
+                port: 1433
+                database: climate_dot
+                schema: dbo
+                user: ci
+                password: ci
+                encrypt: false
+                trust_cert: true
+                threads: 1
+          EOF
+
+      - name: Run dbt parse
+        run: RUN_DBT_PARSE=1 DBT_PROFILES_DIR="${RUNNER_TEMP}/dbt-profile" bash ops/run_repo_checks.sh

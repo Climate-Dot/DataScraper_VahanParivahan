@@ -26,6 +26,9 @@ The active preprocessing scripts now share:
 - a centralized state list in [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
 - a shared raw fuel column mapping in [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py)
 - shared runtime month/year and `config.yaml` resolution in [`runtime_config.py`](/Users/monish/DataScraper_VahanParivahan/runtime_config.py)
+- a shared preprocessing base in [`etl_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/etl_preprocessing.py)
+- a shared SQL ingestion base in [`etl_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/etl_ingestion.py)
+- a shared blob upload entrypoint helper in [`etl_blob_upload.py`](/Users/monish/DataScraper_VahanParivahan/etl_blob_upload.py)
 - shared SQL Server connection retry behavior in [`sqlserver_utils.py`](/Users/monish/DataScraper_VahanParivahan/sqlserver_utils.py)
 - shared schema-drift safeguards in [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py)
 - shared blob upload and cleanup helpers in [`blob_storage_utils.py`](/Users/monish/DataScraper_VahanParivahan/blob_storage_utils.py)
@@ -60,6 +63,9 @@ This means `Access Forbidden` during `initial_page_load` should be treated as a 
 - [`rto_level`](/Users/monish/DataScraper_VahanParivahan/rto_level): RTO pipeline code
 - [`state_level`](/Users/monish/DataScraper_VahanParivahan/state_level): State pipeline code
 - [`climate_dot_dbt`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt): curated SQL layer
+- [`etl_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/etl_preprocessing.py): shared monthly XLSX-to-CSV preprocessing base used by the active pipelines
+- [`etl_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/etl_ingestion.py): shared CSV-to-SQL Server staging/load base used by the active pipelines
+- [`etl_blob_upload.py`](/Users/monish/DataScraper_VahanParivahan/etl_blob_upload.py): shared blob upload wrapper used by the active pipelines
 
 ## Monthly Orchestration Scripts
 
@@ -190,5 +196,6 @@ After upload, the scripts remove local files and directories. That means reruns 
 - Legacy raw tables on the VM may still be on the pre-migration schema until the SQL migration is applied.
 - The SQL used in dbt models is not fully standardized yet across `RTO`, `OEM`, and `State`.
 - VM contents can drift from the repository, especially around dbt model directories.
+- Missing-file recovery and scrape orchestration still have some pipeline-specific duplication even after the shared preprocessing/ingestion/upload refactor.
 
 These are good cleanup targets, but they are documented here first so future changes are explicit and reviewable.

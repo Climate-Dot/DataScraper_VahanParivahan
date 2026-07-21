@@ -16,7 +16,7 @@ The repo currently contains three ingestion pipelines:
 
 - Production is currently the only real environment.
 - The Azure VM can drift from the repository if changes are made directly on the machine.
-- `config.yaml` is required at runtime for database and Azure Blob credentials, but is not committed here.
+- `config.yaml` is required at runtime for database and Azure Blob credentials, but is not committed here. A placeholder version lives at [`config.example.yaml`](/Users/monish/DataScraper_VahanParivahan/config.example.yaml).
 - Google Chat failure alerts are optional, but if enabled the webhook secret should live in `config.yaml` or the `GOOGLE_CHAT_WEBHOOK_URL` environment variable, never in git.
 - The monthly run convention is "previous month by default" unless a month and year are passed on the command line.
 - Vahan source schemas can drift over time, so preprocessing should be treated as a schema boundary, not just a file conversion step.
@@ -27,12 +27,16 @@ The repo currently contains three ingestion pipelines:
 - [`oem_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/oem_data_etl.sh): OEM monthly orchestration script
 - [`rto_ev_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/rto_ev_data_etl.sh): RTO monthly orchestration script
 - [`state_ev_data_etl.sh`](/Users/monish/DataScraper_VahanParivahan/state_ev_data_etl.sh): State monthly orchestration script
+- [`rto_telangana_backfill.sh`](/Users/monish/DataScraper_VahanParivahan/rto_telangana_backfill.sh): Telangana-only historical RTO backfill wrapper
 - [`oem_level`](/Users/monish/DataScraper_VahanParivahan/oem_level): OEM scraping, preprocessing, ingestion, and blob upload code
 - [`rto_level`](/Users/monish/DataScraper_VahanParivahan/rto_level): RTO scraping, preprocessing, ingestion, and blob upload code
 - [`state_level`](/Users/monish/DataScraper_VahanParivahan/state_level): State scraping, preprocessing, ingestion, and blob upload code
 - [`climate_dot_dbt`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt): dbt project for curated SQL models
 - [`pipeline_constants.py`](/Users/monish/DataScraper_VahanParivahan/pipeline_constants.py): shared state list and shared raw fuel column mapping
 - [`runtime_config.py`](/Users/monish/DataScraper_VahanParivahan/runtime_config.py): shared helpers for default month/year resolution and runtime `config.yaml` loading
+- [`etl_preprocessing.py`](/Users/monish/DataScraper_VahanParivahan/etl_preprocessing.py): shared preprocessing base used by the active OEM, RTO, and State monthly pipelines
+- [`etl_ingestion.py`](/Users/monish/DataScraper_VahanParivahan/etl_ingestion.py): shared CSV-to-SQL Server load base used by the active OEM, RTO, and State monthly pipelines
+- [`etl_blob_upload.py`](/Users/monish/DataScraper_VahanParivahan/etl_blob_upload.py): shared blob upload wrapper used by the active OEM, RTO, and State monthly pipelines
 - [`sqlserver_utils.py`](/Users/monish/DataScraper_VahanParivahan/sqlserver_utils.py): shared SQL Server connection retry helper for ingestion scripts
 - [`preprocessing_schema_utils.py`](/Users/monish/DataScraper_VahanParivahan/preprocessing_schema_utils.py): shared preprocessing safeguards for schema drift
 - [`blob_storage_utils.py`](/Users/monish/DataScraper_VahanParivahan/blob_storage_utils.py): shared blob container setup and upload/cleanup helpers
@@ -41,6 +45,7 @@ The repo currently contains three ingestion pipelines:
 - [`docs/runbooks`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks): pipeline-specific operational runbooks
 - [`docs/runbooks/raw_schema_migration.md`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks/raw_schema_migration.md): one-time raw schema migration runbook
 - [`ops/etl_runtime.sh`](/Users/monish/DataScraper_VahanParivahan/ops/etl_runtime.sh): shared shell helper that applies the Selenium browser runtime policy
+- [`ops/run_repo_checks.sh`](/Users/monish/DataScraper_VahanParivahan/ops/run_repo_checks.sh): shared repo validation entrypoint for shell checks, tests, and optional dbt parsing
 - [`ops/production_vm.crontab`](/Users/monish/DataScraper_VahanParivahan/ops/production_vm.crontab): current production cron snapshot for the Azure VM
 - [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql): one-time SQL Server migration for the shared raw fuel taxonomy
 
@@ -91,6 +96,27 @@ Notes:
 - Success alerts send a shorter celebratory summary with emoji, the completed step, and the main cron log path.
 - OEM and RTO dbt failures also include the dedicated dbt log file path in the alert details.
 
+## Validation
+
+The repository now has one shared validation entrypoint for both humans and CI:
+
+```bash
+bash ops/run_repo_checks.sh
+```
+
+That script currently runs:
+
+- shell syntax checks for the monthly ETL entrypoints and shared runtime helpers
+- the repository unit test suite for shared ETL support, schema drift, missing-file recovery, Selenium diagnostics, migration contracts, and Google Chat alerts
+
+Optional dbt project parsing can be enabled when a dbt profile is available:
+
+```bash
+RUN_DBT_PARSE=1 DBT_PROFILES_DIR=/path/to/dbt/profiles bash ops/run_repo_checks.sh
+```
+
+GitHub Actions now runs the same validation flow automatically on every push and pull request. CI-specific Python dependencies live in [`requirements-ci.txt`](/Users/monish/DataScraper_VahanParivahan/requirements-ci.txt) so the fast checks do not need the full scraper runtime.
+
 ## Pipeline Summary
 
 | Pipeline | Entry script | Raw final table | Curated dbt status | Blob upload |
@@ -98,6 +124,12 @@ Notes:
 | RTO | `rto_ev_data_etl.sh` | `fact_ev_data_by_rto` | `rto_wise_ev_data` runs automatically in prod | Yes |
 | OEM | `oem_data_etl.sh` | `fact_oem_data_by_state_and_category` | `oem_wise_ev_data` runs automatically in prod | Yes |
 | State | `state_ev_data_etl.sh` | `fact_ev_data_by_state` | `state_wise_ev_data` exists in the repo but is not part of the current prod operating path | Yes |
+
+Historical RTO note:
+
+- [`rto_level/telangana_historical_backfill.py`](/Users/monish/DataScraper_VahanParivahan/rto_level/telangana_historical_backfill.py) is a Telangana-only raw backfill helper that refreshes the live Telangana RTO mapping, scrapes a historical month range, preprocesses only Telangana rows, and ingests them into `fact_ev_data_by_rto`.
+- It keeps one-off backfill files isolated under [`rto_level/historical_backfill/telangana`](/Users/monish/DataScraper_VahanParivahan/rto_level/historical_backfill/telangana) instead of mixing them into the live monthly `rto_level_ev_data` tree.
+- It does not automatically update the curated `rto_wise_ev_data` model unless you explicitly run it with `--run-dbt-full-refresh`.
 
 ## dbt Project
 
@@ -133,6 +165,5 @@ If you are onboarding yourself back into this project, read in this order:
 - No lower environment for safe end-to-end testing
 - Google Chat webhook delivery is only as reliable as the configured webhook secret and network path on the VM
 - Legacy raw tables on the VM may still reflect pre-migration schemas until the SQL migration is applied
-- Example dbt starter models still exist under [`climate_dot_dbt/models/example`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/example)
 
 This README is intended to describe the system as it exists today, not an idealized future state.

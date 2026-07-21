@@ -12,3 +12,5 @@ __pycache__/
 debug_artifacts/
 oauth-client.json
 output.json
+climate_dot_dbt/target/
+climate_dot_dbt/dbt_packages/

@@ -128,6 +128,20 @@ class RtoMappingRefreshTests(unittest.TestCase):
 
         self.assertEqual(folder_name, "RAJPUR ROADVIU BURARI_DL51")
 
+    def test_build_download_directory_supports_custom_root(self):
+        directory = self.module.RTODataScraper.build_download_directory(
+            "Telangana",
+            "Hyderabad RTO - TG01( 01-JAN-2026 )",
+            "2026",
+            "JUN",
+            download_root="/tmp/telangana-backfill",
+        )
+
+        self.assertEqual(
+            directory,
+            "/tmp/telangana-backfill/Telangana/Hyderabad RTO_TG01/2026/JUN",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
