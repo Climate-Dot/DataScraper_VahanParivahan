@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Iterable
 
 
-DEFAULT_CONFIG_PATH = Path("config.yaml")
+PROJECT_ROOT = Path(__file__).resolve().parent
+DEFAULT_CONFIG_PATH = PROJECT_ROOT / "config.yaml"
 
 
 def get_previous_month_year_label(reference_date: datetime | None = None):
@@ -35,6 +36,14 @@ def load_config(config_path: str | Path = DEFAULT_CONFIG_PATH):
         ) from exc
 
     path = Path(config_path)
+    if not path.is_absolute():
+        cwd_candidate = Path.cwd() / path
+        project_candidate = PROJECT_ROOT / path
+        if cwd_candidate.exists():
+            path = cwd_candidate
+        else:
+            path = project_candidate
+
     with path.open("r", encoding="utf-8") as config_file:
         payload = yaml.safe_load(config_file) or {}
 

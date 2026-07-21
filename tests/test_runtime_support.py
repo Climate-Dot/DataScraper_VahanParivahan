@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest import mock
 
 import blob_storage_utils
 import runtime_config
@@ -37,6 +38,22 @@ class RuntimeConfigTests(unittest.TestCase):
         month, year = runtime_config.resolve_month_year_args(["jul", 2025])
 
         self.assertEqual((month, year), ("JUL", "2025"))
+
+    def test_load_config_resolves_relative_path_from_project_root_when_cwd_differs(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_root = Path(tmpdir)
+            project_root = temp_root / "project"
+            workspace_root = temp_root / "workspace"
+            project_root.mkdir(parents=True, exist_ok=True)
+            workspace_root.mkdir(parents=True, exist_ok=True)
+            config_path = project_root / "config.yaml"
+            config_path.write_text("database:\n  server: test-server\n", encoding="utf-8")
+
+            with mock.patch.object(runtime_config, "PROJECT_ROOT", project_root):
+                with mock.patch("runtime_config.Path.cwd", return_value=workspace_root):
+                    payload = runtime_config.load_config("config.yaml")
+
+        self.assertEqual(payload["database"]["server"], "test-server")
 
 
 class SqlServerUtilsTests(unittest.TestCase):
