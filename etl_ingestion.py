@@ -5,7 +5,11 @@ import logging
 import os
 from pathlib import Path
 
-import pyodbc
+try:
+    import pyodbc
+except ImportError:  # pragma: no cover - pyodbc needs system ODBC libs absent in CI/tests
+    # Real runs on the VM have pyodbc installed; unit tests patch the connection.
+    pyodbc = None
 
 from runtime_config import load_config
 from sqlserver_utils import connect_with_retry
