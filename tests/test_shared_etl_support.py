@@ -181,10 +181,11 @@ class SharedBlobUploadTests(unittest.TestCase):
                 return_value=STORAGE_CONFIG,
             ):
                 with mock.patch.object(
-                    etl_blob_upload.BlobServiceClient,
-                    "from_connection_string",
-                    return_value=fake_blob_service,
-                ):
+                    etl_blob_upload, "BlobServiceClient"
+                ) as blob_service_cls:
+                    blob_service_cls.from_connection_string.return_value = (
+                        fake_blob_service
+                    )
                     raw_count, csv_name = etl_blob_upload.upload_pipeline_artifacts(
                         month="JUN",
                         year="2026",

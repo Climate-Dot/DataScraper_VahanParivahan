@@ -3,7 +3,11 @@ from __future__ import annotations
 import glob
 from pathlib import Path
 
-from azure.storage.blob import BlobServiceClient
+try:
+    from azure.storage.blob import BlobServiceClient
+except ImportError:  # pragma: no cover - azure not installed in CI/local test env
+    # Real runs on the VM have azure installed; unit tests patch this name.
+    BlobServiceClient = None
 
 from blob_storage_utils import (
     ensure_container_exists,

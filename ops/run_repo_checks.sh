@@ -17,6 +17,7 @@ UNIT_TEST_MODULES=(
     tests.test_chat_alerts
     tests.test_dbt_contracts
     tests.test_migration_contract
+    tests.test_pipeline_runtime_wiring
 )
 
 should_run_dbt_parse() {
