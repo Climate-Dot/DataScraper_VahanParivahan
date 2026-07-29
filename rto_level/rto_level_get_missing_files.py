@@ -15,7 +15,10 @@ if REPO_ROOT not in sys.path:
 
 from pipeline_constants import STATE_LIST
 from pipeline_logging import configure_pipeline_logging
-from rto_level.rto_level_data_scraper import RTODataScraper
+from rto_level.rto_level_data_scraper import (
+    RTO_STATE_OFFICE_MAPPING_PATH,
+    RTODataScraper,
+)
 from runtime_config import resolve_month_year_args
 from utils import is_valid_excel_download
 
@@ -24,7 +27,7 @@ configure_pipeline_logging()
 logger = logging.getLogger(__name__)
 
 
-def load_state_rto_mapping(mapping_path="output.json"):
+def load_state_rto_mapping(mapping_path=RTO_STATE_OFFICE_MAPPING_PATH):
     with open(mapping_path, "r", encoding="utf-8") as mapping_file:
         return json.load(mapping_file)
 

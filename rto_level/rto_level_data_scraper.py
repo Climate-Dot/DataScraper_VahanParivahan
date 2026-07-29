@@ -42,6 +42,12 @@ from utils import (
 
 configure_pipeline_logging()
 
+# Live state -> RTO-office label cache: read as a fallback for states whose
+# live mapping refresh fails, and overwritten with the merged result on every
+# successful run. Gitignored; the working-tree copy is load-bearing runtime
+# state, not build output.
+RTO_STATE_OFFICE_MAPPING_PATH = "rto_state_office_mapping.json"
+
 
 def merge_state_rto_mappings(previous_mapping, fresh_mapping):
     """Prefer newly fetched RTO lists, but keep the last known list as fallback."""
@@ -462,15 +468,18 @@ class RTODataScraper:
     @staticmethod
     def load_previous_mapping():
         """
-        function is used to load previous version of output.json if the current fetch fails due to any reason
+        function is used to load previous version of the RTO state/office mapping if the current fetch fails due to any reason
         :return:
         """
-        if os.path.exists("output.json"):
+        if os.path.exists(RTO_STATE_OFFICE_MAPPING_PATH):
             try:
-                with open("output.json", "r") as f:
+                with open(RTO_STATE_OFFICE_MAPPING_PATH, "r") as f:
                     return json.load(f)
             except json.JSONDecodeError:
-                logging.error("Previous output.json is corrupted. Starting fresh.")
+                logging.error(
+                    "Previous %s is corrupted. Starting fresh.",
+                    RTO_STATE_OFFICE_MAPPING_PATH,
+                )
         return {}
 
 def main():
@@ -482,8 +491,9 @@ def main():
     except Exception as e:
         fresh_mapping = {}
         logging.error(
-            "RTO fetching failed with exception: %s. Falling back to older output.json if available.",
+            "RTO fetching failed with exception: %s. Falling back to older %s if available.",
             e,
+            RTO_STATE_OFFICE_MAPPING_PATH,
         )
 
     state_rto_mapping = merge_state_rto_mappings(previous_mapping, fresh_mapping)
@@ -499,22 +509,26 @@ def main():
         )
         if fresh_missing_states:
             logging.warning(
-                "Live RTO mapping refresh missed states and will fall back to the previous output.json for: %s",
+                "Live RTO mapping refresh missed states and will fall back to the previous %s for: %s",
+                RTO_STATE_OFFICE_MAPPING_PATH,
                 ", ".join(fresh_missing_states),
             )
-        with open("output.json", "w") as rto_mapping_output:
+        with open(RTO_STATE_OFFICE_MAPPING_PATH, "w") as rto_mapping_output:
             json.dump(state_rto_mapping, rto_mapping_output, indent=4)
         logging.info(
-            "Saved merged RTO mapping to output.json with coverage for %s states.",
+            "Saved merged RTO mapping to %s with coverage for %s states.",
+            RTO_STATE_OFFICE_MAPPING_PATH,
             len(STATE_LIST) - len(merged_missing_states),
         )
     elif previous_mapping:
         logging.warning(
-            "Live RTO mapping refresh returned no states. Continuing with the previous output.json."
+            "Live RTO mapping refresh returned no states. Continuing with the previous %s.",
+            RTO_STATE_OFFICE_MAPPING_PATH,
         )
     else:
         logging.error(
-            "Live RTO mapping refresh returned no states and no previous output.json is available."
+            "Live RTO mapping refresh returned no states and no previous %s is available.",
+            RTO_STATE_OFFICE_MAPPING_PATH,
         )
 
     if merged_missing_states:

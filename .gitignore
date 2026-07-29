@@ -11,6 +11,6 @@ __pycache__/
 .idea/
 debug_artifacts/
 oauth-client.json
-output.json
+rto_state_office_mapping.json
 climate_dot_dbt/target/
 climate_dot_dbt/dbt_packages/

@@ -28,6 +28,7 @@ from pipeline_logging import configure_pipeline_logging
 from rto_level.rto_level_data_ingestion import RtoDataIngest
 from rto_level.rto_level_data_pre_processing import RTOLevelDataPreProcessor
 from rto_level.rto_level_data_scraper import (
+    RTO_STATE_OFFICE_MAPPING_PATH,
     RTODataScraper,
     merge_state_rto_mappings,
 )
@@ -67,13 +68,16 @@ def parse_args():
     parser.add_argument("--max-workers", type=int, default=10)
     parser.add_argument(
         "--mapping-path",
-        default="output.json",
+        default=RTO_STATE_OFFICE_MAPPING_PATH,
         help="Path to the persisted state-to-RTO mapping JSON file.",
     )
     parser.add_argument(
         "--skip-mapping-persist",
         action="store_true",
-        help="Refresh Telangana RTO offices live, but do not write them back to output.json.",
+        help=(
+            "Refresh Telangana RTO offices live, but do not write them back to "
+            f"{RTO_STATE_OFFICE_MAPPING_PATH}."
+        ),
     )
     parser.add_argument(
         "--force-reextract",

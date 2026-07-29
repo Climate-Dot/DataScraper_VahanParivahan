@@ -179,6 +179,7 @@ class MissingFileRecoveryTests(unittest.TestCase):
                 return "Sample Office_AP01"
 
         scraper_module.RTODataScraper = DummyRTODataScraper
+        scraper_module.RTO_STATE_OFFICE_MAPPING_PATH = "rto_state_office_mapping.json"
         module = load_module(
             "rto_level/rto_level_get_missing_files.py",
             "rto_missing_file_recovery",
@@ -207,6 +208,7 @@ class MissingFileRecoveryTests(unittest.TestCase):
                 return "Sample Office_AP01"
 
         scraper_module.RTODataScraper = DummyRTODataScraper
+        scraper_module.RTO_STATE_OFFICE_MAPPING_PATH = "rto_state_office_mapping.json"
         module = load_module(
             "rto_level/rto_level_get_missing_files.py",
             "rto_missing_file_counts",
