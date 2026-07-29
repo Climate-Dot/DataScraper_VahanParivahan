@@ -120,6 +120,38 @@ class BlobStorageUtilsTests(unittest.TestCase):
             )
             self.assertFalse(target_dir.exists())
 
+    def test_upload_globbed_files_to_container_handles_duplicate_named_downloads(self):
+        # Regression test: a Chrome re-download can leave a second file such as
+        # "reportTable (1).xlsx" alongside "reportTable.xlsx" in the same
+        # directory. Both must upload successfully instead of the second file
+        # disappearing because the first upload deleted the whole directory.
+        container_client = FakeContainerClient()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "rto_level" / "rto_level_ev_data"
+            target_dir = root / "Gujarat" / "AHMEDABAD_GJ1" / "2026" / "JUN"
+            target_dir.mkdir(parents=True)
+            report_path = target_dir / "reportTable.xlsx"
+            duplicate_path = target_dir / "reportTable (1).xlsx"
+            report_path.write_bytes(b"excel-bytes")
+            duplicate_path.write_bytes(b"duplicate-bytes")
+
+            uploaded = blob_storage_utils.upload_globbed_files_to_container(
+                [str(report_path), str(duplicate_path)],
+                relative_root=str(root),
+                container_client=container_client,
+            )
+
+            self.assertEqual(uploaded, 2)
+            self.assertEqual(
+                sorted(name for name, _, _ in container_client.uploads),
+                [
+                    "Gujarat/AHMEDABAD_GJ1/2026/JUN/reportTable (1).xlsx",
+                    "Gujarat/AHMEDABAD_GJ1/2026/JUN/reportTable.xlsx",
+                ],
+            )
+            self.assertFalse(target_dir.exists())
+
     def test_upload_matching_csv_artifact_uploads_and_deletes_csv(self):
         container_client = FakeContainerClient()
 
