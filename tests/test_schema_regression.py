@@ -11,7 +11,13 @@ from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP, STATE_LIST
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLE_WORKBOOK = Path("/Users/monish/Downloads/reportTable (7).xlsx")
+# Optional real-world fixture: a genuine downloaded Vahan report, used to catch
+# Vahan changing its actual column headers (a synthetic file built from
+# COMMON_FUEL_COLUMN_RENAME_MAP would be circular and couldn't catch that
+# drift). Not committed by default since it's real scraped output; drop a
+# sample workbook at this path locally to exercise the check, otherwise it
+# skips.
+SAMPLE_WORKBOOK = REPO_ROOT / "tests" / "fixtures" / "sample_reportTable.xlsx"
 
 COMMON_FUEL_OUTPUT_COLUMNS = list(COMMON_FUEL_COLUMN_RENAME_MAP.values())
 
