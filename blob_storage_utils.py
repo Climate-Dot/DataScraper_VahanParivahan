@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 
 try:
     from azure.core.exceptions import ResourceExistsError
@@ -36,18 +35,31 @@ def ensure_container_exists(container_client, container_name):
 
 def upload_globbed_files_to_container(file_paths, relative_root, container_client):
     uploaded_files = 0
+    uploaded_dirs = set()
     for file_path in file_paths:
         relative_path = os.path.relpath(file_path, relative_root).replace("\\", "/")
         blob_client = container_client.get_blob_client(blob=relative_path)
         with open(file_path, "rb") as data:
             blob_client.upload_blob(data, overwrite=True)
         logging.info("Uploaded %s to blob path %s", file_path, relative_path)
-        directory_to_remove = os.path.dirname(file_path)
-        if os.path.isdir(directory_to_remove):
-            shutil.rmtree(directory_to_remove)
+        os.remove(file_path)
+        uploaded_dirs.add(os.path.dirname(file_path))
         uploaded_files += 1
 
+    for directory in uploaded_dirs:
+        _remove_empty_dir_chain(directory, stop_at=relative_root)
+
     return uploaded_files
+
+
+def _remove_empty_dir_chain(directory, *, stop_at):
+    stop_at = os.path.abspath(stop_at)
+    directory = os.path.abspath(directory)
+    while directory != stop_at and directory.startswith(stop_at + os.sep):
+        if not os.path.isdir(directory) or os.listdir(directory):
+            return
+        os.rmdir(directory)
+        directory = os.path.dirname(directory)
 
 
 def upload_matching_csv_artifact(
