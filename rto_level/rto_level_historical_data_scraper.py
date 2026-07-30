@@ -207,7 +207,7 @@ class RTODataScraper:
 def main():
     data_extract_class = RTODataScraper()
 
-    with open("output.json", "r") as f:
+    with open("rto_state_office_mapping.json", "r") as f:
         state_rto_mapping = json.load(f)
 
     years = [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
