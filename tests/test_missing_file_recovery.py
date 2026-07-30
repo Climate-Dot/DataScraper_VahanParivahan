@@ -7,51 +7,10 @@ import zipfile
 from pathlib import Path
 from unittest import mock
 
+from tests._selenium_test_stubs import install_selenium_stubs
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-
-
-def install_selenium_stubs():
-    selenium = types.ModuleType("selenium")
-    webdriver = types.ModuleType("selenium.webdriver")
-    webdriver_common = types.ModuleType("selenium.webdriver.common")
-    webdriver_common_by = types.ModuleType("selenium.webdriver.common.by")
-    webdriver_support = types.ModuleType("selenium.webdriver.support")
-    webdriver_support_ec = types.ModuleType(
-        "selenium.webdriver.support.expected_conditions"
-    )
-    webdriver_support_wait = types.ModuleType("selenium.webdriver.support.wait")
-
-    class DummyBy:
-        ID = "id"
-        CSS_SELECTOR = "css"
-        XPATH = "xpath"
-        TAG_NAME = "tag_name"
-
-    class DummyWebDriverWait:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def until(self, condition):
-            return condition
-
-    def dummy_clickable(locator):
-        return locator
-
-    webdriver_common_by.By = DummyBy
-    webdriver_support_ec.element_to_be_clickable = dummy_clickable
-    webdriver_support_wait.WebDriverWait = DummyWebDriverWait
-
-    sys.modules.setdefault("selenium", selenium)
-    sys.modules.setdefault("selenium.webdriver", webdriver)
-    sys.modules.setdefault("selenium.webdriver.common", webdriver_common)
-    sys.modules.setdefault("selenium.webdriver.common.by", webdriver_common_by)
-    sys.modules.setdefault("selenium.webdriver.support", webdriver_support)
-    sys.modules.setdefault(
-        "selenium.webdriver.support.expected_conditions",
-        webdriver_support_ec,
-    )
-    sys.modules.setdefault("selenium.webdriver.support.wait", webdriver_support_wait)
 
 
 def load_module(relative_path, module_name, stub_modules=None):
