@@ -29,7 +29,6 @@ from utils import (
     configure_chrome_options,
     find_element as shared_find_element,
     format_log_context,
-    is_valid_excel_download,
     open_page,
     summarize_exception,
     VAHAN_DASHBOARD_URL,
@@ -100,9 +99,7 @@ class OEMDataScraper:
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
         expected_report_path = os.path.join(download_path, "reportTable.xlsx")
-        if os.path.exists(expected_report_path) and not is_valid_excel_download(
-            expected_report_path
-        ):
+        if os.path.exists(expected_report_path):
             os.remove(expected_report_path)
         context = {
             "pipeline": "oem",
@@ -280,9 +277,7 @@ class OEMDataScraper:
                 ) as e:
                     last_exception = e
                     retries += 1
-                    if os.path.exists(expected_report_path) and not is_valid_excel_download(
-                        expected_report_path
-                    ):
+                    if os.path.exists(expected_report_path):
                         try:
                             os.remove(expected_report_path)
                         except OSError:

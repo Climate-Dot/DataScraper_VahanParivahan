@@ -33,7 +33,6 @@ from utils import (
     create_directory_if_not_exists,
     find_element,
     format_log_context,
-    is_valid_excel_download,
     open_page,
     summarize_exception,
     get_year_month_label,
@@ -84,6 +83,32 @@ class RTODataScraper:
         if not rto_name_code:
             return None
         return RTODataScraper.sanitize_folder_name(rto_name_code)
+
+    @staticmethod
+    def build_download_directory(
+        state_label,
+        rto_label,
+        year_label,
+        month_label,
+        download_root=None,
+    ):
+        state_folder_name = re.sub(r"[^a-zA-Z\s]", " ", state_label).rstrip()
+        rto_folder_name = RTODataScraper.build_rto_folder_name(rto_label)
+        if not rto_folder_name:
+            return None
+
+        base_directory = download_root or os.path.join(
+            os.getcwd(),
+            "rto_level",
+            "rto_level_ev_data",
+        )
+        return os.path.join(
+            base_directory,
+            state_folder_name.rstrip(),
+            rto_folder_name,
+            str(year_label),
+            month_label,
+        )
 
     def get_all_rto_from_state(self, state):
         """
@@ -213,14 +238,8 @@ class RTODataScraper:
             raise ValueError(f"Unable to parse RTO label: {rto_label}")
         rto_office_code = rto_folder_name.rsplit("_", 1)[1]
 
-        download_path = os.path.join(
-            os.getcwd(),
-            "rto_level",
-            "rto_level_ev_data",
-            state_folder_name.rstrip(),
-            rto_folder_name,
-            str(year_label),
-            month_label,
+        download_path = self.build_download_directory(
+            state_label, rto_label, year_label, month_label
         )
 
         create_directory_if_not_exists(download_path)
@@ -232,9 +251,7 @@ class RTODataScraper:
             service=Service(ChromeDriverManager().install()), options=browserOpts
         )
         expected_report_path = os.path.join(download_path, "reportTable.xlsx")
-        if os.path.exists(expected_report_path) and not is_valid_excel_download(
-            expected_report_path
-        ):
+        if os.path.exists(expected_report_path):
             os.remove(expected_report_path)
         context = {
             "pipeline": "rto",
@@ -404,9 +421,7 @@ class RTODataScraper:
                 ) as e:
                     last_exception = e
                     retries += 1
-                    if os.path.exists(expected_report_path) and not is_valid_excel_download(
-                        expected_report_path
-                    ):
+                    if os.path.exists(expected_report_path):
                         try:
                             os.remove(expected_report_path)
                         except OSError:
