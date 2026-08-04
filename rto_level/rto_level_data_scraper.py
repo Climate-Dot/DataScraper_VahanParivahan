@@ -84,6 +84,18 @@ class RTODataScraper:
         return re.sub(r"[\\/]", "", name).strip()
 
     @staticmethod
+    def build_rto_option_xpath(rto_office_code):
+        """
+        Build the XPath used to select an RTO office from the dropdown by its
+        code. Anchored with " - CODE(" (not a bare contains(text(), CODE))
+        so a shorter code like "HR2" cannot match a longer one that starts
+        with it, e.g. "HR29" or "HR269" - those render as
+        " - HR29(" / " - HR269(" and would otherwise satisfy a bare
+        contains() check for "HR2", causing the wrong office to be clicked.
+        """
+        return f'//ul[@id="selectedRto_items"]/li[contains(text(), " - {rto_office_code}(")]'
+
+    @staticmethod
     def build_rto_folder_name(rto_label):
         rto_name_code = RTODataScraper.extract_rto_name_and_code(rto_label)
         if not rto_name_code:
@@ -310,7 +322,7 @@ class RTODataScraper:
                     find_element(
                         browser,
                         "xpath",
-                        f'//ul[@id="selectedRto_items"]/li[contains(text(), "{rto_office_code}")]',
+                        self.build_rto_option_xpath(rto_office_code),
                         step="select_rto_office",
                         context=context,
                     ).click()
