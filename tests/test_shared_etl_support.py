@@ -3,8 +3,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import pandas as pd
+
 import etl_blob_upload
 from etl_ingestion import BaseSqlServerIngestor
+from etl_preprocessing import BaseExcelPreprocessor
 
 
 DATABASE_CONFIG = {
@@ -209,6 +212,40 @@ class SharedBlobUploadTests(unittest.TestCase):
             fake_blob_service.container_clients["csv-state"].uploads,
             [("state_level_ev_data_JUN_2026.csv", b"a,b\n1,2\n", True)],
         )
+
+
+class SharedPreprocessingNumericCoercionTests(unittest.TestCase):
+    def test_partially_missing_fuel_column_stays_integer_not_float(self):
+        # Simulates concatenating two offices' monthly reports where one
+        # office's Excel report simply doesn't have the bio_cng_bio_gas
+        # column at all - pandas fills those rows with NaN on concat and
+        # upcasts the whole column to float64, which previously rendered
+        # as "12.0" in the output CSV and broke the SQL side's CAST(...AS INT).
+        office_with_column = pd.DataFrame({"bio_cng_bio_gas": [0, 5], "petrol": [10, 20]})
+        office_without_column = pd.DataFrame({"petrol": [7]})
+        combined = pd.concat([office_with_column, office_without_column], ignore_index=True)
+        self.assertEqual(combined["bio_cng_bio_gas"].dtype, "float64")
+
+        fixed = BaseExcelPreprocessor._coerce_numeric_output_columns(combined)
+
+        self.assertEqual(str(fixed["bio_cng_bio_gas"].dtype), "Int64")
+        csv_output = fixed.to_csv(index=False)
+        self.assertNotIn(".0", csv_output)
+        self.assertEqual(csv_output, "bio_cng_bio_gas,petrol\n0,10\n5,20\n,7\n")
+
+    def test_comma_formatted_numeric_strings_are_stripped(self):
+        df = pd.DataFrame({"total": ["1,234", "56"]})
+
+        fixed = BaseExcelPreprocessor._coerce_numeric_output_columns(df)
+
+        self.assertEqual(list(fixed["total"]), [1234, 56])
+
+    def test_missing_column_is_untouched(self):
+        df = pd.DataFrame({"petrol": [1, 2]})
+
+        fixed = BaseExcelPreprocessor._coerce_numeric_output_columns(df)
+
+        self.assertNotIn("bio_cng_bio_gas", fixed.columns)
 
 
 if __name__ == "__main__":

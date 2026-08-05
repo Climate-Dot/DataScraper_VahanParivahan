@@ -7,7 +7,7 @@ from typing import Iterable, Iterator
 
 import pandas as pd
 
-from pipeline_constants import MONTH_NAME_TO_NUMBER
+from pipeline_constants import COMMON_FUEL_COLUMN_RENAME_MAP, MONTH_NAME_TO_NUMBER
 from preprocessing_schema_utils import (
     ensure_expected_output_columns,
     find_unexpected_source_columns,
@@ -19,6 +19,15 @@ STATE_VALUE_REPLACEMENTS = {
     "Andaman   Nicobar Island": "Andaman and Nicobar",
     "UT of DNH and DD": "Dadara and Nagar Havelli",
 }
+
+# Shared across RTO/OEM/State: when pd.concat combines per-office reports for a
+# month and a fuel column is present in some reports but absent from others,
+# pandas injects NaN for the rows missing it and upcasts the whole column to
+# float64 - so real integer counts render as "12.0" instead of "12" once
+# written to CSV, which then fails the SQL side's CAST(... AS INT). Coercing
+# these to a nullable integer dtype keeps real counts as plain integers and
+# keeps missing values genuinely blank (NULL), not fabricated as 0.
+NUMERIC_OUTPUT_COLUMNS = frozenset(COMMON_FUEL_COLUMN_RENAME_MAP.values())
 
 
 @dataclass(frozen=True)
@@ -125,7 +134,19 @@ class BaseExcelPreprocessor:
             self.output_columns,
             f"{self.pipeline_label.upper()} preprocessing for {month} {year}",
         )
+        df = self._coerce_numeric_output_columns(df)
         return df[self.output_columns]
+
+    @staticmethod
+    def _coerce_numeric_output_columns(df: pd.DataFrame) -> pd.DataFrame:
+        for column_name in NUMERIC_OUTPUT_COLUMNS:
+            if column_name not in df.columns:
+                continue
+            series = df[column_name]
+            if series.dtype == object:
+                series = series.str.replace(",", "", regex=False)
+            df[column_name] = pd.to_numeric(series, errors="coerce").astype("Int64")
+        return df
 
     def _read_report(self, report_path: Path) -> pd.DataFrame:
         if not is_valid_excel_download(report_path):
