@@ -115,6 +115,40 @@ class SharedSqlIngestionTests(unittest.TestCase):
         self.assertIn("s.state = final_demo.state", query)
         self.assertIn("s.vehicle_class = final_demo.vehicle_class", query)
 
+    def test_build_delete_query_can_replace_a_complete_date_snapshot(self):
+        ingestor = DummyIngestor()
+
+        query = ingestor.build_delete_query(["date"])
+
+        self.assertIn("s.date = final_demo.date", query)
+        self.assertNotIn("s.state = final_demo.state", query)
+        self.assertNotIn("s.vehicle_class = final_demo.vehicle_class", query)
+
+    def test_build_delete_query_can_replace_a_partial_state_snapshot(self):
+        ingestor = DummyIngestor()
+
+        query = ingestor.build_delete_query(["date", "state"])
+
+        self.assertIn("s.date = final_demo.date", query)
+        self.assertIn("s.state = final_demo.state", query)
+        self.assertNotIn("s.vehicle_class = final_demo.vehicle_class", query)
+
+    def test_monthly_ingest_replaces_the_complete_date_snapshot(self):
+        ingestor = DummyIngestor()
+
+        with mock.patch.object(
+            ingestor,
+            "data_ingest_from_file",
+            return_value=3,
+        ) as ingest_from_file:
+            inserted_rows = ingestor.data_ingest("JUN", "2026")
+
+        self.assertEqual(inserted_rows, 3)
+        ingest_from_file.assert_called_once_with(
+            "demo_file_JUN_2026.csv",
+            replacement_scope_columns=["date"],
+        )
+
     def test_data_ingest_from_file_executes_shared_load_flow(self):
         ingestor = DummyIngestor()
         connection = RecordingConnection()

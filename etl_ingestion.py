@@ -78,10 +78,14 @@ class BaseSqlServerIngestor:
                 data.append(tuple(value if value != "" else None for value in row))
         return headers, data
 
-    def build_delete_query(self) -> str:
+    def build_delete_query(
+        self,
+        replacement_scope_columns: list[str] | None = None,
+    ) -> str:
+        scope_columns = replacement_scope_columns or self.merge_key_columns
         delete_conditions = " AND ".join(
             f"s.{column_name} = {self.final_table_name}.{column_name}"
-            for column_name in self.merge_key_columns
+            for column_name in scope_columns
         )
         return f"""
             DELETE FROM {self.final_table_name}
@@ -91,7 +95,12 @@ class BaseSqlServerIngestor:
             )
             """
 
-    def data_ingest_from_file(self, file_path: str | Path) -> int:
+    def data_ingest_from_file(
+        self,
+        file_path: str | Path,
+        *,
+        replacement_scope_columns: list[str] | None = None,
+    ) -> int:
         headers, data = self.load_csv_rows(str(file_path))
         if not data:
             logger.warning(
@@ -123,7 +132,7 @@ class BaseSqlServerIngestor:
             logger.info(
                 "Deleting existing records from final table: %s", self.final_table_name
             )
-            cursor.execute(self.build_delete_query())
+            cursor.execute(self.build_delete_query(replacement_scope_columns))
 
             transfer_query = f"""
             INSERT INTO {self.final_table_name}
@@ -142,4 +151,7 @@ class BaseSqlServerIngestor:
         return len(data)
 
     def data_ingest(self, month: str, year: str) -> int:
-        return self.data_ingest_from_file(self.build_file_path(month, year))
+        return self.data_ingest_from_file(
+            self.build_file_path(month, year),
+            replacement_scope_columns=["date"],
+        )
