@@ -444,7 +444,10 @@ def main():
                 window.year,
             )
         else:
-            inserted_rows = ingester.data_ingest_from_file(str(output_csv_path))
+            inserted_rows = ingester.data_ingest_from_file(
+                str(output_csv_path),
+                replacement_scope_columns=["date", "state"],
+            )
             logger.info(
                 "Inserted or refreshed %s Telangana raw rows for %s %s.",
                 inserted_rows,
