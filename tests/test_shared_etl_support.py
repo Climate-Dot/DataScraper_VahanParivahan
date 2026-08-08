@@ -274,6 +274,23 @@ class SharedPreprocessingNumericCoercionTests(unittest.TestCase):
 
         self.assertEqual(list(fixed["total"]), [1234, 56])
 
+    def test_mixed_numeric_objects_are_not_lost_during_string_cleanup(self):
+        df = pd.DataFrame(
+            {
+                "pure_ev": pd.Series(
+                    [148, "1,234", None],
+                    dtype=object,
+                )
+            }
+        )
+
+        fixed = BaseExcelPreprocessor._coerce_numeric_output_columns(df)
+
+        self.assertEqual(str(fixed["pure_ev"].dtype), "Int64")
+        self.assertEqual(fixed["pure_ev"].iloc[0], 148)
+        self.assertEqual(fixed["pure_ev"].iloc[1], 1234)
+        self.assertTrue(pd.isna(fixed["pure_ev"].iloc[2]))
+
     def test_missing_column_is_untouched(self):
         df = pd.DataFrame({"petrol": [1, 2]})
 
