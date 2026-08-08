@@ -95,6 +95,8 @@ dbt run --select rto_wise_ev_data
 - If a live mapping refresh is partial, the scraper falls back to the previous `rto_state_office_mapping.json` for the missing states instead of silently dropping them.
 - If a state is still missing after the merge, the scraper now fails early with a clear missing-state error before download work starts.
 - The preprocessing step uses the shared fuel taxonomy and logs unexpected raw columns.
+- Vahan's blank report-total header is positional: older workbooks can expose it as `Unnamed: 26`, while current workbooks expose it as `Unnamed: 38`. The shared preprocessor normalizes the final unnamed column before monthly files are combined and fails if a non-empty report has no recognizable total column.
+- Legacy `ETHANOL` and `PETROL/ETHANOL` columns are intentionally not aliases for the newer `ETHANOL(E100)` taxonomy. They remain unmapped unless the business approves an explicit historical mapping.
 - Missing expected output columns are written as `NULL`, not `0`.
 - The ingestion step deletes matching rows from the raw final table before inserting staged data.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.
@@ -135,6 +137,8 @@ find /home/climate_dot_data/DataScraper_VahanParivahan/debug_artifacts/selenium/
 ## Verification Checklist
 
 - Confirm the processed CSV exists before ingestion.
+- For historical rebuilds, validate one month without database writes first. The processed row count and mapped fuel/total aggregates must match the raw workbooks before replacing that month's snapshot.
+- Historical monthly ingestion is snapshot replacement: rows no longer present in the downloaded Vahan reports are removed for that date.
 - Confirm raw table load completes without SQL errors.
 - Confirm blob upload completed before local cleanup removed files.
 - Confirm `dbt run --select rto_wise_ev_data` succeeds after any repo sync.
