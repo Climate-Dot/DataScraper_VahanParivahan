@@ -142,9 +142,11 @@ class BaseExcelPreprocessor:
         for column_name in NUMERIC_OUTPUT_COLUMNS:
             if column_name not in df.columns:
                 continue
-            series = df[column_name]
-            if series.dtype == object:
-                series = series.str.replace(",", "", regex=False)
+            # Excel columns can contain a mix of Python numbers and formatted
+            # strings. The pandas .str accessor treats numeric objects as
+            # missing, so normalize the whole series to nullable strings first.
+            series = df[column_name].astype("string")
+            series = series.str.replace(",", "", regex=False)
             df[column_name] = pd.to_numeric(series, errors="coerce").astype("Int64")
         return df
 
