@@ -174,11 +174,42 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.assertEqual(result.loc[0, "vehicle_use_type"], "Private")
             self.assertEqual(result.loc[0, "month"], 6)
             self.assertEqual(result.loc[0, "date"], "01/06/2026")
+            self.assertEqual(result.loc[0, "total"], 32)
             self.assertTrue(pd.isna(result.loc[0, "hcng"]))
             self.assertTrue(pd.isna(result.loc[0, "hydrogen_ice"]))
             self.assertTrue(pd.isna(result.loc[0, "flex_fuel_bio_diesel"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_e20_hybrid_cng"]))
             self.assertTrue(pd.isna(result.loc[0, "petrol_hybrid_cng"]))
+
+    def test_rto_preprocessing_recovers_legacy_positional_total(self):
+        module = load_module(
+            "rto_level/rto_level_data_pre_processing.py",
+            "rto_pre_legacy_total",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            write_mapping_workbook(root)
+            legacy_df = build_raw_dataframe().rename(
+                columns={"Unnamed: 38": "Unnamed: 26"}
+            )
+            report_path = (
+                root
+                / "rto_level"
+                / "rto_level_ev_data"
+                / "Test State"
+                / "TestRto_TS01"
+                / "2013"
+                / "JAN"
+                / "reportTable.xlsx"
+            )
+            write_report_table(report_path, legacy_df)
+
+            processor = module.RTOLevelDataPreProcessor(base_directory=root)
+            result = processor.data_preprocessing("JAN", "2013")
+
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result.loc[0, "total"], 32)
+            self.assertEqual(result.loc[0, "date"], "01/01/2013")
 
     def test_rto_preprocessing_can_filter_to_specific_state(self):
         module = load_module("rto_level/rto_level_data_pre_processing.py", "rto_pre_filter")

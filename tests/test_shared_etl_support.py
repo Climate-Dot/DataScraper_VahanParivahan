@@ -299,5 +299,57 @@ class SharedPreprocessingNumericCoercionTests(unittest.TestCase):
         self.assertNotIn("bio_cng_bio_gas", fixed.columns)
 
 
+class SharedPreprocessingTotalColumnTests(unittest.TestCase):
+    def build_processor(self):
+        processor = object.__new__(BaseExcelPreprocessor)
+        processor.pipeline_label = "test"
+        processor.column_rename_map = {"Unnamed: 38": "total"}
+        return processor
+
+    def test_legacy_positional_total_is_normalized(self):
+        processor = self.build_processor()
+        df = pd.DataFrame(
+            {
+                "Unnamed: 1": ["MOTOR CAR"],
+                "DIESEL": [10],
+                "Unnamed: 26": [10],
+            }
+        )
+
+        fixed = processor._normalize_report_total_column(df)
+
+        self.assertEqual(
+            list(fixed.columns),
+            ["Unnamed: 1", "DIESEL", "Unnamed: 38"],
+        )
+        self.assertEqual(fixed.loc[0, "Unnamed: 38"], 10)
+
+    def test_current_total_column_is_unchanged(self):
+        processor = self.build_processor()
+        df = pd.DataFrame(
+            {
+                "Unnamed: 1": ["MOTOR CAR"],
+                "DIESEL": [10],
+                "Unnamed: 38": [10],
+            }
+        )
+
+        fixed = processor._normalize_report_total_column(df)
+
+        self.assertIs(fixed, df)
+
+    def test_unrecognized_total_layout_fails_instead_of_emitting_null_totals(self):
+        processor = self.build_processor()
+        df = pd.DataFrame(
+            {
+                "Unnamed: 1": ["MOTOR CAR"],
+                "DIESEL": [10],
+            }
+        )
+
+        with self.assertRaisesRegex(ValueError, "Unable to identify"):
+            processor._normalize_report_total_column(df)
+
+
 if __name__ == "__main__":
     unittest.main()

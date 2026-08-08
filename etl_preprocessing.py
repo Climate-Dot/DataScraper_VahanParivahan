@@ -150,18 +150,57 @@ class BaseExcelPreprocessor:
             df[column_name] = pd.to_numeric(series, errors="coerce").astype("Int64")
         return df
 
+    def _normalize_report_total_column(self, df: pd.DataFrame) -> pd.DataFrame:
+        if df.empty:
+            return df
+
+        total_source_columns = [
+            source_column
+            for source_column, output_column in self.column_rename_map.items()
+            if output_column == "total"
+        ]
+        if len(total_source_columns) != 1:
+            raise ValueError(
+                f"Expected exactly one {self.pipeline_label} source mapping for total; "
+                f"found {total_source_columns}"
+            )
+
+        canonical_total_column = total_source_columns[0]
+        if canonical_total_column in df.columns:
+            return df
+
+        # Vahan leaves the Total header blank, so pandas names it from its
+        # position (for example Unnamed: 26 in legacy reports and Unnamed: 38
+        # in current reports). It is consistently the final report column.
+        candidate = df.columns[-1]
+        candidate_label = str(candidate).strip()
+        is_unnamed_total = (
+            candidate_label.startswith("Unnamed:")
+            and candidate_label != "Unnamed: 1"
+        )
+        is_named_total = candidate_label.casefold() in {"total", "grand total"}
+        if not (is_unnamed_total or is_named_total):
+            raise ValueError(
+                f"Unable to identify the {self.pipeline_label} total column. "
+                f"Expected {canonical_total_column!r} or a final unnamed/total "
+                f"column, found final column {candidate!r}."
+            )
+
+        return df.rename(columns={candidate: canonical_total_column})
+
     def _read_report(self, report_path: Path) -> pd.DataFrame:
         if not is_valid_excel_download(report_path):
             raise ValueError(
                 f"Invalid {self.pipeline_label} Excel report file: {report_path}"
             )
 
-        return pd.read_excel(
+        df = pd.read_excel(
             report_path,
             skiprows=3,
             index_col=0,
             engine="openpyxl",
         )
+        return self._normalize_report_total_column(df)
 
     def run_preprocessing(self, month: str, year: str, **kwargs) -> pd.DataFrame:
         frames: list[pd.DataFrame] = []
