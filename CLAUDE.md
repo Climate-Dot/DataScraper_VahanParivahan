@@ -2,7 +2,18 @@
 
 This file is the LLM-oriented handover for this repository. It is written for an agent that needs to continue cleanup and improvement work without re-discovering the same production constraints.
 
-As of July 25, 2026, this project is mid-rewrite: the raw schema cleanup, shared preprocessing/ingestion/upload foundations, runtime alerting, and CI/repo checks are in place, but the Selenium scraping layer is only partially centralized.
+## ⚠️ Read This First: Vahan Portal Retirement (as of 2026-08-09)
+
+**The Vahan dashboard this entire pipeline depends on stops being usable for us after August 15, 2026.** The government is replacing it with a new portal that (a) has a different data grain than what this repo currently ingests and (b) does not support downloading raw data at all. Starting the month after cutover, `RTO`/`OEM`/`State` data will need to come from that new portal instead.
+
+Consequences for anyone picking this repo up:
+
+- **Development on this Vahan-based pipeline is intentionally halted as of 2026-08-09.** Do not invest in refactors, centralization work, or other code-quality improvements here unless something breaks and needs a fix, or the maintainer explicitly asks for it. The code's remaining useful life is measured in days, not the weeks/months this file's older "Recommended Future Work" section assumed.
+- The **new-portal integration is a separate, not-yet-scoped initiative.** It has not started. Do not assume this repo's schema, grain, or ingestion pattern carries over — the new source is coarser and has no raw export, so the curated models will very likely need to change shape, not just source. See "Next Initiative: New Portal Integration" below.
+- **This repo has been worked on by more than one AI agent in parallel** — Claude Code and an agent called "Codex" (see `codex/*` branches in git history, e.g. PRs #14-#17). If you're an agent picking this up, check `git log --oneline -15` before assuming any file is in the state you last saw it in — do not assume you're the only one who has touched this repo recently.
+- The historical dataset (2013 through the last captured month) has been thoroughly remediated and verified as of 2026-08-09 — see "August 2026 Historical Remediation" below before re-investigating data-quality issues that may already be understood and fixed.
+
+As of July 25, 2026, this project is mid-rewrite: the raw schema cleanup, shared preprocessing/ingestion/upload foundations, runtime alerting, and CI/repo checks are in place, but the Selenium scraping layer is only partially centralized. Most of that rewrite work is now deprioritized — see the retirement note above.
 
 ## What This Project Does
 
@@ -41,15 +52,27 @@ This means every change should be made with rollbackability and production safet
 
 ## Current Safe Baseline
 
-The latest known-safe committed baseline includes these recent commits:
+As of 2026-08-09, `main` is at `a28620e3` (`Merge pull request #17 from Climate-Dot/codex/historical-rto-reprocessing`). Recent commits of note, newest first:
 
-- `d8bb5d16` `Add Telangana historical RTO backfill`
-- `1e561f3d` `Fix Telangana backfill mapping resolution`
-- `0256d78b` `Harden Telangana backfill runtime config`
-- `a5b0a8e2` `Centralize ETL preprocessing, load, and upload flows`
-- `0dcb106e` `Add rollout-safe repo checks and cleanup`
+- `a28620e3` merge PR #17 `codex/historical-rto-reprocessing` — `ab39a7a9` `Handle historical Vahan total columns`
+- `a6d38a1c` merge PR #16 `codex/preserve-mixed-numeric-counts` — `311fc19f` `Preserve numeric objects during count normalization` (refines the fix below; see remediation section)
+- `853b1d64` merge PR #15 `codex/rto-reingestion-repair` — `865fd039` `Replace complete snapshots safely during ingestion` (the orphaned-row-gap fix, see below)
+- `27d6b707` merge PR #14 `fix/rto-office-selector-exact-match` — `0f1a7da5` `Fix RTO office selector matching the wrong office by code substring`
 
-Treat `0dcb106e` as the current safe handoff point unless newer work is explicitly reviewed.
+Treat `a28620e3` as the current safe handoff point unless newer work is explicitly reviewed. Given the portal retirement (see top of file), do not expect or require a long-lived "safe baseline" discipline here going forward — check `git log` for the actual current tip instead of trusting this section to stay current.
+
+## August 2026 Historical Remediation (Complete)
+
+Between 2026-08-04 and 2026-08-09, a user-reported data mix-up (one Haryana office's monthly report showing a different office's numbers) triggered a full audit and remediation of the entire historical RTO dataset (2013 through the latest captured month), done jointly by Claude Code and Codex. This work is now complete and verified; treat the dataset as trustworthy unless you find new, specific evidence otherwise. Bugs found and fixed, in the order discovered:
+
+1. **RTO office-selector substring collision.** The Selenium office-picker XPath used `contains(text(), code)`, a substring match — a short code like `HR2` also matched longer codes starting with it (`HR29`, `HR269`) that existed in the same state, causing the wrong office's report to download under the wrong folder. Root-caused to a Feb 2025 commit; had been silently wrong for years for some offices. Fixed with an anchored `" - {code}("` match (`0f1a7da5`).
+2. **Numeric fuel-count columns rendering as `"12.0"` instead of `"12"`.** When `pd.concat()` combines many offices' reports for a month and a fuel column (e.g. `pure_ev`) is present in some reports but absent in others, pandas NaN-fills the gaps and upcasts the whole column to `float64`, so real integer counts get written to CSV with a trailing `.0`, which then fails the curated dbt model's `CAST(... AS INT)`. First fix (`1cacf568`) used `if series.dtype == object` before stripping commas — this missed a further edge case (below). Refined fix (`311fc19f`) normalizes with `.astype("string")` unconditionally before the `.str.replace()` call.
+3. **The refinement in (2) was needed because of a specific pandas footgun**: an `object`-dtype column can hold a genuine *mix* of real Python numbers and strings (e.g. some offices' `PURE EV` cell parsed by openpyxl as an `int`, others as text). Calling `.str.replace()` on such a column silently converts every non-string element (including real integers) to `NaN` — pandas' `.str` accessor requires actual strings and does not error on non-string input. This is why `pure_ev` was correct in isolated single-file tests (no mixed-dtype column ever formed) but wrong for a data-dependent subset of offices in full nationwide production runs — it depended on whether that specific office's raw cell happened to be typed as a number vs. text in its own report, not on how much data was processed together. Verified fixed: 100% non-null `pure_ev` across every year 2013-2026, spot-checked accurate against fresh raw file re-downloads (e.g. Gujarat/`GJ4` May 2026 = 148, Andhra Pradesh/`AP131` April 2026 = 263, both matching exactly).
+4. **Orphaned-row gap in ingestion.** `build_delete_query()` originally only deleted final-table rows matching a staging row on the merge key — if an office's fresh report was legitimately empty that month, it contributed zero staging rows, so the old (possibly wrong) row for that office/month was never deleted. Fixed (`865fd039`) by adding an optional `replacement_scope_columns` param: the standard monthly `data_ingest()` now scopes the delete to `["date"]` alone (replaces the whole day's snapshot unconditionally), while Telangana's historical backfill scopes to `["date", "state"]` to avoid touching other states.
+5. **Duplicate-data-fingerprint bug**: a small number of offices had a *correctly titled* report whose underlying vehicle-count data was actually a byte-for-byte copy of a different office's real numbers (a residual of the same concurrency race that caused bug #1, at a rate the original selector-mismatch validation couldn't detect since it only compared title-vs-folder, not cross-office data duplication). Found and fixed for the `HR16`/`HR241`/`HR254`/`HR268` cluster (Haryana, Jun 2026) and `TG2`/`TG28` (Telangana, Apr 2020) — both confirmed via live re-download from Vahan showing the "duplicate" office's true data was actually empty. A nationwide fingerprint sweep found no other statistically-significant (≥4 matching categories) clusters; ~600+ "weak" (1-3 category) matches remain and are very likely coincidental — verified via live re-download on a sample, not exhaustively.
+6. **Office-rename duplication.** Vahan renamed roughly two dozen RTO offices while keeping the same `rto_code` — 23 in a portal-wide rename landing ~May 2026, plus `DL5` which has carried two names since 2018. Since this pipeline creates a folder (and therefore a DB row) per `(rto_code, current display name)` at scrape time, a renamed office gets **two** folder trees, and any month where both have data becomes a duplicate/double-counted row. **This is not code-fixed** — deliberately deferred given the portal retirement timeline (a code fix only matters for *future* full reprocessing runs, and there won't be many more of those). It has been manually deduped in the database twice (2026-08-05, 2026-08-09) after two different full historical reprocessing runs regenerated it from the still-dual-named source folders. **If anyone runs another full historical reprocess before this pipeline is retired, this will very likely reappear and need re-deduping.** See `fact_ev_data_by_rto_dedup_backup_20260805` and `fact_ev_data_by_rto_dedup_backup_20260809` for exactly what was removed each time, and the affected code list: `AP707, DL1, DL2, DL3, DL4, DL5, DL6, DL7, DL8, DL9, DL10, DL11, DL12, DL13, DL52, DL53, MH16, MH58, MN11, MP16, MZ9, PY51, TN631, UP321`. The dedup logic: for each code, pick the `rto_name` whose data extends to the latest month as canonical, then for any `(year, month)` where the canonical name *also* has a row, delete the non-canonical name's row for that same month only — this correctly preserves e.g. `DL5`'s legitimate 2013-through-mid-2018 history that only ever existed under its old name.
+
+Also refreshed in this window: `rto_code_to_district_mapping` (SCD1, backed up to `rto_code_to_district_mapping_backup_20260805`, 1,661 rows reloaded from an updated CD mapping spreadsheet) — this specific migration's PR (`data/rto-district-mapping-refresh-20260805`) was never merged even though the data change is live in production; low-priority git-hygiene gap, not a data-correctness issue.
 
 ## What Is Already Done
 
@@ -85,8 +108,8 @@ These are already centralized and should be reused instead of re-implemented:
 Selenium design (intended end state, kept deliberately simple as two layers):
 
 - `utils.py` (committed) holds generic, page-agnostic Selenium primitives and helpers.
-- `vahan_dashboard.py` (the in-progress page object — see "Current Unfinished Work") will hold Vahan-specific `Locator`s and page actions (`select_state`, `select_year`, `download_current_report`, …) built on top of `utils.py`. It is **not committed/promoted yet**; it and the three scraper edits that import it stay uncommitted until VM smoke tests pass.
-- A DOM-drift fix should then be a one-file change in `vahan_dashboard.py`, not a three-file hunt across scrapers.
+- `vahan_dashboard.py` (the page object attempted for this — see "Current Unfinished Work") would have held Vahan-specific `Locator`s and page actions (`select_state`, `select_year`, `download_current_report`, …) built on top of `utils.py`. It was never committed/promoted and is now abandoned given the portal retirement, not merely paused.
+- The one-file-change-instead-of-three-file-hunt goal this was chasing is now moot for Vahan; keep the idea in mind for whatever the new-portal scraper looks like instead.
 - Note: a stale `__pycache__/selenium_runtime.cpython-313.pyc` may exist with no matching source — that module was merged into `utils.py`; ignore/clean the pyc.
 
 Thin-wrapper pattern (do not mistake for duplication):
@@ -178,33 +201,28 @@ Design intent:
 
 ## Current Unfinished Work
 
-As of July 25, 2026, the only visible uncommitted refactor bucket is the Selenium selector/page-action centralization:
+**Status update 2026-08-09: this refactor is abandoned, not paused.** Given the Vahan portal retirement (see top of file), it is very unlikely to be worth finishing — the scrapers it would refactor have only days of useful life left. It was never merged into `main`; the uncommitted bucket is preserved in a local git stash (`git stash list` on the machine that was doing this session's work) rather than deleted, in case it's ever wanted for reference on the new-portal scraper. Do not revive it without checking with the maintainer first, given the timeline.
+
+As of July 25, 2026 (original note, kept for context), the only visible uncommitted refactor bucket was the Selenium selector/page-action centralization:
 
 - modified: [`oem_level/oem_level_data_scraper.py`](/Users/monish/DataScraper_VahanParivahan/oem_level/oem_level_data_scraper.py)
 - modified: [`rto_level/rto_level_data_scraper.py`](/Users/monish/DataScraper_VahanParivahan/rto_level/rto_level_data_scraper.py)
 - modified: [`state_level/state_level_data_scraper.py`](/Users/monish/DataScraper_VahanParivahan/state_level/state_level_data_scraper.py)
-- untracked: [`vahan_dashboard.py`](/Users/monish/DataScraper_VahanParivahan/vahan_dashboard.py)
-- untracked: [`tests/test_vahan_dashboard.py`](/Users/monish/DataScraper_VahanParivahan/tests/test_vahan_dashboard.py)
+- untracked: `vahan_dashboard.py`
+- untracked: `tests/test_vahan_dashboard.py`
 
-This refactor is directionally good, but it is not yet the production-safe baseline.
-
-What it is trying to do:
+What it was trying to do:
 
 - move shared selectors and Selenium page actions into one place
 - reduce three-way duplication across `RTO`, `OEM`, and `State`
 - make DOM drift fixes a one-file change instead of a three-file hunt
 
-Why it is still risky:
+Why it was still risky (also now moot given the retirement):
 
 - scraper entrypoints have slightly different control flows
 - the Vahan UI is flaky and changes behavior between headless and headed sessions
 - scraping breakage is operationally expensive because prod is the only real environment
-- the refactor has not yet been validated enough end-to-end on the VM
-
-Rule:
-
-- Do not merge the `vahan_dashboard.py` refactor into production just because the abstraction looks cleaner.
-- It should be promoted only after targeted smoke tests for `OEM`, `RTO`, and `State` on the VM.
+- the refactor was never validated end-to-end on the VM
 
 ## How We Want This Project To Look
 
@@ -239,9 +257,18 @@ The desired end state is a boring, predictable, low-drama production data repo.
 - keep one-off scripts under explicit subfolders instead of the main monthly execution path
 - prefer shared helpers over copy-pasted pipeline-specific implementations
 
-## Recommended Future Work
+## Next Initiative: New Portal Integration
 
-This is the suggested order of work for the next agent.
+This is the actual next major body of work, not the sections below. As of 2026-08-09 it has not been scoped — the maintainer wants to have that conversation directly rather than have an agent guess at an architecture. Known constraints going in, from the maintainer directly:
+
+- The new portal has a materially different data grain than Vahan (exact difference not yet confirmed — could mean coarser geography, coarser vehicle/fuel categorization, coarser time granularity, or some combination).
+- The new portal does **not** support downloading raw data, unlike Vahan's XLSX exports. Whatever capture mechanism is used will need to work from whatever *is* exposed (a rendered dashboard, an API, etc. — not yet confirmed).
+- Do not assume the current three-grain (`RTO`/`OEM`/`State`) schema, the current curated dbt model shapes, or the current monthly delete-then-insert ingestion pattern all carry over unchanged. This repo's own stated principle — never fabricate data that isn't genuinely available, prefer `NULL` over an invented value — applies with extra force here: a coarser source must not be forced to look like the old fine-grained one.
+- Start by understanding exactly what the new portal exposes (get a URL/example from the maintainer, inspect it directly) before proposing any pipeline design.
+
+## Recommended Future Work (Deprioritized — Vahan Pipeline Only)
+
+The sections below were the suggested order of work for continuing to improve the Vahan-based pipeline. Given the portal retirement, treat these as reference/context, not an active backlog — do not pick these up without the maintainer explicitly asking, and prefer routing effort toward the new-portal initiative above instead.
 
 ### 1. Finish the Selenium centralization safely
 
@@ -337,7 +364,7 @@ Start here, in order:
 4. relevant shell entrypoint
 5. relevant preprocessing and ingestion script
 6. relevant dbt model under [`climate_dot_dbt/models/curated`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated)
-7. only then the unfinished Selenium centralization diff
+7. the abandoned Selenium centralization work is reference-only now (see "Current Unfinished Work") — skip it unless specifically relevant
 
 ## Useful Validation Commands
 
@@ -361,8 +388,10 @@ git status --short
 
 ## Final Guidance
 
-If you are Claude Code picking this project up:
+If you are an agent picking this project up after 2026-08-09:
 
-- centralize code where it reduces real maintenance burden
-- preserve the recent improvements that made the project less fragile
-- do not confuse "clean abstraction" with "production-ready change"
+- Read the portal-retirement notice at the top of this file first. The Vahan pipeline is winding down, not being actively improved.
+- The historical dataset has been thoroughly remediated — read "August 2026 Historical Remediation" before re-investigating data-quality issues, but don't assume it's infallible either; verify specific claims against the actual data before trusting them, the same way this remediation effort itself repeatedly found handover claims that needed correcting.
+- Check `git log` for what's actually on `main` before assuming any file's state — more than one agent has been working on this repo.
+- If the maintainer wants to talk about the new portal, that's the real next project — don't default to more Vahan-pipeline cleanup instead.
+- centralize code where it reduces real maintenance burden, preserve improvements that made the project less fragile, and do not confuse "clean abstraction" with "production-ready change" — these older principles still apply to whatever code does get touched, they just apply to a much smaller remaining surface area now.
