@@ -45,7 +45,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import dataclasses
 import itertools
+import json
 import logging
 import re
 import threading
@@ -61,6 +63,7 @@ from new_portal.client import (
     ARCHIVE_TYPES_ACTIVE_ONLY,
     ARCHIVE_TYPES_ALL_STATUSES,
     NewPortalClient,
+    NewPortalError,
 )
 from new_portal.schema import (
     CSV_COLUMNS,
@@ -125,6 +128,11 @@ DEFAULT_WORKERS = 8
 # should fail fast and loudly, not keep knocking.
 ABORT_AFTER_CONSECUTIVE_FAILURES = 25
 
+# How long the recovery pass waits before retrying gapped offices. The portal's
+# intermittent 500s clear over minutes, not seconds (measured 2026-09-23), so
+# retrying immediately mostly re-hits the same errors.
+RECOVERY_SETTLE_SECONDS = 120.0
+
 
 def build_output_path(year: int, output_dir: Path | None = None) -> Path:
     directory = output_dir or REPO_ROOT
@@ -153,6 +161,48 @@ def load_rto_targets(
                 continue
             targets.append(row)
     return targets
+
+
+STAGE_CLASS_DISTRIBUTION = "class_distribution"
+STAGE_FUEL_BREAKDOWN = "fuel_breakdown"
+STAGE_MONTHLY = "monthly"
+
+
+@dataclasses.dataclass(frozen=True)
+class Gap:
+    """One unit of data the portal would not serve.
+
+    A gap is deliberately *not* an absent row. An RTO that reports 19 vehicle
+    classes and hands us 18 has under-counted totals, and a missing row would
+    read downstream as a genuine zero. Naming the hole lets the recovery pass
+    retry exactly it, and lets the run refuse to be ingested while any remain.
+
+    `stage` records how much was lost, because the blast radius differs:
+      - class_distribution: the whole (RTO, scope). No classes could be listed.
+      - fuel_breakdown:     one class. Its fuels could not be listed.
+      - monthly:            one (class, fuel) cell.
+    """
+
+    state_code: str
+    rto_code: int
+    rto_name: str
+    status_scope: str
+    stage: str
+    vehicle_class: str | None = None
+    fuel_label: str | None = None
+    error: str = ""
+
+    @property
+    def rto_label(self) -> str:
+        return f"{self.state_code}/{self.rto_code} {self.rto_name}"
+
+    def describe(self) -> str:
+        parts = [self.rto_label, self.status_scope, self.stage]
+        if self.vehicle_class:
+            parts.append(repr(self.vehicle_class))
+        if self.fuel_label:
+            parts.append(repr(self.fuel_label))
+        return " | ".join(parts)
 
 
 def normalize_class_label(label: str) -> str:
@@ -236,12 +286,24 @@ def fetch_rto_year(
     status_scopes: list[str] | None = None,
     sleep_seconds: float = DEFAULT_SLEEP_SECONDS,
     sleep_func=time.sleep,
-) -> list[dict]:
-    """All CSV rows for one RTO for one year.
+) -> tuple[list[dict], list[Gap]]:
+    """All CSV rows for one RTO for one year, plus whatever the portal refused.
 
     Defaults to ALL_STATUSES only (see schema.DEFAULT_STATUS_SCOPES). Each extra
     scope multiplies the API calls for this RTO, since no endpoint returns more
     than one archive-status scope per request.
+
+    ## Why failures are isolated per call rather than per RTO
+
+    The portal intermittently 500s on individual sub-queries — measured
+    2026-09-23, a drifting subset of (RTO, class) pairs, unrelated to request
+    rate, session age or which parameters change. Letting one of those abort the
+    whole office cost us 7 of 10 Mizoram offices in a run where most classes
+    were perfectly fetchable.
+
+    So a `NewPortalError` on one unit records a `Gap` and moves on. Any other
+    exception propagates: a KeyError in our own parsing is a bug, and silently
+    filing it as "the portal wouldn't serve this" would hide it.
     """
     state_code = rto["state_code"]
     rto_code = int(rto["new_rto_code"])
@@ -250,22 +312,52 @@ def fetch_rto_year(
     )
 
     rows: list[dict] = []
+    gaps: list[Gap] = []
+
+    def gap(status_scope, stage, error, vehicle_class=None, fuel_label=None) -> None:
+        gaps.append(
+            Gap(
+                state_code=state_code,
+                rto_code=rto_code,
+                rto_name=rto["new_rto_name"],
+                status_scope=status_scope,
+                stage=stage,
+                vehicle_class=vehicle_class,
+                fuel_label=fuel_label,
+                error=str(error),
+            )
+        )
+
     for status_scope in status_scopes or DEFAULT_STATUS_SCOPES:
         archive_types = ARCHIVE_TYPES_BY_SCOPE[status_scope]
         # (month, vehicle_class) -> {fuel_column: count}
         cells: dict[tuple[int, int, str], dict[str, int]] = {}
 
-        class_breakdown = portal.get_class_distribution(
-            **scope_args, archive_types=archive_types
-        )
+        try:
+            class_breakdown = portal.get_class_distribution(
+                **scope_args, archive_types=archive_types
+            )
+        except NewPortalError as exc:
+            # Nothing else in this scope is reachable without the class list.
+            gap(status_scope, STAGE_CLASS_DISTRIBUTION, exc)
+            continue
         sleep_func(sleep_seconds)
 
         for vehicle_class in _nonzero_labels(class_breakdown):
-            fuel_breakdown = portal.get_fuel_type_breakdown(
-                **scope_args,
-                vehicle_classes=vehicle_class,
-                archive_types=archive_types,
-            )
+            try:
+                fuel_breakdown = portal.get_fuel_type_breakdown(
+                    **scope_args,
+                    vehicle_classes=vehicle_class,
+                    archive_types=archive_types,
+                )
+            except NewPortalError as exc:
+                gap(
+                    status_scope,
+                    STAGE_FUEL_BREAKDOWN,
+                    exc,
+                    vehicle_class=vehicle_class,
+                )
+                continue
             sleep_func(sleep_seconds)
 
             for fuel_label in _nonzero_labels(fuel_breakdown):
@@ -282,12 +374,22 @@ def fetch_rto_year(
                     )
                     continue
 
-                monthly = portal.get_duration_wise_registration(
-                    **scope_args,
-                    vehicle_classes=vehicle_class,
-                    vehicle_fuels=[fuel_label],
-                    archive_types=archive_types,
-                )
+                try:
+                    monthly = portal.get_duration_wise_registration(
+                        **scope_args,
+                        vehicle_classes=vehicle_class,
+                        vehicle_fuels=[fuel_label],
+                        archive_types=archive_types,
+                    )
+                except NewPortalError as exc:
+                    gap(
+                        status_scope,
+                        STAGE_MONTHLY,
+                        exc,
+                        vehicle_class=vehicle_class,
+                        fuel_label=fuel_label,
+                    )
+                    continue
                 sleep_func(sleep_seconds)
 
                 for entry in monthly:
@@ -311,7 +413,7 @@ def fetch_rto_year(
                 )
             )
 
-    return rows
+    return rows, gaps
 
 
 def _build_row(
@@ -355,6 +457,126 @@ def _build_row(
     return row
 
 
+def build_gap_manifest_path(year: int, output_dir: Path | None = None) -> Path:
+    csv_path = build_output_path(year, output_dir)
+    return csv_path.with_name(f"{csv_path.stem}__gaps.json")
+
+
+def write_gap_manifest(gaps: list[Gap], year: int, manifest_path: Path) -> None:
+    """Persist the gaps beside the CSV.
+
+    The CSV alone cannot express "this office is missing one class" — an absent
+    row is indistinguishable from a real zero. The manifest is what makes a
+    partial pull auditable after the fact instead of a silent under-count.
+    """
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "year": year,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "gap_count": len(gaps),
+        "affected_rtos": sorted({g.rto_label for g in gaps}),
+        "gaps": [dataclasses.asdict(g) for g in gaps],
+    }
+    with manifest_path.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, sort_keys=True)
+        f.write("\n")
+
+
+def recover_gaps(
+    gaps: list[Gap],
+    targets_by_label: dict[str, dict],
+    year: int,
+    vehicle_class_dimensions: dict[str, tuple[str, str, str, str]],
+    *,
+    client_factory,
+    status_scopes: list[str] | None = None,
+    sleep_seconds: float = DEFAULT_SLEEP_SECONDS,
+    sleep_func=time.sleep,
+    settle_seconds: float = RECOVERY_SETTLE_SECONDS,
+) -> tuple[dict[str, list[dict]], list[Gap]]:
+    """Second pass over the offices that came back with gaps.
+
+    Returns ({rto_label: rows}, remaining_gaps). Only labels that genuinely
+    improved appear in the dict; the caller keeps its first-pass rows otherwise.
+
+    ## Why re-fetch the whole office rather than just the failed calls
+
+    Rows are assembled from a (month, class) -> {fuel: count} accumulator, so
+    splicing a single recovered fuel back into rows already written means
+    rebuilding that office's cells anyway. Re-fetching the office is a handful
+    of extra calls for the small minority that failed, and it removes a class of
+    merge bug entirely.
+
+    ## Why a fresh session, and why the wait
+
+    Measured 2026-09-23: a label that 500d twice in a row recovered ~20 minutes
+    later untouched, while retrying within seconds barely helped (3 attempts cut
+    failures 13 -> 11). The failures clear on a timescale of minutes, so the
+    recovery pass waits before starting and builds new sessions rather than
+    reusing the ones that just saw errors.
+    """
+    if not gaps:
+        return {}, []
+
+    labels = sorted({g.rto_label for g in gaps})
+    logger.info(
+        "Recovery pass: %s gap(s) across %s office(s); waiting %ss for the "
+        "portal to settle before retrying.",
+        len(gaps), len(labels), settle_seconds,
+    )
+    sleep_func(settle_seconds)
+
+    gaps_by_label: dict[str, list[Gap]] = {}
+    for g in gaps:
+        gaps_by_label.setdefault(g.rto_label, []).append(g)
+
+    recovered_rows: dict[str, list[dict]] = {}
+    remaining: list[Gap] = []
+    portal = client_factory()
+
+    for label in labels:
+        rto = targets_by_label.get(label)
+        if rto is None:
+            # Should not happen; keep the gap rather than dropping it silently.
+            remaining.extend(gaps_by_label[label])
+            continue
+
+        before = len(gaps_by_label[label])
+        try:
+            rows, retry_gaps = fetch_rto_year(
+                portal,
+                rto,
+                year,
+                vehicle_class_dimensions,
+                status_scopes=status_scopes,
+                sleep_seconds=sleep_seconds,
+                sleep_func=sleep_func,
+            )
+        except Exception:
+            logger.exception("Recovery failed outright for %s", label)
+            remaining.extend(gaps_by_label[label])
+            continue
+
+        if len(retry_gaps) < before:
+            recovered_rows[label] = rows
+            remaining.extend(retry_gaps)
+            logger.info(
+                "Recovered %s: %s gap(s) -> %s, %s rows",
+                label, before, len(retry_gaps), len(rows),
+            )
+        else:
+            # No improvement. Keep the first pass's rows and its gaps so a worse
+            # retry can never shrink what we already had.
+            remaining.extend(gaps_by_label[label])
+            logger.warning(
+                "Recovery did not improve %s (%s gap(s) before, %s after); "
+                "keeping the first pass.",
+                label, before, len(retry_gaps),
+            )
+
+    return recovered_rows, remaining
+
+
 def write_rows(rows: list[dict], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as f:
@@ -393,6 +615,29 @@ def main() -> None:
         ),
     )
     parser.add_argument("--output-dir", type=Path, help="Where to write the CSV.")
+    parser.add_argument(
+        "--no-recovery",
+        action="store_true",
+        help="Skip the second pass over offices that came back with gaps.",
+    )
+    parser.add_argument(
+        "--recovery-wait",
+        type=float,
+        default=RECOVERY_SETTLE_SECONDS,
+        help=(
+            "Seconds to wait before the recovery pass "
+            f"(default: {RECOVERY_SETTLE_SECONDS:g}). The portal's intermittent "
+            "500s clear over minutes, so retrying sooner mostly re-hits them."
+        ),
+    )
+    parser.add_argument(
+        "--allow-gaps",
+        action="store_true",
+        help=(
+            "Exit 0 even if gaps remain after recovery. Off by default: a "
+            "missing row is indistinguishable from a real zero once ingested."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -500,9 +745,9 @@ def main() -> None:
         index, rto = indexed
         label = f"{rto['state_code']}/{rto['new_rto_code']} {rto['new_rto_name']}"
         if aborted.is_set():
-            return index, []
+            return index, [], []
         try:
-            rows = fetch_rto_year(
+            rows, gaps = fetch_rto_year(
                 portal_for_thread(),
                 rto,
                 year,
@@ -522,13 +767,21 @@ def main() -> None:
                     "continuing to hammer the portal.",
                     ABORT_AFTER_CONSECUTIVE_FAILURES,
                 )
-            return index, []
+            return index, [], []
 
+        # Partial success is still success for the circuit breaker: the office
+        # answered, so the portal is not down. Gaps are handled by the recovery
+        # pass, not by aborting the run.
         record_success()
         logger.info(
-            "[%s/%s] %s -> %s rows", next(completed), len(targets), label, len(rows)
+            "[%s/%s] %s -> %s rows%s",
+            next(completed),
+            len(targets),
+            label,
+            len(rows),
+            f" ({len(gaps)} gap(s))" if gaps else "",
         )
-        return index, rows
+        return index, rows, gaps
 
     indexed_targets = list(enumerate(targets))
     if args.workers == 1:
@@ -537,17 +790,55 @@ def main() -> None:
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             results = list(pool.map(fetch_one, indexed_targets))
 
-    # Sort by the original target order so the CSV is byte-identical regardless
-    # of how many workers produced it, and diffable between runs.
-    all_rows: list[dict] = []
-    for _, rows in sorted(results, key=lambda pair: pair[0]):
-        all_rows.extend(rows)
-
     logger.info(
         "Fetched with %s worker(s) using %s session(s)",
         args.workers, len(sessions_created),
     )
+
+    rows_by_index: dict[int, list[dict]] = {}
+    label_by_index: dict[int, str] = {}
+    gaps: list[Gap] = []
+    for index, rows, rto_gaps in results:
+        rows_by_index[index] = rows
+        label_by_index[index] = (
+            f"{targets[index]['state_code']}/{targets[index]['new_rto_code']} "
+            f"{targets[index]['new_rto_name']}"
+        )
+        gaps.extend(rto_gaps)
+
+    # Recovery pass, unless the run already bailed out — retrying into a portal
+    # that just failed 25 offices in a row would be pointless.
+    if gaps and not aborted.is_set() and not args.no_recovery:
+        targets_by_label = {label_by_index[i]: targets[i] for i in rows_by_index}
+        recovered, gaps = recover_gaps(
+            gaps,
+            targets_by_label,
+            year,
+            vehicle_class_dimensions,
+            client_factory=new_client,
+            status_scopes=status_scopes,
+            sleep_seconds=args.sleep_seconds,
+            settle_seconds=args.recovery_wait,
+        )
+        for index, label in label_by_index.items():
+            if label in recovered:
+                rows_by_index[index] = recovered[label]
+
+    # Sort by the original target order so the CSV is byte-identical regardless
+    # of how many workers produced it, and diffable between runs.
+    all_rows: list[dict] = []
+    for index in sorted(rows_by_index):
+        all_rows.extend(rows_by_index[index])
+
     write_rows(all_rows, build_output_path(year, args.output_dir))
+
+    manifest_path = build_gap_manifest_path(year, args.output_dir)
+    if gaps:
+        write_gap_manifest(gaps, year, manifest_path)
+        logger.warning("Wrote %s gap(s) to %s", len(gaps), manifest_path)
+    elif manifest_path.exists():
+        # A stale manifest from an earlier run would misreport a clean pull.
+        manifest_path.unlink()
 
     if aborted.is_set():
         raise SystemExit(
@@ -562,6 +853,24 @@ def main() -> None:
             f"(e.g. {', '.join(failures[:5])}). The CSV holds only the RTOs that "
             f"succeeded — do not ingest it as a complete snapshot."
         )
+
+    if gaps:
+        affected = sorted({g.rto_label for g in gaps})
+        summary = "; ".join(g.describe() for g in gaps[:5])
+        message = (
+            f"{len(gaps)} gap(s) remain after the recovery pass, across "
+            f"{len(affected)} office(s): {summary}"
+            f"{' ...' if len(gaps) > 5 else ''}. Full list: {manifest_path}. "
+            f"These offices under-count, and a missing row is indistinguishable "
+            f"from a real zero once ingested."
+        )
+        if args.allow_gaps:
+            logger.warning("%s Proceeding anyway because --allow-gaps was set.", message)
+        else:
+            raise SystemExit(
+                f"{message} Re-run when the portal is healthier, or pass "
+                f"--allow-gaps to ingest this pull knowing it is incomplete."
+            )
 
 
 if __name__ == "__main__":
