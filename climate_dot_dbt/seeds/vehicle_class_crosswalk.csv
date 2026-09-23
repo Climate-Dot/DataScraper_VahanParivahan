@@ -51,12 +51,12 @@ POWER TILLER,Others,Others,Others,authoritative_mapping_file
 POWER TILLER (COMMERCIAL),Others,Others,Personal,authoritative_mapping_file
 PRIVATE SERVICE VEHICLE,Others,Others,Others,authoritative_mapping_file
 PRIVATE SERVICE VEHICLE (INDIVIDUAL USE),Others,Others,Personal,authoritative_mapping_file
-PULLER TRACTOR,Others,Others,Others,defaulted_others
+PULLER TRACTOR,Others,Others,Others,authoritative_mapping_file
 QUADRICYCLE (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
 QUADRICYCLE (PRIVATE),Others,Others,Personal,authoritative_mapping_file
 RECOVERY VEHICLE,Others,Others,Others,authoritative_mapping_file
 ROAD ROLLER,Others,Others,Others,authoritative_mapping_file
-SCHOOL BUS,Others,Others,Others,defaulted_others
+SCHOOL BUS,Others,Others,Others,authoritative_mapping_file
 SEMI-TRAILER (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
 SNORKED LADDERS,Others,Others,Others,authoritative_mapping_file
 THREE WHEELER (GOODS),3W_Goods,3-Wheelers,Goods,authoritative_mapping_file
@@ -73,5 +73,5 @@ TREE TRIMMING VEHICLE,Others,Others,Others,authoritative_mapping_file
 VEHICLE FITTED WITH COMPRESSOR,Others,Others,Others,authoritative_mapping_file
 VEHICLE FITTED WITH GENERATOR,Others,Others,Others,authoritative_mapping_file
 VEHICLE FITTED WITH RIG,Others,Others,Others,authoritative_mapping_file
-VINTAGE MOTOR VEHICLE,Others,Others,Others,defaulted_others
+VINTAGE MOTOR VEHICLE,Others,Others,Others,authoritative_mapping_file
 X-RAY VAN,Others,Others,Others,authoritative_mapping_file
