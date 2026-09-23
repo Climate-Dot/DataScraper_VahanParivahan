@@ -655,6 +655,18 @@ class AbortThresholdTests(unittest.TestCase):
         self.assertIn("thread_state.client = client", source)
         self.assertIn("preflight_client", source)
 
+    def test_gap_isolation_does_not_disable_the_breaker(self):
+        """An office that yields no rows must still count as a failure.
+
+        Gap isolation turned every office into a "success" as long as it
+        returned, which silently disabled the breaker on a fully degraded
+        portal — the case it exists for. A zero-row office is indistinguishable
+        from the old hard-failure case, so it has to count.
+        """
+        source = (Path(rto_fetch.__file__)).read_text()
+        self.assertIn("if rows:\n            record_success()", source)
+        self.assertIn("consecutive offices yielded no rows", source)
+
 
 if __name__ == "__main__":
     unittest.main()

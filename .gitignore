@@ -15,3 +15,9 @@ rto_state_office_mapping.json
 climate_dot_dbt/target/
 climate_dot_dbt/dbt_packages/
 tests/fixtures/*.xlsx
+# New-portal run artifacts. The CSV is reproducible from the API and the gap
+# manifest describes one run, so neither belongs in git — the durable copy of a
+# CSV is its blob snapshot (new_portal/rto_blob_snapshot.py).
+new_portal_rto_ev_data_*.csv
+new_portal_rto_ev_data_*__gaps.json
+run_logs/
