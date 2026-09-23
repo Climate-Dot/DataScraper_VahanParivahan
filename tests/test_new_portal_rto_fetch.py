@@ -1,11 +1,12 @@
 import csv
+import json
 import re
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from new_portal import rto_fetch, schema
+from new_portal import client, rto_fetch, schema
 
 
 class SchemaTests(unittest.TestCase):
@@ -220,11 +221,15 @@ class FetchRtoYearTests(unittest.TestCase):
             rto_fetch.normalize_class_label("MOTOR CAR"): ("MOTOR CAR", "4W", "LMV", "Personal")
         }
 
-    def _fetch(self, portal, status_scopes=None):
+    def _fetch_with_gaps(self, portal, status_scopes=None):
         return rto_fetch.fetch_rto_year(
             portal, self.rto, 2026, self.dimensions,
             status_scopes=status_scopes, sleep_seconds=0, sleep_func=lambda _: None,
         )
+
+    def _fetch(self, portal, status_scopes=None):
+        rows, _ = self._fetch_with_gaps(portal, status_scopes)
+        return rows
 
     def test_builds_one_row_per_month_and_class(self):
         portal = _portal_stub(
@@ -402,6 +407,229 @@ class IngestorWiringTests(unittest.TestCase):
         from new_portal import rto_ingest
 
         self.assertNotIn("rto_code", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+
+
+class GapIsolationTests(unittest.TestCase):
+    """A portal 500 on one call must not discard the whole office.
+
+    This is the 2026-09-23 failure: a drifting subset of (RTO, class) pairs
+    returned 500, and because the only try/except sat at the RTO level, 7 of 10
+    Mizoram offices produced nothing despite most classes being fetchable.
+    """
+
+    def setUp(self):
+        self.rto = {
+            "state": "Mizoram", "state_code": "MZ", "new_rto_code": "1",
+            "new_rto_name": "AIZAWL DTO", "legacy_rto_code": "MZ1",
+            "legacy_rto_name": "AIZAWL", "link_status": "linked",
+        }
+        self.dimensions = rto_fetch.load_vehicle_class_dimensions()
+
+    def _fetch(self, portal):
+        return rto_fetch.fetch_rto_year(
+            portal, self.rto, 2026, self.dimensions,
+            sleep_seconds=0, sleep_func=lambda _: None,
+        )
+
+    def test_a_poisoned_class_costs_only_that_class(self):
+        monthly = {
+            ("Motor Car", "PETROL"): [
+                {"yearAsString": "2026-January", "registeredVehicleCount": 40}
+            ],
+        }
+
+        def fuels(**kw):
+            if kw["vehicle_classes"] == "Maxi Cab":
+                raise client.NewPortalError("fueltypedonutchart returned HTTP 500")
+            return {"labels": ["PETROL"], "data": [40]}
+
+        portal = mock.Mock()
+        portal.get_class_distribution.return_value = {
+            "labels": ["Motor Car", "Maxi Cab"], "data": [40, 7]
+        }
+        portal.get_fuel_type_breakdown.side_effect = fuels
+        portal.get_duration_wise_registration.side_effect = (
+            lambda **kw: monthly[(kw["vehicle_classes"], kw["vehicle_fuels"][0])]
+        )
+
+        rows, gaps = self._fetch(portal)
+
+        # Motor Car survived.
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["vehicle_class"], "MOTOR CAR")
+        # Maxi Cab is named, not silently absent.
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0].stage, rto_fetch.STAGE_FUEL_BREAKDOWN)
+        self.assertEqual(gaps[0].vehicle_class, "Maxi Cab")
+        self.assertEqual(gaps[0].rto_label, "MZ/1 AIZAWL DTO")
+
+    def test_a_poisoned_fuel_costs_only_that_fuel(self):
+        def monthly(**kw):
+            if kw["vehicle_fuels"][0] == "DIESEL":
+                raise client.NewPortalError("durationWise… returned HTTP 500")
+            return [{"yearAsString": "2026-January", "registeredVehicleCount": 40}]
+
+        portal = mock.Mock()
+        portal.get_class_distribution.return_value = {"labels": ["Motor Car"], "data": [50]}
+        portal.get_fuel_type_breakdown.return_value = {
+            "labels": ["PETROL", "DIESEL"], "data": [40, 10]
+        }
+        portal.get_duration_wise_registration.side_effect = monthly
+
+        rows, gaps = self._fetch(portal)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["petrol"], 40)
+        # The lost diesel count is blank, never 0 — a 0 would be a fabricated count.
+        self.assertEqual(rows[0]["diesel"], "")
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0].stage, rto_fetch.STAGE_MONTHLY)
+        self.assertEqual(gaps[0].fuel_label, "DIESEL")
+
+    def test_class_distribution_failure_gaps_the_whole_scope(self):
+        portal = mock.Mock()
+        portal.get_class_distribution.side_effect = client.NewPortalError("500")
+
+        rows, gaps = self._fetch(portal)
+
+        self.assertEqual(rows, [])
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0].stage, rto_fetch.STAGE_CLASS_DISTRIBUTION)
+        self.assertIsNone(gaps[0].vehicle_class)
+        portal.get_fuel_type_breakdown.assert_not_called()
+
+    def test_a_clean_office_reports_no_gaps(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [5]},
+            {"Motor Car": {"labels": ["PETROL"], "data": [5]}},
+            {("Motor Car", "PETROL"): [
+                {"yearAsString": "2026-June", "registeredVehicleCount": 5}
+            ]},
+        )
+
+        rows, gaps = self._fetch(portal)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(gaps, [])
+
+    def test_non_portal_errors_still_propagate(self):
+        # A bug in our own parsing must not be filed as "the portal refused it".
+        portal = mock.Mock()
+        portal.get_class_distribution.side_effect = KeyError("yearAsString")
+
+        with self.assertRaises(KeyError):
+            self._fetch(portal)
+
+
+class GapManifestTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.gap = rto_fetch.Gap(
+            state_code="MZ", rto_code=4, rto_name="CHAMPHAI",
+            status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_FUEL_BREAKDOWN,
+            vehicle_class="Maxi Cab", error="HTTP 500",
+        )
+
+    def test_manifest_sits_beside_the_csv(self):
+        csv_path = rto_fetch.build_output_path(2026, Path(self.tmp.name))
+        manifest = rto_fetch.build_gap_manifest_path(2026, Path(self.tmp.name))
+        self.assertEqual(manifest.parent, csv_path.parent)
+        self.assertTrue(manifest.name.endswith("__gaps.json"))
+
+    def test_manifest_records_every_gap_and_the_affected_offices(self):
+        path = Path(self.tmp.name) / "gaps.json"
+        rto_fetch.write_gap_manifest([self.gap], 2026, path)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["year"], 2026)
+        self.assertEqual(payload["gap_count"], 1)
+        self.assertEqual(payload["affected_rtos"], ["MZ/4 CHAMPHAI"])
+        self.assertEqual(payload["gaps"][0]["vehicle_class"], "Maxi Cab")
+        self.assertEqual(payload["gaps"][0]["stage"], rto_fetch.STAGE_FUEL_BREAKDOWN)
+
+    def test_describe_names_the_office_scope_stage_and_labels(self):
+        described = self.gap.describe()
+        for expected in ("MZ/4 CHAMPHAI", "ALL_STATUSES", "fuel_breakdown", "Maxi Cab"):
+            self.assertIn(expected, described)
+
+
+class RecoverGapsTests(unittest.TestCase):
+    def setUp(self):
+        self.rto = {
+            "state": "Mizoram", "state_code": "MZ", "new_rto_code": "4",
+            "new_rto_name": "CHAMPHAI", "legacy_rto_code": "MZ4",
+            "legacy_rto_name": "CHAMPHAI", "link_status": "linked",
+        }
+        self.label = "MZ/4 CHAMPHAI"
+        self.targets = {self.label: self.rto}
+        self.gap = rto_fetch.Gap(
+            state_code="MZ", rto_code=4, rto_name="CHAMPHAI",
+            status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_MONTHLY,
+            vehicle_class="Motor Car", fuel_label="DIESEL", error="HTTP 500",
+        )
+
+    def _recover(self, fetch_result):
+        with mock.patch.object(rto_fetch, "fetch_rto_year", side_effect=fetch_result):
+            return rto_fetch.recover_gaps(
+                [self.gap], self.targets, 2026, {},
+                client_factory=mock.Mock(),
+                sleep_func=lambda _: None,
+                settle_seconds=0,
+            )
+
+    def test_no_gaps_means_no_second_pass(self):
+        factory = mock.Mock()
+        recovered, remaining = rto_fetch.recover_gaps(
+            [], self.targets, 2026, {}, client_factory=factory
+        )
+        self.assertEqual(recovered, {})
+        self.assertEqual(remaining, [])
+        factory.assert_not_called()
+
+    def test_a_successful_retry_replaces_the_offices_rows(self):
+        recovered, remaining = self._recover(lambda *a, **k: ([{"total": 9}], []))
+        self.assertEqual(recovered, {self.label: [{"total": 9}]})
+        self.assertEqual(remaining, [])
+
+    def test_a_retry_that_does_not_improve_keeps_the_first_pass(self):
+        # Otherwise a worse retry could shrink data we already had.
+        worse = rto_fetch.Gap(
+            state_code="MZ", rto_code=4, rto_name="CHAMPHAI",
+            status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_CLASS_DISTRIBUTION,
+        )
+        with self.assertLogs(rto_fetch.logger, level="WARNING"):
+            recovered, remaining = self._recover(lambda *a, **k: ([], [worse]))
+        self.assertEqual(recovered, {})
+        self.assertEqual(remaining, [self.gap])
+
+    def test_a_retry_that_raises_keeps_the_original_gap(self):
+        with self.assertLogs(rto_fetch.logger, level="ERROR"):
+            recovered, remaining = self._recover(RuntimeError("connection reset"))
+        self.assertEqual(recovered, {})
+        self.assertEqual(remaining, [self.gap])
+
+    def test_it_waits_before_retrying(self):
+        # The 500s clear over minutes; an immediate retry mostly re-hits them.
+        slept = []
+        with mock.patch.object(rto_fetch, "fetch_rto_year", return_value=([], [])):
+            rto_fetch.recover_gaps(
+                [self.gap], self.targets, 2026, {},
+                client_factory=mock.Mock(),
+                sleep_func=slept.append,
+                settle_seconds=120,
+            )
+        self.assertIn(120, slept)
+
+    def test_it_builds_a_fresh_session(self):
+        factory = mock.Mock()
+        with mock.patch.object(rto_fetch, "fetch_rto_year", return_value=([], [])):
+            rto_fetch.recover_gaps(
+                [self.gap], self.targets, 2026, {},
+                client_factory=factory,
+                sleep_func=lambda _: None,
+                settle_seconds=0,
+            )
+        factory.assert_called_once()
 
 
 class AbortThresholdTests(unittest.TestCase):
