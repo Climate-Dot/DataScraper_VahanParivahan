@@ -1,0 +1,1687 @@
+state,state_code,new_rto_code,new_rto_name,legacy_rto_code,legacy_rto_name,link_status
+Andaman & Nicobar Island,AN,201,Baratang,AN201,,portal_only
+Andaman & Nicobar Island,AN,212,Campbell Bay,AN212,,portal_only
+Andaman & Nicobar Island,AN,211,Car Nicobar,AN211,,portal_only
+Andaman & Nicobar Island,AN,204,Diglipur,AN204,,portal_only
+Andaman & Nicobar Island,AN,200,Ferrargunj,AN200,,portal_only
+Andaman & Nicobar Island,AN,208,Kamorta,AN208,,portal_only
+Andaman & Nicobar Island,AN,209,Katchal,AN209,,portal_only
+Andaman & Nicobar Island,AN,207,Little Andaman,AN207,,portal_only
+Andaman & Nicobar Island,AN,203,Mayabunder,AN203,,portal_only
+Andaman and Nicobar,AN,1,Port Blair DTO,AN1,Port Blair DTO,linked
+Andaman & Nicobar Island,AN,202,Rangat,AN202,,portal_only
+Andaman & Nicobar Island,AN,205,Shaheed Dweep,AN205,,portal_only
+Andaman & Nicobar Island,AN,206,Swaraj Dweep,AN206,,portal_only
+Andaman & Nicobar Island,AN,210,Teressa,AN210,,portal_only
+Andhra Pradesh,AP,221,Adoni RTO,AP221,Adoni RTO,linked
+Andhra Pradesh,AP,205,Amalapuram RTA,AP205,Amalapuram RTA,linked
+Andhra Pradesh,AP,131,Anakapalli RTA,AP131,Anakapalli RTA,linked
+Andhra Pradesh,AP,2,Anantapur RTA,AP2,Anantapur RTA,linked
+Andhra Pradesh,AP,126,Atmakur MVI Office,AP126,Atmakur MVI Office,linked
+Andhra Pradesh,AP,321,Atmakur-Kurnool MVI Office,AP321,Atmakur-Kurnool MVI Office,linked
+Andhra Pradesh,AP,104,Badvel MVI Office,AP104,Badvel MVI Office,linked
+Andhra Pradesh,AP,207,BAPATLA RTO OFFICE,AP207,BAPATLA RTO OFFICE,linked
+Andhra Pradesh,AP,137,Bhimavaram RTA,AP137,Bhimavaram RTA,linked
+Andhra Pradesh,AP,307,Chilakaluripeta MVI Office,AP307,Chilakaluripeta MVI Office,linked
+Andhra Pradesh,AP,905,Chintoor,AP905,Chintoor,linked
+Andhra Pradesh,AP,127,Chirala UO,AP127,Chirala UO,linked
+Andhra Pradesh,AP,3,Chittoor RTA,AP3,Chittoor RTA,linked
+Andhra Pradesh,AP,4,Cuddapah RTA,AP4,Cuddapah RTA,linked
+Andhra Pradesh,AP,427,Darsi UO,AP427,Darsi UO,linked
+Andhra Pradesh,AP,602,Dharamavaram unit office,AP602,Dharamavaram unit office,linked
+Andhra Pradesh,AP,421,Dhone MVI Office,AP421,Dhone MVI Office,linked
+Andhra Pradesh,AP,231,Gajuwaka RTA,AP231,Gajuwaka RTA,linked
+Andhra Pradesh,AP,116,Gudiwada RTA,AP116,Gudiwada RTA,linked
+Andhra Pradesh,AP,226,Gudur RTA,AP226,Gudur RTA,linked
+Andhra Pradesh,AP,202,Guntakal UO,AP202,Guntakal UO,linked
+Andhra Pradesh,AP,7,Guntur RTA,AP7,Guntur RTA,linked
+Andhra Pradesh,AP,102,Hindupur RTA,AP102,Hindupur RTA,linked
+Andhra Pradesh,AP,130,Itchapuram MVI Office,AP130,Itchapuram MVI Office,linked
+Andhra Pradesh,AP,616,Jaggayyapet UO,AP616,Jaggayyapet UO,linked
+Andhra Pradesh,AP,237,JANGAREDDYGUDEM RTA,AP237,JANGAREDDYGUDEM RTA,linked
+Andhra Pradesh,AP,702,Kalyandurg RTO office,AP702,Kalyandurg RTO office,linked
+Andhra Pradesh,AP,227,Kandukur MVI Office,AP227,Kandukur MVI Office,linked
+Andhra Pradesh,AP,326,Kavali UO,AP326,Kavali UO,linked
+Andhra Pradesh,AP,337,Kovvuru UO,AP337,Kovvuru UO,linked
+Andhra Pradesh,AP,21,Kurnool RTA,AP21,Kurnool RTA,linked
+Andhra Pradesh,AP,407,Macherla MVI Office,AP407,Macherla MVI Office,linked
+Andhra Pradesh,AP,405,Mandapeta UO,AP405,Mandapeta UO,linked
+Andhra Pradesh,AP,507,Mangalagiri MVI Office,AP507,Mangalagiri MVI Office,linked
+Andhra Pradesh,AP,327,Markapur UO,AP327,Markapur UO,linked
+Andhra Pradesh,AP,114,Nagari MVI office,AP114,Nagari MVI office,linked
+Andhra Pradesh,AP,316,Nandigama RTA,AP316,Nandigama RTA,linked
+Andhra Pradesh,AP,121,Nandyal RTA,AP121,Nandyal RTA,linked
+Andhra Pradesh,AP,107,Narasaraopet RTA,AP107,Narasaraopet RTA,linked
+Andhra Pradesh,AP,331,Narsipatnam MVI Office,AP331,Narsipatnam MVI Office,linked
+Andhra Pradesh,AP,26,Nellore RTA,AP26,Nellore RTA,linked
+Andhra Pradesh,AP,416,Nuzvid UO,AP416,Nuzvid UO,linked
+Andhra Pradesh,AP,41,Paderu RTA,AP41,Paderu RTA,linked
+Andhra Pradesh,AP,637,Palakole UO,AP637,Palakole UO,linked
+Andhra Pradesh,AP,230,PALAKONDA RTA,AP230,PALAKONDA RTA,linked
+Andhra Pradesh,AP,303,Palamaner MVI Office,AP303,Palamaner MVI Office,linked
+Andhra Pradesh,AP,330,Palasa MVI Office,AP330,Palasa MVI Office,linked
+Andhra Pradesh,AP,135,PARVATHIPURAM RTO OFFICE,AP135,PARVATHIPURAM RTO OFFICE,linked
+Andhra Pradesh,AP,505,Peddapuram MVI Office,AP505,Peddapuram MVI Office,linked
+Andhra Pradesh,AP,607,Piduguralla UO,AP607,Piduguralla UO,linked
+Andhra Pradesh,AP,403,Piler MVI Office,AP403,Piler MVI Office,linked
+Andhra Pradesh,AP,27,Prakasam RTA,AP27,Prakasam RTA,linked
+Andhra Pradesh,AP,204,Proddutur RTA,AP204,Proddutur RTA,linked
+Andhra Pradesh,AP,304,Pulivendula MVI Office,AP304,Pulivendula MVI Office,linked
+Andhra Pradesh,AP,113,Punganur UO,AP113,Punganur UO,linked
+Andhra Pradesh,AP,503,Puttur MVI Office,AP503,Puttur MVI Office,linked
+Andhra Pradesh,AP,105,Rajahmundry RTA,AP105,Rajahmundry RTA,linked
+Andhra Pradesh,AP,404,Rajampet MVI Office,AP404,Rajampet MVI Office,linked
+Andhra Pradesh,AP,605,Ramachandrapuram UO,AP605,Ramachandrapuram UO,linked
+Andhra Pradesh,AP,705,Ravulapalem UO,AP705,Ravulapalem UO,linked
+Andhra Pradesh,AP,504,Rayachoti MVI Office,AP504,Rayachoti MVI Office,linked
+Andhra Pradesh,AP,141,REGIONAL TRANSPORT OFFICE RAMPACHODAVARAM,AP141,REGIONAL TRANSPORT OFFICE RAMPACHODAVARAM,linked
+Andhra Pradesh,AP,37,RTA Eluru,AP37,RTA Eluru,linked
+Andhra Pradesh,AP,5,RTA Kakinada,AP5,RTA Kakinada,linked
+Andhra Pradesh,AP,216,RTA MACHILIPATNAM,AP216,RTA MACHILIPATNAM,linked
+Andhra Pradesh,AP,302,RTO KADIRI,AP302,RTO KADIRI,linked
+Andhra Pradesh,AP,203,RTO MADANAPALLE,AP203,RTO MADANAPALLE,linked
+Andhra Pradesh,AP,235,Salur MVI Office,AP235,Salur MVI Office,linked
+Andhra Pradesh,AP,30,Srikakulam RTA,AP30,Srikakulam RTA,linked
+Andhra Pradesh,AP,603,Srikalahasthi MVI Office,AP603,Srikalahasthi MVI Office,linked
+Andhra Pradesh,AP,426,Sullurpet UO,AP426,Sullurpet UO,linked
+Andhra Pradesh,AP,437,Tadepalli Gudem UO,AP437,Tadepalli Gudem UO,linked
+Andhra Pradesh,AP,402,Tadipatri UO,AP402,Tadipatri UO,linked
+Andhra Pradesh,AP,537,Tanuku UO,AP537,Tanuku UO,linked
+Andhra Pradesh,AP,430,Tekkali MVI Office,AP430,Tekkali MVI Office,linked
+Andhra Pradesh,AP,707,TENALI RTA,AP707,TENALI RTA,linked
+Andhra Pradesh,AP,103,Tirupati RTA,AP103,Tirupati RTA,linked
+Andhra Pradesh,AP,305,UNIT OFFICE KATHIPUDI,AP305,UNIT OFFICE KATHIPUDI,linked
+Andhra Pradesh,AP,502,UNIT OFFICE RAYADURG,AP502,UNIT OFFICE RAYADURG,linked
+Andhra Pradesh,AP,16,Vijayawada RTA,AP16,Vijayawada RTA,linked
+Andhra Pradesh,AP,31,Vishakapatnam RTA,AP31,Vishakapatnam RTA,linked
+Andhra Pradesh,AP,35,Vizianagaram RTA,AP35,Vizianagaram RTA,linked
+Andhra Pradesh,AP,516,Vuyyuru UO,AP516,Vuyyuru UO,linked
+Arunachal Pradesh,AR,17,ANJAW,AR17,ANJAW,linked
+Arunachal Pradesh,AR,28,Bichom,AR28,Bichom,linked
+Arunachal Pradesh,AR,12,CHANGLANG,AR12,CHANGLANG,linked
+Arunachal Pradesh,AR,10,DIBANG VALLEY,AR10,DIBANG VALLEY,linked
+Arunachal Pradesh,AR,5,EAST KAMENG,AR5,EAST KAMENG,linked
+Arunachal Pradesh,AR,9,EAST SIANG,AR9,EAST SIANG,linked
+Arunachal Pradesh,AR,1,ITANAGAR CAPITAL REGION,AR1,ITANAGAR CAPITAL REGION,linked
+Arunachal Pradesh,AR,23,KAMLE,AR23,KAMLE,linked
+Arunachal Pradesh,AR,27,Keyi Panyor,AR27,Keyi Panyor,linked
+Arunachal Pradesh,AR,19,KRA-DAADI,AR19,KRA-DAADI,linked
+Arunachal Pradesh,AR,15,KURUNG KUMEY,AR15,KURUNG KUMEY,linked
+Arunachal Pradesh,AR,25,LEPARADA,AR25,LEPARADA,linked
+Arunachal Pradesh,AR,11,LOHIT,AR11,LOHIT,linked
+Arunachal Pradesh,AR,18,LONGDING,AR18,LONGDING,linked
+Arunachal Pradesh,AR,16,LOWER DIBANG VALLEY,AR16,LOWER DIBANG VALLEY,linked
+Arunachal Pradesh,AR,22,LOWER SIANG,AR22,LOWER SIANG,linked
+Arunachal Pradesh,AR,6,LOWER SUBANSIRI,AR6,LOWER SUBANSIRI,linked
+Arunachal Pradesh,AR,20,NAMSAI,AR20,NAMSAI,linked
+Arunachal Pradesh,AR,24,PAKKE-KESANG,AR24,PAKKE-KESANG,linked
+Arunachal Pradesh,AR,26,SHI-YOMI,AR26,SHI-YOMI,linked
+Arunachal Pradesh,AR,21,SIANG,AR21,SIANG,linked
+Arunachal Pradesh,AR,99,STATE TRANSPORT AUTHORITY,AR99,,portal_only
+Arunachal Pradesh,AR,3,TAWANG,AR3,TAWANG,linked
+Arunachal Pradesh,AR,13,TIRAP,AR13,TIRAP,linked
+Arunachal Pradesh,AR,14,UPPER SIANG,AR14,UPPER SIANG,linked
+Arunachal Pradesh,AR,7,UPPER SUBANSIRI,AR7,UPPER SUBANSIRI,linked
+Arunachal Pradesh,AR,4,WEST KAMENG,AR4,WEST KAMENG,linked
+Arunachal Pradesh,AR,8,WEST SIANG,AR8,WEST SIANG,linked
+Arunachal Pradesh,AR,2,YUPIA,AR2,YUPIA,linked
+Assam,AS,15,BARPETA,AS15,BARPETA,linked
+Assam,AS,28,BASKA,AS28,BASKA,linked
+Assam,AS,32,BISWANATH CHARIALI,AS32,BISWANATH CHARIALI,linked
+Assam,AS,19,BONGAIGAON,AS19,BONGAIGAON,linked
+Assam,AS,11,CACHAR,AS11,CACHAR,linked
+Assam,AS,33,CHARAIDEO,AS33,CHARAIDEO,linked
+Assam,AS,26,CHIRANG,AS26,CHIRANG,linked
+Assam,AS,13,DARRANG,AS13,DARRANG,linked
+Assam,AS,22,DHEMAJI,AS22,DHEMAJI,linked
+Assam,AS,17,DHUBRI,AS17,DHUBRI,linked
+Assam,AS,6,DIBRUGARH,AS6,DIBRUGARH,linked
+Assam,AS,8,DIMA HASAO,AS8,DIMA HASAO,linked
+Assam,AS,18,GOALPARA,AS18,GOALPARA,linked
+Assam,AS,5,GOLAGHAT,AS5,GOLAGHAT,linked
+Assam,AS,24,HAILAKANDI,AS24,HAILAKANDI,linked
+Assam,AS,31,HOJAI,AS31,HOJAI,linked
+Assam,AS,3,JORHAT,AS3,JORHAT,linked
+Assam,AS,1,KAMRUP,AS1,KAMRUP,linked
+Assam,AS,25,KAMRUP(RURAL),AS25,KAMRUP(RURAL),linked
+Assam,AS,9,KARBI ANGLONG,AS9,KARBI ANGLONG,linked
+Assam,AS,10,KARIMGANJ,AS10,KARIMGANJ,linked
+Assam,AS,16,KOKRAJHAR,AS16,KOKRAJHAR,linked
+Assam,AS,7,LAKHIMPUR,AS7,LAKHIMPUR,linked
+Assam,AS,29,MAJULI,AS29,MAJULI,linked
+Assam,AS,21,MORIGAON,AS21,MORIGAON,linked
+Assam,AS,2,NAGAON,AS2,NAGAON,linked
+Assam,AS,14,NALBARI,AS14,NALBARI,linked
+Assam,AS,200,"NIAIMT,CACHAR",AS200,,portal_only
+Assam,AS,202,"NIAIMT,HAILAKANDI",AS202,,portal_only
+Assam,AS,201,"NIAIMT,KARIMGANJ",AS201,,portal_only
+Assam,AS,4,SIVASAGAR,AS4,SIVASAGAR,linked
+Assam,AS,12,SONITPUR,AS12,SONITPUR,linked
+Assam,AS,34,SOUTH SALMARA,AS34,SOUTH SALMARA,linked
+Assam,AS,999,STATE TRANSPORT AUTHORITY,AS999,,portal_only
+Assam,AS,23,TINSUKIA,AS23,TINSUKIA,linked
+Assam,AS,27,UDALGURI,AS27,UDALGURI,linked
+Bihar,BR,38,ARARIA,BR38,ARARIA,linked
+Bihar,BR,56,ARAWAL,BR56,ARAWAL,linked
+Bihar,BR,26,AURANGABAD,BR26,AURANGABAD,linked
+Bihar,BR,51,BANKA,BR51,BANKA,linked
+Bihar,BR,9,BEGUSARAI,BR9,BEGUSARAI,linked
+Bihar,BR,22,BETTIAH,BR22,BETTIAH,linked
+Bihar,BR,45,BHABHUA,BR45,BHABHUA,linked
+Bihar,BR,10,BHAGALPUR,BR10,BHAGALPUR,linked
+Bihar,BR,103,BHAGALPUR RTA,BR103,,portal_only
+Bihar,BR,3,BHOJPUR,BR3,BHOJPUR,linked
+Bihar,BR,44,BUXUR,BR44,BUXUR,linked
+Bihar,BR,4,CHAPARA,BR4,CHAPARA,linked
+Bihar,BR,109,CHAPRA RTA,BR109,,portal_only
+Bihar,BR,7,DARBHANGA,BR7,DARBHANGA,linked
+Bihar,BR,102,DARBHANGA RTA,BR102,,portal_only
+Bihar,BR,2,GAYA,BR2,GAYA,linked
+Bihar,BR,107,GAYA RTA,BR107,,portal_only
+Bihar,BR,28,GOPALGANJ,BR28,GOPALGANJ,linked
+Bihar,BR,46,JAMUI,BR46,JAMUI,linked
+Bihar,BR,25,JEHANABAD,BR25,JEHANABAD,linked
+Bihar,BR,39,KATIHAR,BR39,KATIHAR,linked
+Bihar,BR,34,KHAGARIA,BR34,KHAGARIA,linked
+Bihar,BR,37,KISHANGANJ,BR37,KISHANGANJ,linked
+Bihar,BR,53,LAKHISARAI,BR53,LAKHISARAI,linked
+Bihar,BR,201,"M/S MURARI AUTO,Patna",BR201,,portal_only
+Bihar,BR,43,MADHEPURA,BR43,MADHEPURA,linked
+Bihar,BR,32,MADHUBANI,BR32,MADHUBANI,linked
+Bihar,BR,5,MOTIHARI,BR5,MOTIHARI,linked
+Bihar,BR,8,MUNGER,BR8,MUNGER,linked
+Bihar,BR,104,MUNGER RTA,BR104,,portal_only
+Bihar,BR,6,MUZAFFARPUR,BR6,MUZAFFARPUR,linked
+Bihar,BR,106,MUZAFFARPUR RTA,BR106,,portal_only
+Bihar,BR,21,NALANDA,BR21,NALANDA,linked
+Bihar,BR,27,NAWADA,BR27,NAWADA,linked
+Bihar,BR,1,PATNA,BR1,PATNA,linked
+Bihar,BR,101,PATNA RTA,BR101,,portal_only
+Bihar,BR,11,PURNEA,BR11,PURNEA,linked
+Bihar,BR,108,PURNEA RTA,BR108,,portal_only
+Bihar,BR,24,ROHTAS,BR24,ROHTAS,linked
+Bihar,BR,19,SAHARSA,BR19,SAHARSA,linked
+Bihar,BR,105,SAHARSA RTA,BR105,,portal_only
+Bihar,BR,33,SAMASTIPUR,BR33,SAMASTIPUR,linked
+Bihar,BR,52,SHEIKHPURA,BR52,SHEIKHPURA,linked
+Bihar,BR,55,SHEOHAR,BR55,SHEOHAR,linked
+Bihar,BR,30,SITAMARHI,BR30,SITAMARHI,linked
+Bihar,BR,29,SIWAN,BR29,SIWAN,linked
+Bihar,BR,999,STA BIHAR,BR999,,portal_only
+Bihar,BR,50,SUPAUL,BR50,SUPAUL,linked
+Bihar,BR,31,VAISHALI,BR31,VAISHALI,linked
+Chhattisgarh,CG,3,AIG(F/P) PHQ,CG3,,portal_only
+Chhattisgarh,CG,15,Ambikapur RTO,CG15,Ambikapur RTO,linked
+Chhattisgarh,CG,16,BAIKUNTHPUR DTO,CG16,BAIKUNTHPUR DTO,linked
+Chhattisgarh,CG,24,Balod DTO,CG24,Balod DTO,linked
+Chhattisgarh,CG,22,Baloda Bazar DTO,CG22,Baloda Bazar DTO,linked
+Chhattisgarh,CG,30,Balrampur DTO,CG30,Balrampur DTO,linked
+Chhattisgarh,CG,25,Bemetara DTO,CG25,Bemetara DTO,linked
+Chhattisgarh,CG,20,Bijapur DTO,CG20,Bijapur DTO,linked
+Chhattisgarh,CG,10,Bilaspur RTO,CG10,Bilaspur RTO,linked
+Chhattisgarh,CG,18,Dantewada DTO,CG18,Dantewada DTO,linked
+Chhattisgarh,CG,5,Dhamtari DTO,CG5,Dhamtari DTO,linked
+Chhattisgarh,CG,7,DURG RTO,CG7,DURG RTO,linked
+Chhattisgarh,CG,23,Gariyaband DTO,CG23,Gariyaband DTO,linked
+Chhattisgarh,CG,31,Gaurela-Pendra-Marwahi DTO,CG31,Gaurela-Pendra-Marwahi DTO,linked
+Chhattisgarh,CG,17,JAGDALPUR RTO,CG17,JAGDALPUR RTO,linked
+Chhattisgarh,CG,11,Janjgir Champa DTO,CG11,Janjgir Champa DTO,linked
+Chhattisgarh,CG,14,Jashpur DTO,CG14,Jashpur DTO,linked
+Chhattisgarh,CG,19,KANKER DTO,CG19,KANKER DTO,linked
+Chhattisgarh,CG,9,KAWARDHA DTO,CG9,KAWARDHA DTO,linked
+Chhattisgarh,CG,27,KONDAGAON DTO,CG27,KONDAGAON DTO,linked
+Chhattisgarh,CG,12,Korba DTO,CG12,Korba DTO,linked
+Chhattisgarh,CG,6,Mahasamund DTO,CG6,Mahasamund DTO,linked
+Chhattisgarh,CG,28,Mungeli DTO,CG28,Mungeli DTO,linked
+Chhattisgarh,CG,21,Narayanpur DTO,CG21,Narayanpur DTO,linked
+Chhattisgarh,CG,13,Raigarh DTO,CG13,Raigarh DTO,linked
+Chhattisgarh,CG,4,Raipur RTO,CG4,Raipur RTO,linked
+Chhattisgarh,CG,8,Rajnandgaon ARTO,CG8,Rajnandgaon ARTO,linked
+Chhattisgarh,CG,998,RTA TC NAWA RAIPUR,CG998,,portal_only
+Chhattisgarh,CG,99,State Transport Authority,CG99,,portal_only
+Chhattisgarh,CG,26,Sukma DTO,CG26,Sukma DTO,linked
+Chhattisgarh,CG,29,Surajpur DTO,CG29,Surajpur DTO,linked
+Chandigarh,CH,1,CHANDIGARH UT (RLA AND STA),CH1,CHANDIGARH UT (RLA AND STA),linked
+Dadara and Nagar Havelli,DD,3,DAMAN,DD3,DAMAN,linked
+Dadara and Nagar Havelli,DD,2,DIU,DD2,DIU,linked
+Dadara and Nagar Havelli,DD,1,SILVASSA,DD1,SILVASSA,linked
+Delhi,DL,53,BURARI AUTO UNIT,DL53,AUTO UNIT HQ,linked
+Delhi,DL,52,BURARI TAXI UNIT,DL52,TAXI UNIT HQ,linked
+Delhi,DL,9,DWARKA,DL9,SOUTH WEST (DWARKA),linked
+Delhi,DL,2,I P ESTATE,DL2,NEW DELHI (JAM NAGAR HOUSE),linked
+Delhi,DL,4,JANAKPURI,DL4,WEST (HARI NAGAR),linked
+Delhi,DL,207,JHULJHULI FITNESS CENTER,DL207,,portal_only
+Delhi,DL,205,KAIR CLUSTER BUS FITNESS CENTER,DL205,,portal_only
+Delhi,DL,206,KUSHAKNALA CLUSTER BUS FITNESS CENTER,DL206,,portal_only
+Delhi,DL,201,LADO SARAI FITNESS CENTER,DL201,,portal_only
+Delhi,DL,5,LONI ROAD,DL5,NORTH EAST (LONI),linked
+Delhi,DL,1,MALL ROAD,DL1,OLD DELHI (MALL ROAD),linked
+Delhi,DL,7,MAYUR VIHAR,DL7,EAST (MAYUR VIHAR),linked
+Delhi,DL,204,RAJA GARDEN FITNESS CENTER,DL204,,portal_only
+Delhi,DL,10,RAJOURI GARDEN,DL10,CENTRAL (RAJA GARDEN),linked
+Delhi,DL,51,RAJPUR ROAD/VIU BURARI,DL51,RAJPUR ROADVIU BURARI,linked
+Delhi,DL,11,ROHINI,DL11,OUTER NORTH (ROHINI-I),linked
+Delhi,DL,6,SARAI KALE KHAN,DL6,SOUTH EAST (SARAI KALE KHAN),linked
+Delhi,DL,202,SHAKUR BASTI FITNESS CENTER,DL202,,portal_only
+Delhi,DL,3,SOUTH DELHI,DL3,SOUTH (LADO SARAI),linked
+Delhi,DL,13,SURAJMAL VIHAR,DL13,NORTH WEST (ROHINI-II),linked
+Delhi,DL,12,VASANT VIHAR,DL12,NORTH (BURARI),linked
+Delhi,DL,203,VISHWAS NAGAR FITNESS CENTER,DL203,,portal_only
+Delhi,DL,8,WAZIRPUR,DL8,CENTRAL NORTH (WAZIRPUR),linked
+Goa,GA,107,ASSISTANT DIRECTOR OF TRANSPORT ENF. (NORTH) PANAJI,GA107,,portal_only
+Goa,GA,108,ASSISTANT DIRECTOR OF TRANSPORT ENF. (SOUTH) MARGAO,GA108,,portal_only
+Goa,GA,4,BICHOLIM RTO,GA4,BICHOLIM RTO,linked
+Goa,GA,10,CANACONA RTO,GA10,CANACONA RTO,linked
+Goa,GA,12,DHARBANDORA RTO,GA12,DHARBANDORA RTO,linked
+Goa,GA,3,MAPUSA RTO,GA3,MAPUSA RTO,linked
+Goa,GA,8,MARGAO RTO,GA8,MARGAO RTO,linked
+Goa,GA,7,PANAJI RTO,GA7,PANAJI RTO,linked
+Goa,GA,11,PERNEM RTO,GA11,PERNEM RTO,linked
+Goa,GA,5,PONDA RTO,GA5,PONDA RTO,linked
+Goa,GA,9,QUEPEM RTO,GA9,QUEPEM RTO,linked
+Goa,GA,999,"STATE TRANSPORT AUTHORITY, GOA",GA999,,portal_only
+Goa,GA,6,VASCO RTO,GA6,VASCO RTO,linked
+Gujarat,GJ,30,AAHWA,GJ30,AAHWA,linked
+Gujarat,GJ,1,AHMEDABAD,GJ1,AHMEDABAD,linked
+Gujarat,GJ,38,"Ahmedabad (Rural), Bawla ARTO",GJ38,"Ahmedabad (Rural), Bawla ARTO",linked
+Gujarat,GJ,27,AHMEDABAD EAST,GJ27,AHMEDABAD EAST,linked
+Gujarat,GJ,14,AMRELI,GJ14,AMRELI,linked
+Gujarat,GJ,23,ANAND,GJ23,ANAND,linked
+Gujarat,GJ,8,BANASKANTHA,GJ8,BANASKANTHA,linked
+Gujarat,GJ,19,BARDOLI,GJ19,BARDOLI,linked
+Gujarat,GJ,16,BHARUCH,GJ16,BHARUCH,linked
+Gujarat,GJ,4,BHAVNAGAR,GJ4,BHAVNAGAR,linked
+Gujarat,GJ,33,BOTAD,GJ33,BOTAD,linked
+Gujarat,GJ,34,CHHOTAUDAIPUR,GJ34,CHHOTAUDAIPUR,linked
+Gujarat,GJ,20,DAHOD,GJ20,DAHOD,linked
+Gujarat,GJ,18,GANDHINAGAR,GJ18,GANDHINAGAR,linked
+Gujarat,GJ,10,JAMNAGAR,GJ10,JAMNAGAR,linked
+Gujarat,GJ,11,JUNAGADH,GJ11,JUNAGADH,linked
+Gujarat,GJ,12,KACHCHH,GJ12,KACHCHH,linked
+Gujarat,GJ,39,KACHCHH EAST,GJ39,KACHCHH EAST,linked
+Gujarat,GJ,37,KHAMBHALIYA,GJ37,KHAMBHALIYA,linked
+Gujarat,GJ,7,KHEDA,GJ7,KHEDA,linked
+Gujarat,GJ,35,LUNAVADA,GJ35,LUNAVADA,linked
+Gujarat,GJ,2,MEHSANA,GJ2,MEHSANA,linked
+Gujarat,GJ,31,MODASA,GJ31,MODASA,linked
+Gujarat,GJ,36,MORBI,GJ36,MORBI,linked
+Gujarat,GJ,22,NARMADA,GJ22,NARMADA,linked
+Gujarat,GJ,21,NAVSARI,GJ21,NAVSARI,linked
+Gujarat,GJ,17,PANCHMAHAL,GJ17,PANCHMAHAL,linked
+Gujarat,GJ,24,PATAN,GJ24,PATAN,linked
+Gujarat,GJ,25,PORBANDAR,GJ25,PORBANDAR,linked
+Gujarat,GJ,3,RAJKOT,GJ3,RAJKOT,linked
+Gujarat,GJ,9,SABARKANTHA,GJ9,SABARKANTHA,linked
+Gujarat,GJ,5,SURAT,GJ5,SURAT,linked
+Gujarat,GJ,13,SURENDRANAGAR,GJ13,SURENDRANAGAR,linked
+Gujarat,GJ,26,TAPI,GJ26,TAPI,linked
+Gujarat,GJ,6,VADODARA,GJ6,VADODARA,linked
+Gujarat,GJ,15,VALSAD,GJ15,VALSAD,linked
+Gujarat,GJ,32,VERAVAL,GJ32,VERAVAL,linked
+Himachal Pradesh,HP,800,ADDITIONAL/JOINT/DY. DIRECTOR-CUM-RTO (HQ),HP800,,portal_only
+Himachal Pradesh,HP,807,ARTO BADDI,HP807,,portal_only
+Himachal Pradesh,HP,808,ARTO BAROTIWALA,HP808,,portal_only
+Himachal Pradesh,HP,803,ARTO DAMTAL (TOKI),HP803,,portal_only
+Himachal Pradesh,HP,811,ARTO GAGRET,HP811,,portal_only
+Himachal Pradesh,HP,806,ARTO KALA AMB,HP806,,portal_only
+Himachal Pradesh,HP,804,ARTO KANDWAL,HP804,,portal_only
+Himachal Pradesh,HP,812,ARTO MEHATPUR,HP812,,portal_only
+Himachal Pradesh,HP,805,ARTO PAONTA SAHIB,HP805,,portal_only
+Himachal Pradesh,HP,810,ARTO PARWANOO,HP810,,portal_only
+Himachal Pradesh,HP,801,ARTO SWARGHAT,HP801,,portal_only
+Himachal Pradesh,HP,809,ARTO TIPRA,HP809,,portal_only
+Himachal Pradesh,HP,802,ARTO TUNUHATTI,HP802,,portal_only
+Himachal Pradesh,HP,113,HRTC BAIJNATH,HP113,,portal_only
+Himachal Pradesh,HP,105,HRTC BILASPUR,HP105,,portal_only
+Himachal Pradesh,HP,115,HRTC CHAMBA,HP115,,portal_only
+Himachal Pradesh,HP,114,HRTC DEHRA,HP114,,portal_only
+Himachal Pradesh,HP,111,HRTC DHARAMSHALA,HP111,,portal_only
+Himachal Pradesh,HP,119,HRTC HAMIRPUR,HP119,,portal_only
+Himachal Pradesh,HP,107,HRTC JASSUR,HP107,,portal_only
+Himachal Pradesh,HP,104,HRTC KULLU,HP104,,portal_only
+Himachal Pradesh,HP,106,HRTC MANDI,HP106,,portal_only
+Himachal Pradesh,HP,110,HRTC NAHAN,HP110,,portal_only
+Himachal Pradesh,HP,109,HRTC NALAGARH,HP109,,portal_only
+Himachal Pradesh,HP,112,HRTC PALAMPUR,HP112,,portal_only
+Himachal Pradesh,HP,122,HRTC RAMPUR,HP122,,portal_only
+Himachal Pradesh,HP,116,HRTC SARKAGHAT,HP116,,portal_only
+Himachal Pradesh,HP,121,HRTC SHIMLA(RURAL),HP121,,portal_only
+Himachal Pradesh,HP,117,HRTC SUNDERNAGAR,HP117,,portal_only
+Himachal Pradesh,HP,103,HRTC TARADEVI,HP103,,portal_only
+Himachal Pradesh,HP,108,HRTC UNA,HP108,,portal_only
+Himachal Pradesh,HP,19,RLA AMB,HP19,RLA AMB,linked
+Himachal Pradesh,HP,35,RLA ANI,HP35,RLA ANI,linked
+Himachal Pradesh,HP,11,RLA ARKI,HP11,RLA ARKI,linked
+Himachal Pradesh,HP,127,RLA BADDI,HP127,RLA BADDI,linked
+Himachal Pradesh,HP,53,RLA BAIJNATH,HP53,RLA BAIJNATH,linked
+Himachal Pradesh,HP,82,RLA BALH,HP82,RLA BALH,linked
+Himachal Pradesh,HP,123,RLA BALICHOWKI,HP123,RLA BALICHOWKI,linked
+Himachal Pradesh,HP,78,RLA BANGANA,HP78,RLA BANGANA,linked
+Himachal Pradesh,HP,49,RLA BANJAR,HP49,RLA BANJAR,linked
+Himachal Pradesh,HP,21,RLA BARSAR,HP21,RLA BARSAR,linked
+Himachal Pradesh,HP,46,RLA BHARMOUR,HP46,RLA BHARMOUR,linked
+Himachal Pradesh,HP,74,RLA BHORANJ,HP74,RLA BHORANJ,linked
+Himachal Pradesh,HP,24,RLA BILASPUR,HP24,RLA BILASPUR,linked
+Himachal Pradesh,HP,48,RLA CHAMBA,HP48,RLA CHAMBA,linked
+Himachal Pradesh,HP,8,RLA CHOPAL,HP8,RLA CHOPAL,linked
+Himachal Pradesh,HP,44,RLA CHURAH,HP44,RLA CHURAH,linked
+Himachal Pradesh,HP,57,RLA CHUWARI,HP57,RLA CHUWARI,linked
+Himachal Pradesh,HP,47,RLA DALHOUSIE,HP47,RLA DALHOUSIE,linked
+Himachal Pradesh,HP,36,RLA DEHRA,HP36,RLA DEHRA,linked
+Himachal Pradesh,HP,86,RLA DHARAMPUR,HP86,RLA DHARAMPUR,linked
+Himachal Pradesh,HP,39,RLA DHARAMSHALA,HP39,RLA DHARAMSHALA,linked
+Himachal Pradesh,HP,96,RLA DHEERA,HP96,RLA DHEERA,linked
+Himachal Pradesh,HP,77,RLA DODRA KAWAR,HP77,RLA DODRA KAWAR,linked
+Himachal Pradesh,HP,88,RLA FATHEPUR,HP88,RLA FATHEPUR,linked
+Himachal Pradesh,HP,101,RLA GAGRET,HP101,RLA GAGRET,linked
+Himachal Pradesh,HP,23,RLA GHUMARVI,HP23,RLA GHUMARVI,linked
+Himachal Pradesh,HP,32,RLA GOHAR,HP32,RLA GOHAR,linked
+Himachal Pradesh,HP,22,RLA HAMIRPUR,HP22,RLA HAMIRPUR,linked
+Himachal Pradesh,HP,80,RLA HAROLI,HP80,RLA HAROLI,linked
+Himachal Pradesh,HP,97,RLA INDORA,HP97,RLA INDORA,linked
+Himachal Pradesh,HP,56,RLA JAISINGPUR,HP56,RLA JAISINGPUR,linked
+Himachal Pradesh,HP,83,RLA JAWALAJI,HP83,RLA JAWALAJI,linked
+Himachal Pradesh,HP,54,RLA JAWALI,HP54,RLA JAWALI,linked
+Himachal Pradesh,HP,89,RLA JHANDUTTA,HP89,RLA JHANDUTTA,linked
+Himachal Pradesh,HP,29,RLA JOGINDER NAGAR,HP29,RLA JOGINDER NAGAR,linked
+Himachal Pradesh,HP,75,RLA JUBBAL,HP75,RLA JUBBAL,linked
+Himachal Pradesh,HP,125,RLA KAFFOTA,HP125,RLA KAFFOTA,linked
+Himachal Pradesh,HP,25,RLA KALPA,HP25,RLA KALPA,linked
+Himachal Pradesh,HP,13,RLA KANDAGHAT,HP13,RLA KANDAGHAT,linked
+Himachal Pradesh,HP,40,RLA KANGRA,HP40,RLA KANGRA,linked
+Himachal Pradesh,HP,30,RLA KARSOG,HP30,RLA KARSOG,linked
+Himachal Pradesh,HP,98,RLA KASAULI,HP98,RLA KASAULI,linked
+Himachal Pradesh,HP,41,RLA KAZA,HP41,RLA KAZA,linked
+Himachal Pradesh,HP,42,RLA KELANG,HP42,RLA KELANG,linked
+Himachal Pradesh,HP,99,RLA KOTKHAI,HP99,RLA KOTKHAI,linked
+Himachal Pradesh,HP,102,RLA KOTLI,HP102,RLA KOTLI,linked
+Himachal Pradesh,HP,34,RLA KULU,HP34,RLA KULU,linked
+Himachal Pradesh,HP,95,RLA KUMARSAIN,HP95,RLA KUMARSAIN,linked
+Himachal Pradesh,HP,126,RLA KUPVI,HP126,RLA KUPVI,linked
+Himachal Pradesh,HP,58,RLA MANALI,HP58,RLA MANALI,linked
+Himachal Pradesh,HP,33,RLA MANDI,HP33,RLA MANDI,linked
+Himachal Pradesh,HP,55,RLA NADAUN,HP55,RLA NADAUN,linked
+Himachal Pradesh,HP,94,RLA NAGROTA BAGWAN,HP94,RLA NAGROTA BAGWAN,linked
+Himachal Pradesh,HP,18,RLA NAHAN,HP18,RLA NAHAN,linked
+Himachal Pradesh,HP,12,RLA NALAGARH,HP12,RLA NALAGARH,linked
+Himachal Pradesh,HP,26,RLA NICHAR,HP26,RLA NICHAR,linked
+Himachal Pradesh,HP,124,RLA NIRMAND,HP124,RLA NIRMAND,linked
+Himachal Pradesh,HP,38,RLA NURPUR,HP38,RLA NURPUR,linked
+Himachal Pradesh,HP,100,RLA PACHHAD,HP100,RLA PACHHAD,linked
+Himachal Pradesh,HP,76,RLA PADDHAR,HP76,RLA PADDHAR,linked
+Himachal Pradesh,HP,37,RLA PALAMPUR,HP37,RLA PALAMPUR,linked
+Himachal Pradesh,HP,45,RLA PANGI,HP45,RLA PANGI,linked
+Himachal Pradesh,HP,17,RLA PAONTA SAHIB,HP17,RLA PAONTA SAHIB,linked
+Himachal Pradesh,HP,15,RLA PARWANOO,HP15,RLA PARWANOO,linked
+Himachal Pradesh,HP,27,RLA POOH,HP27,RLA POOH,linked
+Himachal Pradesh,HP,16,RLA RAJGARH,HP16,RLA RAJGARH,linked
+Himachal Pradesh,HP,6,RLA RAMPUR BUSHAR,HP6,RLA RAMPUR BUSHAR,linked
+Himachal Pradesh,HP,10,RLA ROHRU,HP10,RLA ROHRU,linked
+Himachal Pradesh,HP,81,RLA SALOONI,HP81,RLA SALOONI,linked
+Himachal Pradesh,HP,79,RLA SANGRAH,HP79,RLA SANGRAH,linked
+Himachal Pradesh,HP,28,RLA SARKAGHAT,HP28,RLA SARKAGHAT,linked
+Himachal Pradesh,HP,90,RLA SHAHPUR,HP90,RLA SHAHPUR,linked
+Himachal Pradesh,HP,85,RLA SHILLAI,HP85,RLA SHILLAI,linked
+Himachal Pradesh,HP,3,RLA SHIMLA HP-03/HP-07(URBAN),HP3,RLA SHIMLA HP-03HP-07(URBAN),linked
+Himachal Pradesh,HP,51,RLA SHIMLA(RURAL),HP51,RLA SHIMLA(RURAL),linked
+Himachal Pradesh,HP,91,RLA SHRI NAINA DEVI JI SWARGHAT,HP91,RLA SHRI NAINA DEVI JI SWARGHAT,linked
+Himachal Pradesh,HP,14,RLA SOLAN,HP14,RLA SOLAN,linked
+Himachal Pradesh,HP,84,RLA SUJANPUR,HP84,RLA SUJANPUR,linked
+Himachal Pradesh,HP,31,RLA SUNDARNAGAR,HP31,RLA SUNDARNAGAR,linked
+Himachal Pradesh,HP,9,RLA THEOG,HP9,RLA THEOG,linked
+Himachal Pradesh,HP,87,RLA THUNAG,HP87,RLA THUNAG,linked
+Himachal Pradesh,HP,43,RLA UDAIPUR,HP43,RLA UDAIPUR,linked
+Himachal Pradesh,HP,20,RLA UNA,HP20,RLA UNA,linked
+Himachal Pradesh,HP,814,RTO (FLYING SQUAD) KANGRA AT DHARAMSHALA,HP814,,portal_only
+Himachal Pradesh,HP,813,RTO (FLYING SQUAD) KULLU,HP813,,portal_only
+Himachal Pradesh,HP,93,RTO BADDI(NALAGARH),HP93,RTO BADDI(NALAGARH),linked
+Himachal Pradesh,HP,69,RTO BILASPUR,HP69,RTO BILASPUR,linked
+Himachal Pradesh,HP,73,RTO CHAMBA,HP73,RTO CHAMBA,linked
+Himachal Pradesh,HP,68,RTO DHARAMSHALA,HP68,RTO DHARAMSHALA,linked
+Himachal Pradesh,HP,67,RTO HAMIRPUR,HP67,RTO HAMIRPUR,linked
+Himachal Pradesh,HP,66,RTO KULLU,HP66,RTO KULLU,linked
+Himachal Pradesh,HP,65,RTO MANDI,HP65,RTO MANDI,linked
+Himachal Pradesh,HP,71,RTO NAHAN,HP71,RTO NAHAN,linked
+Himachal Pradesh,HP,92,RTO RAMPUR,HP92,RTO RAMPUR,linked
+Himachal Pradesh,HP,63,RTO SHIMLA,HP63,RTO SHIMLA,linked
+Himachal Pradesh,HP,64,RTO SOLAN,HP64,RTO SOLAN,linked
+Himachal Pradesh,HP,72,RTO UNA,HP72,RTO UNA,linked
+Himachal Pradesh,HP,62,STA SHIMLA,HP62,STA SHIMLA,linked
+Haryana,HR,1,AMBALA CITY,HR1,AMBALA CITY,linked
+Haryana,HR,40,ASSANDH,HR40,ASSANDH,linked
+Haryana,HR,13,BAHADURGARH,HR13,BAHADURGARH,linked
+Haryana,HR,29,BALLABGARH,HR29,BALLABGARH,linked
+Haryana,HR,54,BARARA,HR54,BARARA,linked
+Haryana,HR,81,BAWAL,HR81,BAWAL,linked
+Haryana,HR,16,BHIWANI,HR16,BHIWANI,linked
+Haryana,HR,19,CHARKHI DADRI,HR19,CHARKHI DADRI,linked
+Haryana,HR,25,DABWALI,HR25,DABWALI,linked
+Haryana,HR,44,ELLNABAD,HR44,ELLNABAD,linked
+Haryana,HR,51,FARIDABAD,HR51,FARIDABAD,linked
+Haryana,HR,22,FATEHABAD,HR22,FATEHABAD,linked
+Haryana,HR,28,FEROZEPUR ZIRKHA,HR28,FEROZEPUR ZIRKHA,linked
+Haryana,HR,42,GANAUR,HR42,GANAUR,linked
+Haryana,HR,11,GOHANA,HR11,GOHANA,linked
+Haryana,HR,9,GULHA,HR9,GULHA,linked
+Haryana,HR,72,GURUGRAM SOUTH,HR72,GURUGRAM SOUTH,linked
+Haryana,HR,21,HANSI,HR21,HANSI,linked
+Haryana,HR,70,HARYANA HEAD OFFICE CHD,HR70,HARYANA HEAD OFFICE CHD,linked
+Haryana,HR,52,HATHIN,HR52,HATHIN,linked
+Haryana,HR,20,HISAR,HR20,HISAR,linked
+Haryana,HR,50,HODEL,HR50,HODEL,linked
+Haryana,HR,2,JAGADHARI,HR2,JAGADHARI,linked
+Haryana,HR,14,JHAJHAR,HR14,JHAJHAR,linked
+Haryana,HR,31,JIND,HR31,JIND,linked
+Haryana,HR,8,KAITHAL,HR8,KAITHAL,linked
+Haryana,HR,83,KALAYAT,HR83,KALAYAT,linked
+Haryana,HR,82,KANINA,HR82,KANINA,linked
+Haryana,HR,5,KARNAL,HR5,KARNAL,linked
+Haryana,HR,43,KOSLI,HR43,KOSLI,linked
+Haryana,HR,97,LADWA,HR97,LADWA,linked
+Haryana,HR,18,LOHARU,HR18,LOHARU,linked
+Haryana,HR,204,"M.G. MOTORS, 12KM MILE STONE(F.C)",HR204,,portal_only
+Haryana,HR,238,M/S ABC MOTORS DHANGARH FATEHABAD(F.C),HR238,,portal_only
+Haryana,HR,271,M/S AMBA MOTORS,HR271,,portal_only
+Haryana,HR,270,M/S COMPETENT AUTOMOBILES COMPANY LTD,HR270,,portal_only
+Haryana,HR,266,M/S CSG AUTOMOBILES(F.C),HR266,,portal_only
+Haryana,HR,261,M/S DAISY MOTORS PVT LTD(F.C),HR261,,portal_only
+Haryana,HR,259,M/S DAISY MOTORS PVT LTD(F.C),HR259,,portal_only
+Haryana,HR,206,"M/S DAISY MOTORS PVT LTD, 12KM STONE(F.C)",HR206,,portal_only
+Haryana,HR,251,M/S DAKSH MARKETING(F.C),HR251,,portal_only
+Haryana,HR,268,M/S DHINGRA TRUCKING PVT LTD,HR268,,portal_only
+Haryana,HR,263,M/S DINCO FOUR WHEELS LLP(F.C),HR263,,portal_only
+Haryana,HR,247,M/S EAKANSH MOTORS PVT LTD(F.C),HR247,,portal_only
+Haryana,HR,236,M/S EAKANSH WHEELS 126KM STONE JAGDHARI ROAD(F.C),HR236,,portal_only
+Haryana,HR,256,M/S G.N.G AUTO AIDS PVT.LTD(F.C),HR256,,portal_only
+Haryana,HR,253,M/S GARG MOTORS(F.C),HR253,,portal_only
+Haryana,HR,213,M/S GLOBAL AUTMOBOLINES SCO 25-26 GROUND FLOOR(F.C),HR213,,portal_only
+Haryana,HR,203,"M/S GLOBAL AUTOMART PVT LTD, 82 KM STONE(F.C)",HR203,,portal_only
+Haryana,HR,212,M/S H.S MOTORS SANOLI ROAD(F.C),HR212,,portal_only
+Haryana,HR,260,M/S HARCHAND MOTORS(F.C),HR260,,portal_only
+Haryana,HR,276,M/S HARYANA MOTOR(F.C),HR276,,portal_only
+Haryana,HR,257,M/S HIMGIRI AUTOMOBILES PVT.LTD(F.C),HR257,,portal_only
+Haryana,HR,246,M/S HIND MOTORS(F.C),HR246,,portal_only
+Haryana,HR,215,M/S HISAR AUTOMOBILES 5TH KM STONE SIRSA ROAD(F.C),HR215,,portal_only
+Haryana,HR,218,M/S JAGMOHAN AUTOMOBILES PVT LTD(F.C),HR218,,portal_only
+Haryana,HR,208,M/S JOHAR AUTOMOBILES FARIDABAD(F.C),HR208,,portal_only
+Haryana,HR,275,M/S KARAN AUTOMOTIVE(F.C),HR275,,portal_only
+Haryana,HR,210,M/S KARNAL MOTORS PVT 71/3 MILE STONE(F.C),HR210,,portal_only
+Haryana,HR,209,"M/S KARNAL MOTORS PVT LTD,PLOT NO-156-157(F.C)",HR209,,portal_only
+Haryana,HR,221,M/S KBS MOTORS PVT LTD OLD COURT ROAD JAGADHARI(F.C),HR221,,portal_only
+Haryana,HR,216,M/S KBS MOTORS PVT LTD VILL-TEPLA AMBALA(F.C),HR216,,portal_only
+Haryana,HR,249,M/S KHANNA CAR PLAZA PVT LTD(F.C),HR249,,portal_only
+Haryana,HR,250,M/S LEKHRAJ AUTO PLAZA PVT LTD(F.C),HR250,,portal_only
+Haryana,HR,269,M/S M.G. MOTORS,HR269,,portal_only
+Haryana,HR,235,M/S M/S SATGURU MOTORS NH-52(F.C),HR235,,portal_only
+Haryana,HR,223,"M/S MAHABALAJI AUTO SERVICE PVT LTD, 1/158, KM STONE(F.C)",HR223,,portal_only
+Haryana,HR,240,M/S MANGALAM MOTORS BAHADURGARH DISTT JHAJJAR(F.C),HR240,,portal_only
+Haryana,HR,277,M/S MANGLA MOTORS(F.C),HR277,,portal_only
+Haryana,HR,219,"M/S METRO MOTORS PVT LTD, 106, RAILWAY ROAD(F.C)",HR219,,portal_only
+Haryana,HR,217,"M/S METRO MOTORS PVT LTD, 76/1 MILE STONE(F.C)",HR217,,portal_only
+Haryana,HR,227,M/S MG MOTORS NEAR TOLL PLAZA NARANGPUR ROHTAK ROAD BHIWANI(F.C),HR227,,portal_only
+Haryana,HR,205,"M/S MOHAN FOURWHEEL PVT LTD, 13 KM STONE(F.C)",HR205,,portal_only
+Haryana,HR,239,M/S PALTINUM MOTOCOPR MANESAR GURUGRAM(F.C),HR239,,portal_only
+Haryana,HR,258,M/S PALUCK TECHNOLOGIES PVT.LTD(F.C),HR258,,portal_only
+Haryana,HR,225,M/S PANDIT AUTOMOBILES PVT LTD GOBINDPURA BYE PASS ROAD JAGADHARI YAMUNANAGAR(F.C),HR225,,portal_only
+Haryana,HR,211,"M/S PARAS TRUCKS, 11KM STONE DELHI BYE PASS ROAD(F.C)",HR211,,portal_only
+Haryana,HR,232,M/S PASCO AUTOMOBILES,HR232,,portal_only
+Haryana,HR,233,M/S PASCO AUTOMOBILES,HR233,,portal_only
+Haryana,HR,214,M/S PASCO AUTOMOBILES,HR214,,portal_only
+Haryana,HR,230,M/S PASCO AUTOMOBILES 34/3 DINESH JAIN COMPLEX(F.C),HR230,,portal_only
+Haryana,HR,228,"M/S PASCO AUTOMOBILES, 6 INDUSTRIAL ESTATE PALAM GURUGRAM(F.C)",HR228,,portal_only
+Haryana,HR,224,M/S PASCO MOTORS LLP 30MILES STONE(F.C),HR224,,portal_only
+Haryana,HR,202,M/S PASCO MOTORS LLP SHOP NO. G35(F.C),HR202,,portal_only
+Haryana,HR,207,"M/S PASCO MOTORS LLP, 40 MILE STONE(F.C)",HR207,,portal_only
+Haryana,HR,252,M/S PASCO MOTORS(F.C),HR252,,portal_only
+Haryana,HR,234,M/S PREM MOTORS PVT LTD DIVIDING ROAD(F.C),HR234,,portal_only
+Haryana,HR,231,M/S PREM MOTORS PVT LTD PLOT 3 IDC(F.C),HR231,,portal_only
+Haryana,HR,229,M/S R.K.H AUTOMOBILES PVT LTD(F.C),HR229,,portal_only
+Haryana,HR,279,M/S RAMA MOTORS(F.C),HR279,,portal_only
+Haryana,HR,241,M/S RANA MOTORS PVT LTD MEHARAULI ROAD GURUGRAM(F.C),HR241,,portal_only
+Haryana,HR,243,M/S RUDRA MOTORS NARWANA DISTT JIND(F.C),HR243,,portal_only
+Haryana,HR,245,M/S SAHIL MOTORS(F.C),HR245,,portal_only
+Haryana,HR,280,M/S Sanjay Automotive LLP Old Delhi Road(F.C),HR280,,portal_only
+Haryana,HR,254,M/S SHAKTI MOTORS PVT LTD(F.C),HR254,,portal_only
+Haryana,HR,248,M/S SHIVA MOTORS(F.C),HR248,,portal_only
+Haryana,HR,264,M/S SHREE KRISHANA MOTORS(F.C),HR264,,portal_only
+Haryana,HR,201,"M/S SHREE MOTORS PVT LTD, DEHCORA ROAD(F.C)",HR201,,portal_only
+Haryana,HR,255,M/S SHREE SALASAR MOTORS(F.C),HR255,,portal_only
+Haryana,HR,278,M/S SISOTHYA AUTOMOBILES DELHI JAIPUR HIGHWAY(F.C),HR278,,portal_only
+Haryana,HR,244,M/S STAR AUTOMOBILE(F.C),HR244,,portal_only
+Haryana,HR,267,M/S SUPREME MOBILES PVT LTD(F.C),HR267,,portal_only
+Haryana,HR,262,M/S SUPREME MOBILES PVT LTD(F.C),HR262,,portal_only
+Haryana,HR,237,M/S TAYAL MOTORS PVT LTD MATHURA ROAD FARIDABAD(F.C),HR237,,portal_only
+Haryana,HR,273,M/S TCS AUTOWORLD,HR273,,portal_only
+Haryana,HR,265,M/S THADESHRI Motors(F.C),HR265,,portal_only
+Haryana,HR,220,M/S TIRUPATI MOTORS REWARI-DELHI ROAD VILL-JONAWAS(F.C),HR220,,portal_only
+Haryana,HR,242,M/S UNIQUE MOTORS PVT LTD OPP-BHANU INDUSTRIES HISAR(F.C),HR242,,portal_only
+Haryana,HR,222,M/S UNITED MOTORS MIRZAPUR ROAD NEAR MIRZAPUR CHOWK(F.C),HR222,,portal_only
+Haryana,HR,272,M/S VIPIN MOTORS,HR272,,portal_only
+Haryana,HR,274,M/S VMT MOTORS,HR274,,portal_only
+Haryana,HR,226,"M/S YASHODHA TRANSWHEELS LLP, 78 MILE STONE VILLAGE KARHANS(F.C)",HR226,,portal_only
+Haryana,HR,34,MAHENDERGARH,HR34,MAHENDERGARH,linked
+Haryana,HR,15,MEHAM,HR15,MEHAM,linked
+Haryana,HR,4,NARAINGARH,HR4,NARAINGARH,linked
+Haryana,HR,35,NARNAUL,HR35,NARNAUL,linked
+Haryana,HR,32,NARWANA,HR32,NARWANA,linked
+Haryana,HR,27,NUH,HR27,NUH,linked
+Haryana,HR,30,PALWAL,HR30,PALWAL,linked
+Haryana,HR,3,PANCHKULA,HR3,PANCHKULA,linked
+Haryana,HR,6,PANIPAT,HR6,PANIPAT,linked
+Haryana,HR,76,PATAUDI,HR76,PATAUDI,linked
+Haryana,HR,41,PEHOWA,HR41,PEHOWA,linked
+Haryana,HR,99,"RA(MV),PANCHKULA",HR99,"RA(MV),PANCHKULA",linked
+Haryana,HR,59,RATIA,HR59,RATIA,linked
+Haryana,HR,36,REWARI,HR36,REWARI,linked
+Haryana,HR,96,RLA TAURU,HR96,RLA TAURU,linked
+Haryana,HR,12,ROHTAK,HR12,ROHTAK,linked
+Haryana,HR,37,RTA AMBALA,HR37,RTA AMBALA,linked
+Haryana,HR,84,RTA CHARKI DADRI,HR84,RTA CHARKI DADRI,linked
+Haryana,HR,61,"RTA, BHIWANI",HR61,"RTA, BHIWANI",linked
+Haryana,HR,38,"RTA, FARIDABAD",HR38,"RTA, FARIDABAD",linked
+Haryana,HR,62,"RTA, FATEHABAD",HR62,"RTA, FATEHABAD",linked
+Haryana,HR,55,"RTA, GURGAON",HR55,"RTA, GURGAON",linked
+Haryana,HR,39,"RTA, HISAR",HR39,"RTA, HISAR",linked
+Haryana,HR,63,"RTA, JHAJJAR AT BAHADURGARH",HR63,"RTA, JHAJJAR AT BAHADURGARH",linked
+Haryana,HR,56,"RTA, JIND",HR56,"RTA, JIND",linked
+Haryana,HR,64,"RTA, KAITHAL",HR64,"RTA, KAITHAL",linked
+Haryana,HR,45,"RTA, KARNAL",HR45,"RTA, KARNAL",linked
+Haryana,HR,65,"RTA, KURUKSHETRA",HR65,"RTA, KURUKSHETRA",linked
+Haryana,HR,66,"RTA, MOHINDERGARH",HR66,"RTA, MOHINDERGARH",linked
+Haryana,HR,74,"RTA, NUH",HR74,"RTA, NUH",linked
+Haryana,HR,73,"RTA, PALWAL",HR73,"RTA, PALWAL",linked
+Haryana,HR,68,"RTA, PANCHKULA",HR68,"RTA, PANCHKULA",linked
+Haryana,HR,67,"RTA, PANIPAT",HR67,"RTA, PANIPAT",linked
+Haryana,HR,47,"RTA, REWARI",HR47,"RTA, REWARI",linked
+Haryana,HR,46,"RTA, ROHTAK",HR46,"RTA, ROHTAK",linked
+Haryana,HR,57,"RTA, SIRSA",HR57,"RTA, SIRSA",linked
+Haryana,HR,69,"RTA, SONEPAT",HR69,"RTA, SONEPAT",linked
+Haryana,HR,58,"RTA, YNR",HR58,"RTA, YNR",linked
+Haryana,HR,33,SAFIDON,HR33,SAFIDON,linked
+Haryana,HR,60,SAMALKHA,HR60,SAMALKHA,linked
+Haryana,HR,85,SDM AMBALA CANTONMENT,HR85,SDM AMBALA CANTONMENT,linked
+Haryana,HR,88,SDM BADHRA,HR88,SDM BADHRA,linked
+Haryana,HR,87,SDM BADKHAL,HR87,SDM BADKHAL,linked
+Haryana,HR,89,SDM BADLI,HR89,SDM BADLI,linked
+Haryana,HR,98,SDM BADSHAHPUR,HR98,SDM BADSHAHPUR,linked
+Haryana,HR,80,SDM BARWALA,HR80,SDM BARWALA,linked
+Haryana,HR,77,SDM BERI,HR77,SDM BERI,linked
+Haryana,HR,71,SDM BILASPUR,HR71,SDM BILASPUR,linked
+Haryana,HR,91,SDM GHARAUNDA,HR91,SDM GHARAUNDA,linked
+Haryana,HR,26,SDM GURUGRAM,HR26,SDM GURUGRAM,linked
+Haryana,HR,75,SDM INDIRI,HR75,SDM INDIRI,linked
+Haryana,HR,94,SDM KALANWALI,HR94,SDM KALANWALI,linked
+Haryana,HR,79,SDM KHARKHONDA,HR79,SDM KHARKHONDA,linked
+Haryana,HR,86,SDM NARNAUND,HR86,SDM NARNAUND,linked
+Haryana,HR,49,SDM OFFICE KALKA,HR49,SDM OFFICE KALKA,linked
+Haryana,HR,93,SDM PUNHANA,HR93,SDM PUNHANA,linked
+Haryana,HR,92,SDM RADAUR,HR92,SDM RADAUR,linked
+Haryana,HR,95,SDM SAMPLA,HR95,SDM SAMPLA,linked
+Haryana,HR,78,SDM SHAHABAD,HR78,SDM SHAHABAD,linked
+Haryana,HR,90,SDM UCHANA,HR90,SDM UCHANA,linked
+Haryana,HR,24,SIRSA,HR24,SIRSA,linked
+Haryana,HR,17,SIWANI,HR17,SIWANI,linked
+Haryana,HR,10,SONEPAT,HR10,SONEPAT,linked
+Haryana,HR,7,THANESAR,HR7,THANESAR,linked
+Haryana,HR,23,TOHANA,HR23,TOHANA,linked
+Haryana,HR,48,TOSHAM,HR48,TOSHAM,linked
+Jharkhand,JH,201,"Authorised Testing  Centre (TUV SUD), Ranchi",JH201,,portal_only
+Jharkhand,JH,202,"Authorized Fitness Centre(VAHAN),Dhanbad",JH202,,portal_only
+Jharkhand,JH,9,BOKARO,JH9,BOKARO,linked
+Jharkhand,JH,13,CHATRA,JH13,CHATRA,linked
+Jharkhand,JH,15,DEOGHAR,JH15,DEOGHAR,linked
+Jharkhand,JH,10,DHANBAD,JH10,DHANBAD,linked
+Jharkhand,JH,4,DTO OFFICE DUMKA,JH4,DTO OFFICE DUMKA,linked
+Jharkhand,JH,5,EAST SINGHBHUM (JAMSHEDPUR),JH5,EAST SINGHBHUM (JAMSHEDPUR),linked
+Jharkhand,JH,14,GARHWA,JH14,GARHWA,linked
+Jharkhand,JH,11,GIRIDIH,JH11,GIRIDIH,linked
+Jharkhand,JH,17,GODDA,JH17,GODDA,linked
+Jharkhand,JH,7,GUMLA,JH7,GUMLA,linked
+Jharkhand,JH,2,HAZARIBAG,JH2,HAZARIBAG,linked
+Jharkhand,JH,21,JAMTARA,JH21,JAMTARA,linked
+Jharkhand,JH,23,KHUNTI,JH23,KHUNTI,linked
+Jharkhand,JH,12,KODERMA,JH12,KODERMA,linked
+Jharkhand,JH,19,LATEHAR,JH19,LATEHAR,linked
+Jharkhand,JH,8,LOHARDAGA,JH8,LOHARDAGA,linked
+Jharkhand,JH,203,"M/s Auto Fitness Centre,Ranchi",JH203,,portal_only
+Jharkhand,JH,205,"M/s Auto Tech Vehicle Fitness,Ranchi",JH205,,portal_only
+Jharkhand,JH,206,"M/S Global Automated Fitness,Hazaribag",JH206,,portal_only
+Jharkhand,JH,204,"M/s Universal Automated Fitness Centre, East Singhbhum",JH204,,portal_only
+Jharkhand,JH,16,PAKUR,JH16,PAKUR,linked
+Jharkhand,JH,3,PALAMU,JH3,PALAMU,linked
+Jharkhand,JH,24,RAMGARH,JH24,RAMGARH,linked
+Jharkhand,JH,1,RANCHI,JH1,RANCHI,linked
+Jharkhand,JH,18,SAHEBGANJ,JH18,SAHEBGANJ,linked
+Jharkhand,JH,22,SARAIKELA-KHARSAWAN,JH22,SARAIKELA-KHARSAWAN,linked
+Jharkhand,JH,20,SIMDEGA,JH20,SIMDEGA,linked
+Jharkhand,JH,99,STATE TRANSPORT AUTHORITY,JH99,,portal_only
+Jharkhand,JH,6,WEST SINGHBHUM (CHAIBASA),JH6,WEST SINGHBHUM (CHAIBASA),linked
+Jammu and Kashmir,JK,3,ANANTNAG ARTO,JK3,ANANTNAG ARTO,linked
+Jammu and Kashmir,JK,15,BANDIPORA ARTO,JK15,BANDIPORA ARTO,linked
+Jammu and Kashmir,JK,5,BARAMULLA ARTO,JK5,BARAMULLA ARTO,linked
+Jammu and Kashmir,JK,4,BUDGAM ARTO,JK4,BUDGAM ARTO,linked
+Jammu and Kashmir,JK,6,DODA ARTO,JK6,DODA ARTO,linked
+Jammu and Kashmir,JK,16,GANDERBAL ARTO,JK16,GANDERBAL ARTO,linked
+Jammu and Kashmir,JK,2,JAMMU RTO,JK2,JAMMU RTO,linked
+Jammu and Kashmir,JK,8,KATHUA RTO,JK8,KATHUA RTO,linked
+Jammu and Kashmir,JK,17,KISHTWAR ARTO,JK17,KISHTWAR ARTO,linked
+Jammu and Kashmir,JK,18,KULGAM ARTO,JK18,KULGAM ARTO,linked
+Jammu and Kashmir,JK,9,KUPWARA ARTO,JK9,KUPWARA ARTO,linked
+Jammu and Kashmir,JK,12,POONCH ARTO,JK12,POONCH ARTO,linked
+Jammu and Kashmir,JK,13,PULWAMA ARTO,JK13,PULWAMA ARTO,linked
+Jammu and Kashmir,JK,11,RAJOURI ARTO,JK11,RAJOURI ARTO,linked
+Jammu and Kashmir,JK,19,RAMBAN ARTO,JK19,RAMBAN ARTO,linked
+Jammu and Kashmir,JK,20,REASI ARTO,JK20,REASI ARTO,linked
+Jammu and Kashmir,JK,21,SAMBA ARTO,JK21,SAMBA ARTO,linked
+Jammu and Kashmir,JK,22,SHOPIAN ARTO,JK22,SHOPIAN ARTO,linked
+Jammu and Kashmir,JK,1,SRINAGAR RTO,JK1,SRINAGAR RTO,linked
+Jammu and Kashmir,JK,999,STATE TRANSPORT AUTHORITY,JK999,,portal_only
+Jammu and Kashmir,JK,14,UDHAMPUR ARTO,JK14,UDHAMPUR ARTO,linked
+Karnataka,KA,71,ATHANI ARTO,KA71,ATHANI ARTO,linked
+Karnataka,KA,29,BAGALKOT  RTO,KA29,BAGALKOT RTO,linked
+Karnataka,KA,24,BAILHONGAL  RTO,KA24,BAILHONGAL RTO,linked
+Karnataka,KA,58,Banashankari,KA58,,portal_only
+Karnataka,KA,70,BANTWALA ARTO,KA70,BANTWALA ARTO,linked
+Karnataka,KA,56,BASAVAKALYAN ARTO,KA56,BASAVAKALYAN ARTO,linked
+Karnataka,KA,34,BELLARY  RTO,KA34,BELLARY RTO,linked
+Karnataka,KA,1,BENGALURU CENTRAL  RTO,KA1,BENGALURU CENTRAL RTO,linked
+Karnataka,KA,3,BENGALURU EAST  RTO,KA3,BENGALURU EAST RTO,linked
+Karnataka,KA,4,BENGALURU NORTH  RTO,KA4,BENGALURU NORTH RTO,linked
+Karnataka,KA,5,BENGALURU SOUTH  RTO,KA5,BENGALURU SOUTH RTO,linked
+Karnataka,KA,2,BENGALURU WEST  RTO,KA2,BENGALURU WEST RTO,linked
+Karnataka,KA,39,BHALKI  ARTO,KA39,BHALKI ARTO,linked
+Karnataka,KA,38,BIDAR  RTO,KA38,BIDAR RTO,linked
+Karnataka,KA,28,BIJAPUR  RTO,KA28,BIJAPUR RTO,linked
+Karnataka,KA,10,CHAMARAJANAGAR  RTO,KA10,CHAMARAJANAGAR RTO,linked
+Karnataka,KA,59,"CHANDAPURA, BENGALURU RTO",KA59,"CHANDAPURA, BENGALURU RTO",linked
+Karnataka,KA,40,CHICKABALLAPUR  RTO,KA40,CHICKABALLAPUR RTO,linked
+Karnataka,KA,18,CHIKAMANGLUR RTO,KA18,CHIKAMANGLUR RTO,linked
+Karnataka,KA,23,CHIKKODI  RTO,KA23,CHIKKODI RTO,linked
+Karnataka,KA,67,CHINTAMANI ARTO,KA67,CHINTAMANI ARTO,linked
+Karnataka,KA,16,CHITRADURGA  RTO,KA16,CHITRADURGA RTO,linked
+Karnataka,KA,65,DANDELI ARTO,KA65,DANDELI ARTO,linked
+Karnataka,KA,17,DAVANAGERE  RTO,KA17,DAVANAGERE RTO,linked
+Karnataka,KA,43,DEVANAHALLI  ARTO,KA43,DEVANAHALLI ARTO,linked
+Karnataka,KA,63,DHARWAD EAST RTO,KA63,DHARWAD EAST RTO,linked
+Karnataka,KA,25,DHARWAD WEST RTO,KA25,DHARWAD WEST RTO,linked
+Karnataka,KA,51,ELECTRONIC CITY  RTO,KA51,ELECTRONIC CITY RTO,linked
+Karnataka,KA,26,GADAG  RTO,KA26,GADAG RTO,linked
+Karnataka,KA,49,GOKAK  ARTO,KA49,GOKAK ARTO,linked
+Karnataka,KA,13,HASSAN  RTO,KA13,HASSAN RTO,linked
+Karnataka,KA,27,HAVERI  RTO,KA27,HAVERI RTO,linked
+Karnataka,KA,47,HONNAVAR  ARTO,KA47,HONNAVAR ARTO,linked
+Karnataka,KA,35,HOSPET  RTO,KA35,HOSPET RTO,linked
+Karnataka,KA,45,HUNSUR  ARTO,KA45,HUNSUR ARTO,linked
+Karnataka,KA,48,JAMKHANDI  ARTO,KA48,JAMKHANDI ARTO,linked
+Karnataka,KA,41,JNANABHARATHI  RTO,KA41,JNANABHARATHI RTO,linked
+Karnataka,KA,8,K G F  ARTO,KA8,K G F ARTO,linked
+Karnataka,KA,32,KALABURAGI  RTO,KA32,KALABURAGI RTO,linked
+Karnataka,KA,30,KARWAR  RTO,KA30,KARWAR RTO,linked
+Karnataka,KA,7,KOLAR  RTO,KA7,KOLAR RTO,linked
+Karnataka,KA,37,KOPPAL  RTO,KA37,KOPPAL RTO,linked
+Karnataka,KA,53,KRISHNARAJAPURAM  RTO,KA53,KRISHNARAJAPURAM RTO,linked
+Karnataka,KA,64,"MADHUGIRI, TUMAKURU ARTO",KA64,"MADHUGIRI, TUMAKURU ARTO",linked
+Karnataka,KA,12,MADIKERI  RTO,KA12,MADIKERI RTO,linked
+Karnataka,KA,11,MANDYA  RTO,KA11,MANDYA RTO,linked
+Karnataka,KA,19,MANGALORE  RTO,KA19,MANGALORE RTO,linked
+Karnataka,KA,61,Marathahalli,KA61,,portal_only
+Karnataka,KA,55,MYSURU  EAST  RTO,KA55,MYSURU EAST RTO,linked
+Karnataka,KA,9,MYSURU WEST  RTO,KA9,MYSURU WEST RTO,linked
+Karnataka,KA,54,NAGAMANGALA  RTO,KA54,NAGAMANGALA RTO,linked
+Karnataka,KA,52,NELAMANGALA  RTO,KA52,NELAMANGALA RTO,linked
+Karnataka,KA,21,PUTTUR  RTO,KA21,PUTTUR RTO,linked
+Karnataka,KA,60,"R.T. Nagar, Bengaluru",KA60,,portal_only
+Karnataka,KA,36,RAICHUR  RTO,KA36,RAICHUR RTO,linked
+Karnataka,KA,42,RAMANAGAR  RTO,KA42,RAMANAGAR RTO,linked
+Karnataka,KA,69,RAMDURGA ARTO,KA69,RAMDURGA ARTO,linked
+Karnataka,KA,68,RANIBENNUR ARTO,KA68,RANIBENNUR ARTO,linked
+Karnataka,KA,22,REGIONAL TRANSPORT OFFICE BELAGAVI,KA22,REGIONAL TRANSPORT OFFICE BELAGAVI,linked
+Karnataka,KA,15,SAGAR  ARTO,KA15,SAGAR ARTO,linked
+Karnataka,KA,46,SAKALESHPURA  ARTO,KA46,SAKALESHPURA ARTO,linked
+Karnataka,KA,14,SHIMOGA  RTO,KA14,SHIMOGA RTO,linked
+Karnataka,KA,31,SIRSI  RTO,KA31,SIRSI RTO,linked
+Karnataka,KA,99,STATE TRANSPORT AUTHORITY,KA99,,portal_only
+Karnataka,KA,57,"STU AND AUTORIKSHAW,  SHANTHINAGAR RTO",KA57,"STU AND AUTORIKSHAW, SHANTHINAGAR RTO",linked
+Karnataka,KA,62,"Surathkal, Mangaluru",KA62,,portal_only
+Karnataka,KA,66,"TARIKERE, CHIKKAMAGALURU ARTO",KA66,"TARIKERE, CHIKKAMAGALURU ARTO",linked
+Karnataka,KA,44,TIPTUR  ARTO,KA44,TIPTUR ARTO,linked
+Karnataka,KA,6,TUMKUR  RTO,KA6,TUMKUR RTO,linked
+Karnataka,KA,20,UDUPI  RTO,KA20,UDUPI RTO,linked
+Karnataka,KA,33,YADGIRI  RTO,KA33,YADGIRI RTO,linked
+Karnataka,KA,50,YALAHANKA  RTO,KA50,YALAHANKA RTO,linked
+Kerala,KL,26,ADOOR SRTO,KL26,ADOOR SRTO,linked
+Kerala,KL,4,ALAPPUZHA RTO,KL4,ALAPPUZHA RTO,linked
+Kerala,KL,49,ALATHUR SRTO,KL49,ALATHUR SRTO,linked
+Kerala,KL,41,ALUVA SRTO,KL41,ALUVA SRTO,linked
+Kerala,KL,63,ANGAMALI SRTO,KL63,ANGAMALI SRTO,linked
+Kerala,KL,16,ATTINGAL RTO,KL16,ATTINGAL RTO,linked
+Kerala,KL,82,CHADAYAMANGALA SRTO,KL82,CHADAYAMANGALA SRTO,linked
+Kerala,KL,64,CHALAKKUDY SRTO,KL64,CHALAKKUDY SRTO,linked
+Kerala,KL,33,CHANGANACHERRY SRTO,KL33,CHANGANACHERRY SRTO,linked
+Kerala,KL,30,CHENGANNUR SRTO,KL30,CHENGANNUR SRTO,linked
+Kerala,KL,32,CHERTHALA SRTO,KL32,CHERTHALA SRTO,linked
+Kerala,KL,70,CHITTUR SRTO,KL70,CHITTUR SRTO,linked
+Kerala,KL,68,DEVIKULAM SRTO,KL68,DEVIKULAM SRTO,linked
+Kerala,KL,7,ERNAKULAM RTO,KL7,ERNAKULAM RTO,linked
+Kerala,KL,46,GURUVAYUR SRTO,KL46,GURUVAYUR SRTO,linked
+Kerala,KL,6,IDUKKI RTO,KL6,IDUKKI RTO,linked
+Kerala,KL,45,IRINJALAKUDA SRTO,KL45,IRINJALAKUDA SRTO,linked
+Kerala,KL,78,IRITTY SRTO,KL78,IRITTY SRTO,linked
+Kerala,KL,60,KANHANGAD SRTO,KL60,KANHANGAD SRTO,linked
+Kerala,KL,34,KANJIRAPPALLY SRTO,KL34,KANJIRAPPALLY SRTO,linked
+Kerala,KL,13,KANNUR RTO,KL13,KANNUR RTO,linked
+Kerala,KL,23,KARUNAGAPPALLY SRTO,KL23,KARUNAGAPPALLY SRTO,linked
+Kerala,KL,14,KASARGODE RTO,KL14,KASARGODE RTO,linked
+Kerala,KL,74,KATTAKADA SRTO,KL74,KATTAKADA SRTO,linked
+Kerala,KL,29,KAYAMKULAM SRTO,KL29,KAYAMKULAM SRTO,linked
+Kerala,KL,22,KAZHAKUTTOM SRTO,KL22,KAZHAKUTTOM SRTO,linked
+Kerala,KL,47,KODUNGALLUR SRTO,KL47,KODUNGALLUR SRTO,linked
+Kerala,KL,57,KODUVALLY SRTO,KL57,KODUVALLY SRTO,linked
+Kerala,KL,56,KOILANDY SRTO,KL56,KOILANDY SRTO,linked
+Kerala,KL,2,KOLLAM RTO,KL2,KOLLAM RTO,linked
+Kerala,KL,84,KONDOTTY SRTO,KL84,KONDOTTY SRTO,linked
+Kerala,KL,83,KONNI SRTO,KL83,KONNI SRTO,linked
+Kerala,KL,44,KOTHAMANGALAM SRTO,KL44,KOTHAMANGALAM SRTO,linked
+Kerala,KL,24,KOTTARAKKARA SRTO,KL24,KOTTARAKKARA SRTO,linked
+Kerala,KL,5,KOTTAYAM RTO,KL5,KOTTAYAM RTO,linked
+Kerala,KL,11,KOZHIKODE RTO,KL11,KOZHIKODE RTO,linked
+Kerala,KL,61,KUNNATHUR SRTO,KL61,KUNNATHUR SRTO,linked
+Kerala,KL,66,KUTTANADU SRTO,KL66,KUTTANADU SRTO,linked
+Kerala,KL,10,MALAPPURAM RTO,KL10,MALAPPURAM RTO,linked
+Kerala,KL,28,MALLAPPALLY SRTO,KL28,MALLAPPALLY SRTO,linked
+Kerala,KL,72,MANANTHAVADY SRTO,KL72,MANANTHAVADY SRTO,linked
+Kerala,KL,50,MANNARGHAT SRTO,KL50,MANNARGHAT SRTO,linked
+Kerala,KL,43,MATTANCHERRY SRTO,KL43,MATTANCHERRY SRTO,linked
+Kerala,KL,31,MAVELIKKARA SRTO,KL31,MAVELIKKARA SRTO,linked
+Kerala,KL,17,MUVATTUPUZHA RTO,KL17,MUVATTUPUZHA RTO,linked
+Kerala,KL,76,NANMANDA SRTO,KL76,NANMANDA SRTO,linked
+Kerala,KL,15,NATIONALISED SECTOR(TVPM) RTO,KL15,NATIONALISED SECTOR(TVPM) RTO,linked
+Kerala,KL,21,NEDUMANGADU SRTO,KL21,NEDUMANGADU SRTO,linked
+Kerala,KL,20,NEYYATTINKARA SRTO,KL20,NEYYATTINKARA SRTO,linked
+Kerala,KL,71,NILAMBUR SRTO,KL71,NILAMBUR SRTO,linked
+Kerala,KL,42,NORTH PARUR SRTO,KL42,NORTH PARUR SRTO,linked
+Kerala,KL,51,OTTAPPALAM SRTO,KL51,OTTAPPALAM SRTO,linked
+Kerala,KL,35,PALAI SRTO,KL35,PALAI SRTO,linked
+Kerala,KL,9,PALAKKAD RTO,KL9,PALAKKAD RTO,linked
+Kerala,KL,19,PARASSALA SRTO,KL19,PARASSALA SRTO,linked
+Kerala,KL,3,PATHANAMTHITTA RTO,KL3,PATHANAMTHITTA RTO,linked
+Kerala,KL,80,PATHANAPURAM SRTO,KL80,PATHANAPURAM SRTO,linked
+Kerala,KL,52,PATTAMBI SRTO,KL52,PATTAMBI SRTO,linked
+Kerala,KL,86,PAYYANNUR SRTO,KL86,PAYYANNUR SRTO,linked
+Kerala,KL,77,PERAMBRA SRTO,KL77,PERAMBRA SRTO,linked
+Kerala,KL,53,PERINTHALMANNA SRTO,KL53,PERINTHALMANNA SRTO,linked
+Kerala,KL,40,PERUMBAVUR SRTO,KL40,PERUMBAVUR SRTO,linked
+Kerala,KL,54,PONNANI SRTO,KL54,PONNANI SRTO,linked
+Kerala,KL,25,PUNALUR SRTO,KL25,PUNALUR SRTO,linked
+Kerala,KL,85,RAMANATTUKARA (FEROKE) SRTO,KL85,RAMANATTUKARA (FEROKE) SRTO,linked
+Kerala,KL,62,RANNI SRTO,KL62,RANNI SRTO,linked
+Kerala,KL,73,SULTHANBATHERY SRTO,KL73,SULTHANBATHERY SRTO,linked
+Kerala,KL,99,TC OFFICE - STA OFFICE,KL99,TC OFFICE - STA OFFICE,linked
+Kerala,KL,58,THALASSERY SRTO,KL58,THALASSERY SRTO,linked
+Kerala,KL,59,THALIPARAMBA SRTO,KL59,THALIPARAMBA SRTO,linked
+Kerala,KL,55,THIRUR SRTO,KL55,THIRUR SRTO,linked
+Kerala,KL,65,THIRURANGADI SRTO,KL65,THIRURANGADI SRTO,linked
+Kerala,KL,27,THIRUVALLA SRTO,KL27,THIRUVALLA SRTO,linked
+Kerala,KL,38,THODUPUZHA SRTO,KL38,THODUPUZHA SRTO,linked
+Kerala,KL,75,THRIPRAYAR SRTO,KL75,THRIPRAYAR SRTO,linked
+Kerala,KL,8,THRISSUR RTO,KL8,THRISSUR RTO,linked
+Kerala,KL,39,TRIPUNITHURA SRTO,KL39,TRIPUNITHURA SRTO,linked
+Kerala,KL,1,TRIVANDRUM RTO,KL1,TRIVANDRUM RTO,linked
+Kerala,KL,69,UDUMBANCHOLA SRTO,KL69,UDUMBANCHOLA SRTO,linked
+Kerala,KL,67,UZHAVOOR SRTO,KL67,UZHAVOOR SRTO,linked
+Kerala,KL,18,VADAKARA RTO,KL18,VADAKARA RTO,linked
+Kerala,KL,36,VAIKOM SRTO,KL36,VAIKOM SRTO,linked
+Kerala,KL,37,VANDIPERIYAR SRTO,KL37,VANDIPERIYAR SRTO,linked
+Kerala,KL,81,VARKALA SRTO,KL81,VARKALA SRTO,linked
+Kerala,KL,79,VELLARIKUNDU SRTO,KL79,VELLARIKUNDU SRTO,linked
+Kerala,KL,48,WADAKKANCHERRY SRTO,KL48,WADAKKANCHERRY SRTO,linked
+Kerala,KL,12,WAYANAD RTO,KL12,WAYANAD RTO,linked
+Ladakh,LA,1,KARGIL ARTO,LA1,KARGIL ARTO,linked
+Ladakh,LA,2,LEH ARTO,LA2,LEH ARTO,linked
+Ladakh,LA,999,STATE TRANSPORT AUTHORITY,LA999,,portal_only
+Lakshadweep,LD,2,AGATTI,LD2,AGATTI,linked
+Lakshadweep,LD,3,AMINI,LD3,AMINI,linked
+Lakshadweep,LD,4,ANDROTH,LD4,ANDROTH,linked
+Lakshadweep,LD,5,CHETLAT,LD5,CHETLAT,linked
+Lakshadweep,LD,6,KADMAT,LD6,KADMAT,linked
+Lakshadweep,LD,7,KALPENI,LD7,KALPENI,linked
+Lakshadweep,LD,1,KAVARATTI,LD1,KAVARATTI,linked
+Lakshadweep,LD,8,KILTAN,LD8,KILTAN,linked
+Lakshadweep,LD,9,MINICOY,LD9,MINICOY,linked
+Maharashtra,MH,45,AKLUJ,MH45,AKLUJ,linked
+Maharashtra,MH,44,AMBEJOGAI,MH44,AMBEJOGAI,linked
+Maharashtra,MH,27,AMRAWATI,MH27,AMRAWATI,linked
+Maharashtra,MH,42,BARAMATI,MH42,BARAMATI,linked
+Maharashtra,MH,23,BEED,MH23,BEED,linked
+Maharashtra,MH,54,BHADGAON,MH54,BHADGAON,linked
+Maharashtra,MH,36,BHANDARA,MH36,BHANDARA,linked
+Maharashtra,MH,28,BULDHANA,MH28,BULDHANA,linked
+Maharashtra,MH,52,CHALISGAON,MH52,CHALISGAON,linked
+Maharashtra,MH,20,CHHATRAPATI SAMBHAJINAGAR,MH20,CHHATRAPATI SAMBHAJINAGAR,linked
+Maharashtra,MH,202,Chiplun Chiplun Track,MH202,,portal_only
+Maharashtra,MH,25,DHARASHIV,MH25,DHARASHIV,linked
+Maharashtra,MH,18,DHULE,MH18,DHULE,linked
+Maharashtra,MH,38,"DY REGIONAL TRANSPORT OFFICE, HINGOLI",MH38,"DY REGIONAL TRANSPORT OFFICE, HINGOLI",linked
+Maharashtra,MH,8,DY RTO RATNAGIRI,MH8,DY RTO RATNAGIRI,linked
+Maharashtra,MH,33,GADCHIROLI,MH33,GADCHIROLI,linked
+Maharashtra,MH,35,GONDHIA,MH35,GONDHIA,linked
+Maharashtra,MH,51,ICHALKARANJI,MH51,ICHALKARANJI,linked
+Maharashtra,MH,21,JALANA,MH21,JALANA,linked
+Maharashtra,MH,5,KALYAN,MH5,KALYAN,linked
+Maharashtra,MH,50,KARAD,MH50,KARAD,linked
+Maharashtra,MH,56,KHAMGAON,MH56,KHAMGAON,linked
+Maharashtra,MH,9,KOLHAPUR,MH9,KOLHAPUR,linked
+Maharashtra,MH,41,MALEGAON,MH41,MALEGAON,linked
+Maharashtra,MH,58,MIRA BHAYANDAR,MH58,"Dy.REGIONAL TRANSPORT OFFICE,MIRA BHAYANDAR",linked
+Maharashtra,MH,1,MUMBAI (CENTRAL),MH1,MUMBAI (CENTRAL),linked
+Maharashtra,MH,3,MUMBAI (EAST),MH3,MUMBAI (EAST),linked
+Maharashtra,MH,2,MUMBAI (WEST),MH2,MUMBAI (WEST),linked
+Maharashtra,MH,49,NAGPUR (EAST),MH49,NAGPUR (EAST),linked
+Maharashtra,MH,40,NAGPUR (RURAL),MH40,NAGPUR (RURAL),linked
+Maharashtra,MH,31,NAGPUR (U),MH31,NAGPUR (U),linked
+Maharashtra,MH,26,NANDED,MH26,NANDED,linked
+Maharashtra,MH,39,NANDURBAR,MH39,NANDURBAR,linked
+Maharashtra,MH,15,NASHIK,MH15,NASHIK,linked
+Maharashtra,MH,46,PANVEL,MH46,PANVEL,linked
+Maharashtra,MH,22,PARBHANI,MH22,PARBHANI,linked
+Maharashtra,MH,6,PEN (RAIGAD),MH6,PEN (RAIGAD),linked
+Maharashtra,MH,53,PHALTAN,MH53,PHALTAN,linked
+Maharashtra,MH,12,PUNE,MH12,PUNE,linked
+Maharashtra,MH,47,R.T.O.BORIVALI,MH47,R.T.O.BORIVALI,linked
+Maharashtra,MH,16,RTO AHEMEDNAGAR,MH16,RTO AHILYANAGAR,linked
+Maharashtra,MH,30,RTO AKOLA,MH30,RTO AKOLA,linked
+Maharashtra,MH,34,RTO CHANDRAPUR,MH34,RTO CHANDRAPUR,linked
+Maharashtra,MH,19,RTO JALGAON,MH19,RTO JALGAON,linked
+Maharashtra,MH,24,RTO LATUR,MH24,RTO LATUR,linked
+Maharashtra,MH,203,RTO MH04-Mira Bhayander FitnessTrack,MH203,,portal_only
+Maharashtra,MH,14,RTO PIMPRI CHINCHWAD,MH14,RTO PIMPRI CHINCHWAD,linked
+Maharashtra,MH,11,RTO SATARA,MH11,RTO SATARA,linked
+Maharashtra,MH,13,RTO SOLAPUR,MH13,RTO SOLAPUR,linked
+Maharashtra,MH,10,SANGLI,MH10,SANGLI,linked
+Maharashtra,MH,7,SINDHUDURG(KUDAL),MH7,SINDHUDURG(KUDAL),linked
+Maharashtra,MH,17,SRIRAMPUR,MH17,SRIRAMPUR,linked
+Maharashtra,MH,99,TC OFFICE,MH99,,portal_only
+Maharashtra,MH,4,THANE,MH4,THANE,linked
+Maharashtra,MH,55,UDGIR,MH55,UDGIR,linked
+Maharashtra,MH,57,VAIJAPUR,MH57,VAIJAPUR,linked
+Maharashtra,MH,48,VASAI,MH48,VASAI,linked
+Maharashtra,MH,43,VASHI (NEW MUMBAI),MH43,VASHI (NEW MUMBAI),linked
+Maharashtra,MH,32,WARDHA,MH32,WARDHA,linked
+Maharashtra,MH,37,WASHIM,MH37,WASHIM,linked
+Maharashtra,MH,29,YAWATMAL,MH29,YAWATMAL,linked
+Meghalaya,ML,14,AMPATI,ML14,AMPATI,linked
+Meghalaya,ML,9,BAGHMARA,ML9,BAGHMARA,linked
+Meghalaya,ML,98,Commissioner of Transport,ML98,,portal_only
+Meghalaya,ML,4,JOWAI,ML4,JOWAI,linked
+Meghalaya,ML,11,KHLIEHRIAT,ML11,KHLIEHRIAT,linked
+Meghalaya,ML,15,MAIRANG,ML15,MAIRANG,linked
+Meghalaya,ML,12,MAWKYRWAT,ML12,MAWKYRWAT,linked
+Meghalaya,ML,10,NONGPOH,ML10,NONGPOH,linked
+Meghalaya,ML,6,NONGSTOIN,ML6,NONGSTOIN,linked
+Meghalaya,ML,13,RESUBELPARA,ML13,RESUBELPARA,linked
+Meghalaya,ML,5,SHILLONG,ML5,SHILLONG,linked
+Meghalaya,ML,99,STATE TRANSPORT AUTHORITY,ML99,,portal_only
+Meghalaya,ML,8,TURA,ML8,TURA,linked
+Meghalaya,ML,7,WILLIAMNAGAR,ML7,WILLIAMNAGAR,linked
+Manipur,MN,5,BISHNUPUR,MN5,BISHNUPUR,linked
+Manipur,MN,9,Chandel,MN9,Chandel,linked
+Manipur,MN,2,CHURACHANDPUR,MN2,CHURACHANDPUR,linked
+Manipur,MN,12,"DTO, KAMJONG",MN12,"DTO, KAMJONG",linked
+Manipur,MN,6,IMPHAL EAST,MN6,IMPHAL EAST,linked
+Manipur,MN,1,IMPHAL WEST,MN1,IMPHAL WEST,linked
+Manipur,MN,3,KANGPOKPI,MN3,KANGPOKPI,linked
+Manipur,MN,8,SENAPATI,MN8,SENAPATI,linked
+Manipur,MN,99,STA MANIPUR,MN99,,portal_only
+Manipur,MN,10,Tamenglong,MN10,Tamenglong,linked
+Manipur,MN,11,TENGNOUPAL,MN11,TENGNOUPAL,linked
+Manipur,MN,4,THOUBAL,MN4,THOUBAL,linked
+Manipur,MN,7,UKHRUL,MN7,UKHRUL,linked
+Madhya Pradesh,MP,70,AGAR MALWA RTO,MP70,AGAR MALWA RTO,linked
+Madhya Pradesh,MP,69,ALIRAJPUR DTO,MP69,ALIRAJPUR DTO,linked
+Madhya Pradesh,MP,65,ANUPPUR DTO,MP65,ANUPPUR DTO,linked
+Madhya Pradesh,MP,67,ASHOKNAGAR DTO,MP67,ASHOKNAGAR DTO,linked
+Madhya Pradesh,MP,46,BADWANI DTO,MP46,BADWANI DTO,linked
+Madhya Pradesh,MP,50,BALAGHAT DTO,MP50,BALAGHAT DTO,linked
+Madhya Pradesh,MP,48,BETUL DTO,MP48,BETUL DTO,linked
+Madhya Pradesh,MP,30,BHIND DTO,MP30,BHIND DTO,linked
+Madhya Pradesh,MP,4,BHOPAL RTO,MP4,BHOPAL RTO,linked
+Madhya Pradesh,MP,68,BURHANPUR DTO,MP68,BURHANPUR DTO,linked
+Madhya Pradesh,MP,16,CHATTARPUR  ARTO,MP16,CHHATARPUR ARTO,linked
+Madhya Pradesh,MP,28,CHHINDWARA ARTO,MP28,CHHINDWARA ARTO,linked
+Madhya Pradesh,MP,34,DAMOH DTO,MP34,DAMOH DTO,linked
+Madhya Pradesh,MP,32,DATIA DTO,MP32,DATIA DTO,linked
+Madhya Pradesh,MP,41,DEWAS DTO,MP41,DEWAS DTO,linked
+Madhya Pradesh,MP,11,DHAR ARTO,MP11,DHAR ARTO,linked
+Madhya Pradesh,MP,52,DINDORI DTO,MP52,DINDORI DTO,linked
+Madhya Pradesh,MP,8,GUNA DTO,MP8,GUNA DTO,linked
+Madhya Pradesh,MP,7,GWALIOR RTO,MP7,GWALIOR RTO,linked
+Madhya Pradesh,MP,47,HARDA DTO,MP47,HARDA DTO,linked
+Madhya Pradesh,MP,5,HOSANGABAD DTO,MP5,HOSANGABAD DTO,linked
+Madhya Pradesh,MP,9,INDORE RTO,MP9,INDORE RTO,linked
+Madhya Pradesh,MP,20,JABALPUR RTO,MP20,JABALPUR RTO,linked
+Madhya Pradesh,MP,45,JHABUA DTO,MP45,JHABUA DTO,linked
+Madhya Pradesh,MP,21,KATNI ARTO,MP21,KATNI ARTO,linked
+Madhya Pradesh,MP,12,KHANDWA ARTO,MP12,KHANDWA ARTO,linked
+Madhya Pradesh,MP,10,KHARGONE ARTO,MP10,KHARGONE ARTO,linked
+Madhya Pradesh,MP,51,MANDLA DTO,MP51,MANDLA DTO,linked
+Madhya Pradesh,MP,14,MANDSAUR ARTO,MP14,MANDSAUR ARTO,linked
+Madhya Pradesh,MP,6,MORENA DTO,MP6,MORENA DTO,linked
+Madhya Pradesh,MP,49,NARSINGHPUR DTO,MP49,NARSINGHPUR DTO,linked
+Madhya Pradesh,MP,44,NEEMUCH DTO,MP44,NEEMUCH DTO,linked
+Madhya Pradesh,MP,71,NIWARI DTO,MP71,NIWARI DTO,linked
+Madhya Pradesh,MP,35,PANNA DTO,MP35,PANNA DTO,linked
+Madhya Pradesh,MP,38,RAISEN DTO,MP38,RAISEN DTO,linked
+Madhya Pradesh,MP,39,RAJGARH DTO,MP39,RAJGARH DTO,linked
+Madhya Pradesh,MP,43,RATLAM DTO,MP43,RATLAM DTO,linked
+Madhya Pradesh,MP,17,REWA RTO,MP17,REWA RTO,linked
+Madhya Pradesh,MP,15,SAGAR RTO,MP15,SAGAR RTO,linked
+Madhya Pradesh,MP,19,SATNA ARTO,MP19,SATNA ARTO,linked
+Madhya Pradesh,MP,37,SEHORE DTO,MP37,SEHORE DTO,linked
+Madhya Pradesh,MP,22,SEONI ARTO,MP22,SEONI ARTO,linked
+Madhya Pradesh,MP,18,SHAHDOL RTO,MP18,SHAHDOL RTO,linked
+Madhya Pradesh,MP,42,SHAJAPUR DTO,MP42,SHAJAPUR DTO,linked
+Madhya Pradesh,MP,31,SHEOPUR DTO,MP31,SHEOPUR DTO,linked
+Madhya Pradesh,MP,33,SHIVPURI DTO,MP33,SHIVPURI DTO,linked
+Madhya Pradesh,MP,53,SIDHI DTO,MP53,SIDHI DTO,linked
+Madhya Pradesh,MP,66,SINGROLI DTO,MP66,SINGROLI DTO,linked
+Madhya Pradesh,MP,999,STATE TRANSPORT AUTHORITY,MP999,,portal_only
+Madhya Pradesh,MP,36,TIKAMGARH DTO,MP36,TIKAMGARH DTO,linked
+Madhya Pradesh,MP,13,UJJAIN RTO,MP13,UJJAIN RTO,linked
+Madhya Pradesh,MP,54,UMARIA DTO,MP54,UMARIA DTO,linked
+Madhya Pradesh,MP,40,VIDISHA DTO,MP40,VIDISHA DTO,linked
+Mizoram,MZ,1,AIZAWL DTO,MZ1,AIZAWL DTO,linked
+Mizoram,MZ,9,AIZAWL RURAL DTO,MZ9,SAITUAL,linked
+Mizoram,MZ,4,CHAMPHAI,MZ4,CHAMPHAI,linked
+Mizoram,MZ,5,KOLASIB,MZ5,KOLASIB,linked
+Mizoram,MZ,7,LAWNGTLAI,MZ7,LAWNGTLAI,linked
+Mizoram,MZ,2,LUNGLEI,MZ2,LUNGLEI,linked
+Mizoram,MZ,8,MAMIT,MZ8,MAMIT,linked
+Mizoram,MZ,3,SAIHA,MZ3,SAIHA,linked
+Mizoram,MZ,6,SERCHHIP,MZ6,SERCHHIP,linked
+Mizoram,MZ,99,STATE TRANSPORT AUTHORITY,MZ99,,portal_only
+Nagaland,NL,7,DIMAPUR DTO,NL7,DIMAPUR DTO,linked
+Nagaland,NL,1,KOHIMA RTO,NL1,KOHIMA RTO,linked
+Nagaland,NL,2,MOKOKCHUNG RTO,NL2,MOKOKCHUNG RTO,linked
+Nagaland,NL,4,MON DTO,NL4,MON DTO,linked
+Nagaland,NL,8,PHEK DTO,NL8,PHEK DTO,linked
+Nagaland,NL,99,TRANSPORT COMMISSIONERATE,NL99,,portal_only
+Nagaland,NL,3,TUENSANG DTO,NL3,TUENSANG DTO,linked
+Nagaland,NL,5,WOKHA DTO,NL5,WOKHA DTO,linked
+Nagaland,NL,6,ZUNHEBOTO DTO,NL6,ZUNHEBOTO DTO,linked
+Odisha,OR,19,ANGUL RTO,OD19,ANGUL RTO,linked
+Odisha,OR,901,ARTO BARBIL,OD901,ARTO BARBIL,linked
+Odisha,OR,1,BALASORE RTO,OD1,BALASORE RTO,linked
+Odisha,OR,17,BARGARH RTO,OD17,BARGARH RTO,linked
+Odisha,OR,22,BHADRAK RTO,OD22,BHADRAK RTO,linked
+Odisha,OR,32,BHANJANAGAR RTO,OD32,BHANJANAGAR RTO,linked
+Odisha,OR,2,BHUBANESWAR RTO,OD2,BHUBANESWAR RTO,linked
+Odisha,OR,33,BHUBANESWAR-II RTO,OD33,BHUBANESWAR-II RTO,linked
+Odisha,OR,3,BOLANGIR RTO,OD3,BOLANGIR RTO,linked
+Odisha,OR,27,BOUDH RTO,OD27,BOUDH RTO,linked
+Odisha,OR,4,CHANDIKHOLE RTO,OD4,CHANDIKHOLE RTO,linked
+Odisha,OR,5,CUTTACK RTO,OD5,CUTTACK RTO,linked
+Odisha,OR,28,DEOGARH RTO,OD28,DEOGARH RTO,linked
+Odisha,OR,6,DHENKANAL RTO,OD6,DHENKANAL RTO,linked
+Odisha,OR,20,GAJAPATI RTO,OD20,GAJAPATI RTO,linked
+Odisha,OR,7,GANJAM RTO,OD7,GANJAM RTO,linked
+Odisha,OR,21,JAGATSINGHPUR RTO,OD21,JAGATSINGHPUR RTO,linked
+Odisha,OR,34,JAJPUR RTO,OD34,JAJPUR RTO,linked
+Odisha,OR,23,JHARSUGUDA RTO,OD23,JHARSUGUDA RTO,linked
+Odisha,OR,8,KALAHANDI RTO,OD8,KALAHANDI RTO,linked
+Odisha,OR,29,KENDRAPARA RTO,OD29,KENDRAPARA RTO,linked
+Odisha,OR,9,KEONJHAR RTO,OD9,KEONJHAR RTO,linked
+Odisha,OR,201,KHORDHA ARTO,OD201,KHORDHA ARTO,linked
+Odisha,OR,10,KORAPUT RTO,OD10,KORAPUT RTO,linked
+Odisha,OR,30,MALKANAGIRI RTO,OD30,MALKANAGIRI RTO,linked
+Odisha,OR,11,MAYURBHANJ RTO,OD11,MAYURBHANJ RTO,linked
+Odisha,OR,24,NAWARANGPUR RTO,OD24,NAWARANGPUR RTO,linked
+Odisha,OR,25,NAYAGARH RTO,OD25,NAYAGARH RTO,linked
+Odisha,OR,26,NUAPADA RTO,OD26,NUAPADA RTO,linked
+Odisha,OR,12,PHULBANI RTO,OD12,PHULBANI RTO,linked
+Odisha,OR,13,PURI RTO,OD13,PURI RTO,linked
+Odisha,OR,111,RAIRANGPUR ARTO,OD111,RAIRANGPUR ARTO,linked
+Odisha,OR,18,RAYGADA RTO,OD18,RAYGADA RTO,linked
+Odisha,OR,14,ROURKELA RTO,OD14,ROURKELA RTO,linked
+Odisha,OR,15,SAMBALPUR RTO,OD15,SAMBALPUR RTO,linked
+Odisha,OR,31,SONEPUR RTO,OD31,SONEPUR RTO,linked
+Odisha,OR,99,STATE TRANSPORT AUTHORITY,OD99,,portal_only
+Odisha,OR,16,SUNDERGARH RTO,OD16,SUNDERGARH RTO,linked
+Odisha,OR,35,TALCHER RTO,OD35,TALCHER RTO,linked
+Punjab,PB,19,RTO BARNALA,PB19,RTO BARNALA,linked
+Punjab,PB,6,RTO GURDASPUR,PB6,RTO GURDASPUR,linked
+Punjab,PB,29,RTO MOGA,PB29,RTO MOGA,linked
+Punjab,PB,35,RTO PATHANKOT,PB35,RTO PATHANKOT,linked
+Punjab,PB,11,RTO PATIALA,PB11,RTO PATIALA,linked
+Punjab,PB,12,RTO ROPAR,PB12,RTO ROPAR,linked
+Punjab,PB,14,SDM AJNALA,PB14,SDM AJNALA,linked
+Punjab,PB,92,SDM AMARGARH,PB92,SDM AMARGARH,linked
+Punjab,PB,89,SDM AMRITSAR-2,PB89,SDM AMRITSAR-2,linked
+Punjab,PB,16,SDM ANANDPUR SAHIB,PB16,SDM ANANDPUR SAHIB,linked
+Punjab,PB,76,SDM DHARAMKOT,PB76,SDM DHARAMKOT,linked
+Punjab,PB,66,SDM NIHAL SINGH WALA,PB66,SDM NIHAL SINGH WALA,linked
+Punjab,PB,45,SDM TALWANDI SABO,PB45,SDM TALWANDI SABO,linked
+Punjab,PB,1,PUNJAB STA(RAC)/(AITP),PB1,PUNJAB STA(RAC)(AITP),linked
+Punjab,PB,2,RTO AMRITSAR,PB2,RTO AMRITSAR,linked
+Punjab,PB,3,RTO BATHINDA,PB3,RTO BATHINDA,linked
+Punjab,PB,4,RTO FARIDKOT,PB4,RTO FARIDKOT,linked
+Punjab,PB,23,RTO FATEHGARH SAHIB,PB23,RTO FATEHGARH SAHIB,linked
+Punjab,PB,22,RTO FAZILKA,PB22,RTO FAZILKA,linked
+Punjab,PB,5,RTO FEROZPUR,PB5,RTO FEROZPUR,linked
+Punjab,PB,7,RTO HOSHIARPUR,PB7,RTO HOSHIARPUR,linked
+Punjab,PB,8,RTO JALANDHAR,PB8,RTO JALANDHAR,linked
+Punjab,PB,9,RTO KAPURTHALA,PB9,RTO KAPURTHALA,linked
+Punjab,PB,10,RTO LUDHIANA,PB10,RTO LUDHIANA,linked
+Punjab,PB,28,RTO MALERKOTLA,PB28,RTO MALERKOTLA,linked
+Punjab,PB,31,RTO MANSA,PB31,RTO MANSA,linked
+Punjab,PB,30,RTO MUKTSAR SAHIB,PB30,RTO MUKTSAR SAHIB,linked
+Punjab,PB,65,RTO SAHIBZADA AJIT SINGH NAGAR,PB65,RTO SAHIBZADA AJIT SINGH NAGAR,linked
+Punjab,PB,13,RTO SANGRUR,PB13,RTO SANGRUR,linked
+Punjab,PB,32,RTO SBS NAGAR,PB32,RTO SBS NAGAR,linked
+Punjab,PB,46,RTO TARN TARAN,PB46,RTO TARN TARAN,linked
+Punjab,PB,15,SDM ABOHAR,PB15,SDM ABOHAR,linked
+Punjab,PB,94,SDM ADAMPUR,PB94,,portal_only
+Punjab,PB,82,SDM AHMEDGARH,PB82,SDM AHMEDGARH,linked
+Punjab,PB,48,SDM AMLOH,PB48,SDM AMLOH,linked
+Punjab,PB,17,SDM BABA BAKALA,PB17,SDM BABA BAKALA,linked
+Punjab,PB,69,SDM BAGHA PURANA,PB69,SDM BAGHA PURANA,linked
+Punjab,PB,20,SDM BALACHAUR,PB20,SDM BALACHAUR,linked
+Punjab,PB,78,SDM BANGA,PB78,SDM BANGA,linked
+Punjab,PB,52,SDM BASSI PATHANA,PB52,SDM BASSI PATHANA,linked
+Punjab,PB,18,SDM BATALA,PB18,SDM BATALA,linked
+Punjab,PB,84,SDM BHAWNIGARH,PB84,SDM BHAWNIGARH,linked
+Punjab,PB,88,SDM BHIKHIWIND,PB88,SDM BHIKHIWIND,linked
+Punjab,PB,57,SDM BHOLATH,PB57,SDM BHOLATH,linked
+Punjab,PB,50,SDM BUDHLADA,PB50,SDM BUDHLADA,linked
+Punjab,PB,71,SDM CHAMKAUR SAHIB,PB71,SDM CHAMKAUR SAHIB,linked
+Punjab,PB,21,SDM DASUYA,PB21,SDM DASUYA,linked
+Punjab,PB,58,SDM DERA BABA NANAK,PB58,SDM DERA BABA NANAK,linked
+Punjab,PB,70,SDM DERA BASSI,PB70,SDM DERA BASSI,linked
+Punjab,PB,68,SDM DHAR KALAN,PB68,SDM DHAR KALAN,linked
+Punjab,PB,59,SDM DHURI,PB59,SDM DHURI,linked
+Punjab,PB,99,SDM DINANAGAR,PB99,SDM DINANAGAR,linked
+Punjab,PB,86,SDM DIRBA,PB86,SDM DIRBA,linked
+Punjab,PB,83,SDM DUDHAN SADHAN,PB83,SDM DUDHAN SADHAN,linked
+Punjab,PB,24,SDM GARSHANKAR,PB24,SDM GARSHANKAR,linked
+Punjab,PB,60,SDM GIDDARBAHA,PB60,SDM GIDDARBAHA,linked
+Punjab,PB,77,SDM GURU HAR SAHAI,PB77,SDM GURU HAR SAHAI,linked
+Punjab,PB,25,SDM JAGRAON,PB25,SDM JAGRAON,linked
+Punjab,PB,62,SDM JAITO,PB62,SDM JAITO,linked
+Punjab,PB,61,SDM JALALABAD,PB61,SDM JALALABAD,linked
+Punjab,PB,90,SDM JALANDHAR-11,PB90,SDM JALANDHAR-11,linked
+Punjab,PB,85,SDM KALANAUR,PB85,SDM KALANAUR,linked
+Punjab,PB,63,SDM KHADUR SAHIB,PB63,SDM KHADUR SAHIB,linked
+Punjab,PB,49,SDM KHAMANO,PB49,SDM KHAMANO,linked
+Punjab,PB,26,SDM KHANNA,PB26,SDM KHANNA,linked
+Punjab,PB,27,SDM KHARAR,PB27,SDM KHARAR,linked
+Punjab,PB,79,SDM KOTKAPURA,PB79,SDM KOTKAPURA,linked
+Punjab,PB,75,SDM LEHRAGAGA,PB75,SDM LEHRAGAGA,linked
+Punjab,PB,93,SDM LOPOKE,PB93,SDM LOPOKE,linked
+Punjab,PB,91,SDM LUDHIANA EAST,PB91,SDM LUDHIANA EAST,linked
+Punjab,PB,81,SDM MAJITHA,PB81,SDM MAJITHA,linked
+Punjab,PB,53,SDM MALOUT,PB53,SDM MALOUT,linked
+Punjab,PB,80,SDM MAUR MANDI,PB80,SDM MAUR MANDI,linked
+Punjab,PB,64,SDM MOONAK,PB64,SDM MOONAK,linked
+Punjab,PB,87,SDM MORINDA,PB87,SDM MORINDA,linked
+Punjab,PB,54,SDM MUKERIAN,PB54,SDM MUKERIAN,linked
+Punjab,PB,34,SDM NABHA,PB34,SDM NABHA,linked
+Punjab,PB,33,SDM NAKODAR,PB33,SDM NAKODAR,linked
+Punjab,PB,74,SDM NANGAL,PB74,SDM NANGAL,linked
+Punjab,PB,72,SDM PATRAN,PB72,SDM PATRAN,linked
+Punjab,PB,38,SDM PATTI,PB38,SDM PATTI,linked
+Punjab,PB,55,SDM PAYAL,PB55,SDM PAYAL,linked
+Punjab,PB,36,SDM PHAGWARA,PB36,SDM PHAGWARA,linked
+Punjab,PB,37,SDM PHILLOUR,PB37,SDM PHILLOUR,linked
+Punjab,PB,56,SDM RAIKOT,PB56,SDM RAIKOT,linked
+Punjab,PB,39,SDM RAJPURA,PB39,SDM RAJPURA,linked
+Punjab,PB,40,SDM RAMPURA PHUL,PB40,SDM RAMPURA PHUL,linked
+Punjab,PB,42,SDM SAMANA,PB42,SDM SAMANA,linked
+Punjab,PB,43,SDM SAMRALA,PB43,SDM SAMRALA,linked
+Punjab,PB,51,SDM SARDULGARH,PB51,SDM SARDULGARH,linked
+Punjab,PB,67,SDM SHAHKOT,PB67,SDM SHAHKOT,linked
+Punjab,PB,41,SDM SULTANPUR LODHI,PB41,SDM SULTANPUR LODHI,linked
+Punjab,PB,44,SDM SUNAM,PB44,SDM SUNAM,linked
+Punjab,PB,95,SDM TANDA,PB95,,portal_only
+Punjab,PB,73,SDM TAPA,PB73,SDM TAPA,linked
+Punjab,PB,47,SDM ZIRA,PB47,SDM ZIRA,linked
+Puducherry,PY,11,BAHOUR,PY11,BAHOUR,linked
+Puducherry,PY,99,CHECK POST,PY99,,portal_only
+Puducherry,PY,2,KARAIKAL,PY2,KARAIKAL,linked
+Puducherry,PY,3,MAHE,PY3,MAHE,linked
+Puducherry,PY,5,OULGARET,PY5,OULGARET,linked
+Puducherry,PY,1,PUDUCHERRY,PY1,PUDUCHERRY,linked
+Puducherry,PY,51,VILLIANUR,PY51,THIRUBUVANAI(VILLIANUR),linked
+Puducherry,PY,4,YANAM,PY4,YANAM,linked
+Rajasthan,RJ,267,A&L Company,RJ267,,portal_only
+Rajasthan,RJ,38,ABU ROAD DTO,RJ38,ABU ROAD DTO,linked
+Rajasthan,RJ,260,Adinath Fitness Center,RJ260,,portal_only
+Rajasthan,RJ,225,Agarwal Fitness Center,RJ225,,portal_only
+Rajasthan,RJ,1,AJMER RTO,RJ1,AJMER RTO,linked
+Rajasthan,RJ,243,Alwar Auto Mobile Fitness Center,RJ243,,portal_only
+Rajasthan,RJ,254,Alwar Fitness Center,RJ254,,portal_only
+Rajasthan,RJ,2,ALWAR RTO,RJ2,ALWAR RTO,linked
+Rajasthan,RJ,218,ARAVALI FITNESS TESTING CENTER,RJ218,,portal_only
+Rajasthan,RJ,257,Arihant Vehicle Fitness Center,RJ257,,portal_only
+Rajasthan,RJ,261,Atharva Enterprises,RJ261,,portal_only
+Rajasthan,RJ,280,BALAJI ALLIANCE,RJ280,,portal_only
+Rajasthan,RJ,210,BALAJI FITNESS CENTER (BHILWARA),RJ210,,portal_only
+Rajasthan,RJ,209,BALAJI FITNESS CENTER (HANUMANGARH),RJ209,,portal_only
+Rajasthan,RJ,39,BALOTRA DTO,RJ39,BALOTRA DTO,linked
+Rajasthan,RJ,3,BANSWARA DTO,RJ3,BANSWARA DTO,linked
+Rajasthan,RJ,276,BANSWARA VEHICLE FITNESS CENTER,RJ276,,portal_only
+Rajasthan,RJ,28,BARAN DTO,RJ28,BARAN DTO,linked
+Rajasthan,RJ,4,BARMER DTO,RJ4,BARMER DTO,linked
+Rajasthan,RJ,36,BEAWAR DTO,RJ36,BEAWAR DTO,linked
+Rajasthan,RJ,250,Bharat Vahan Fitness Center,RJ250,,portal_only
+Rajasthan,RJ,5,BHARATPUR RTO,RJ5,BHARATPUR RTO,linked
+Rajasthan,RJ,6,BHILWARA DTO,RJ6,BHILWARA DTO,linked
+Rajasthan,RJ,46,BHINMAL DTO,RJ46,BHINMAL DTO,linked
+Rajasthan,RJ,40,BHIWARI DTO,RJ40,BHIWARI DTO,linked
+Rajasthan,RJ,7,BIKANER RTO,RJ7,BIKANER RTO,linked
+Rajasthan,RJ,8,BUNDI DTO,RJ8,BUNDI DTO,linked
+Rajasthan,RJ,9,CHITTORGARH RTO,RJ9,CHITTORGARH RTO,linked
+Rajasthan,RJ,41,CHOMU DTO,RJ41,CHOMU DTO,linked
+Rajasthan,RJ,10,CHURU DTO,RJ10,CHURU DTO,linked
+Rajasthan,RJ,29,DAUSA RTO,RJ29,DAUSA RTO,linked
+Rajasthan,RJ,11,DHOLPUR DTO,RJ11,DHOLPUR DTO,linked
+Rajasthan,RJ,37,DIDWANA DTO,RJ37,DIDWANA DTO,linked
+Rajasthan,RJ,47,DUDU DTO,RJ47,DUDU DTO,linked
+Rajasthan,RJ,281,DUDU FITNESS CENTER,RJ281,,portal_only
+Rajasthan,RJ,12,DUNGARPUR DTO,RJ12,DUNGARPUR DTO,linked
+Rajasthan,RJ,228,EXPLORE IT SERVICES PVT. LTD.,RJ228,,portal_only
+Rajasthan,RJ,224,FREEDOM MOTORS,RJ224,,portal_only
+Rajasthan,RJ,223,G.Y. Fitness Center,RJ223,,portal_only
+Rajasthan,RJ,226,Ganesh Ji Fitness Center,RJ226,,portal_only
+Rajasthan,RJ,31,HANUMANGARH DTO,RJ31,HANUMANGARH DTO,linked
+Rajasthan,RJ,251,Hindustan Automobiles,RJ251,,portal_only
+Rajasthan,RJ,269,Indira Vehicle Fitness Centre,RJ269,,portal_only
+Rajasthan,RJ,231,INFINITY FITNESS CENTER,RJ231,,portal_only
+Rajasthan,RJ,141,"JAGATPURA, JAIPUR ARTO",RJ141,"JAGATPURA, JAIPUR ARTO",linked
+Rajasthan,RJ,236,Jai Bhawani Fitness Center,RJ236,,portal_only
+Rajasthan,RJ,14,JAIPUR (FIRST) RTO,RJ14,JAIPUR (FIRST) RTO,linked
+Rajasthan,RJ,59,JAIPUR (SECOND) RTO,RJ59,JAIPUR (SECOND) RTO,linked
+Rajasthan,RJ,234,Jaipur Vehicle Fitness and Maintenance Center,RJ234,,portal_only
+Rajasthan,RJ,15,JAISALMER DTO,RJ15,JAISALMER DTO,linked
+Rajasthan,RJ,16,JALORE DTO,RJ16,JALORE DTO,linked
+Rajasthan,RJ,282,JALORE FITNESS CENTRE,RJ282,,portal_only
+Rajasthan,RJ,17,JHALAWAR DTO,RJ17,JHALAWAR DTO,linked
+Rajasthan,RJ,18,JHUNJHUNU DTO,RJ18,JHUNJHUNU DTO,linked
+Rajasthan,RJ,242,Jodhpur Parivahan Fitness Centre,RJ242,,portal_only
+Rajasthan,RJ,19,JODHPUR RTO,RJ19,JODHPUR RTO,linked
+Rajasthan,RJ,34,KAROLI DTO,RJ34,KAROLI DTO,linked
+Rajasthan,RJ,48,KEKRI DTO,RJ48,KEKRI DTO,linked
+Rajasthan,RJ,53,KHETRI DTO,RJ53,KHETRI DTO,linked
+Rajasthan,RJ,42,KISHANGARH DTO,RJ42,KISHANGARH DTO,linked
+Rajasthan,RJ,20,KOTA RTO,RJ20,KOTA RTO,linked
+Rajasthan,RJ,263,Kota Vehicle Fitness Center,RJ263,,portal_only
+Rajasthan,RJ,32,KOTPUTALI DTO,RJ32,KOTPUTALI DTO,linked
+Rajasthan,RJ,266,Laxmi Parivahan Fitness Center,RJ266,,portal_only
+Rajasthan,RJ,222,M & D Automobile Fitness Center,RJ222,,portal_only
+Rajasthan,RJ,239,M.K. Fitness Center,RJ239,,portal_only
+Rajasthan,RJ,201,M/S Dholpur Fitness Center,RJ201,,portal_only
+Rajasthan,RJ,203,M/S Jagdamba Fitness Center,RJ203,,portal_only
+Rajasthan,RJ,204,M/S Nandan Fitness Testing Center,RJ204,,portal_only
+Rajasthan,RJ,202,M/S OM Fitness & Service Center,RJ202,,portal_only
+Rajasthan,RJ,233,Mahadev Fitness Center,RJ233,,portal_only
+Rajasthan,RJ,274,MAHADEV FITNESS CENTER BHILWARA,RJ274,,portal_only
+Rajasthan,RJ,273,MAHADEV FITNESS CENTER JODHPUR,RJ273,,portal_only
+Rajasthan,RJ,229,MAHAVEER JAIN FITNESS CENTRE,RJ229,,portal_only
+Rajasthan,RJ,232,MAHAVEER PRASAD RAM KISHAN,RJ232,,portal_only
+Rajasthan,RJ,271,Marudhara Transport Company,RJ271,,portal_only
+Rajasthan,RJ,249,Marwar Fitness Center,RJ249,,portal_only
+Rajasthan,RJ,220,Matsya Fitness Center,RJ220,,portal_only
+Rajasthan,RJ,230,Meel Motors,RJ230,,portal_only
+Rajasthan,RJ,247,Meera Fitness Center,RJ247,,portal_only
+Rajasthan,RJ,215,MEERA FITNESS TESTING CENTER CHITTORGARH,RJ215,,portal_only
+Rajasthan,RJ,255,Naganaray Fitness Center,RJ255,,portal_only
+Rajasthan,RJ,21,NAGAUR DTO,RJ21,NAGAUR DTO,linked
+Rajasthan,RJ,248,Navdeep Fitness Test Center,RJ248,,portal_only
+Rajasthan,RJ,245,Navdurga Vahan Fitness Center,RJ245,,portal_only
+Rajasthan,RJ,216,Navkar Shri Fitness Testing Center,RJ216,,portal_only
+Rajasthan,RJ,49,NOHAR DTO,RJ49,NOHAR DTO,linked
+Rajasthan,RJ,50,NOKHA DTO,RJ50,NOKHA DTO,linked
+Rajasthan,RJ,253,Nokha Vehicle Fitness Center,RJ253,,portal_only
+Rajasthan,RJ,22,PALI RTO,RJ22,PALI RTO,linked
+Rajasthan,RJ,240,Parasvnath Fitness Center,RJ240,,portal_only
+Rajasthan,RJ,277,PAWAN VEHICLE FITNESS CENTER PVT LTD,RJ277,,portal_only
+Rajasthan,RJ,43,PHALODI DTO,RJ43,PHALODI DTO,linked
+Rajasthan,RJ,54,PIPAR CITY DTO,RJ54,PIPAR CITY DTO,linked
+Rajasthan,RJ,55,POKHRAN DTO,RJ55,POKHRAN DTO,linked
+Rajasthan,RJ,35,PRATAPGARH DTO,RJ35,PRATAPGARH DTO,linked
+Rajasthan,RJ,265,Preksha Parivahan Fitness Center,RJ265,,portal_only
+Rajasthan,RJ,272,Prerna Parivahan Fitness Center,RJ272,,portal_only
+Rajasthan,RJ,221,R.K. Fitness Center,RJ221,,portal_only
+Rajasthan,RJ,283,RAJASTHAN VEHICLE FITNESS CENTER,RJ283,,portal_only
+Rajasthan,RJ,30,RAJSAMAND DTO,RJ30,RAJSAMAND DTO,linked
+Rajasthan,RJ,33,RAMGANJMANDI DTO,RJ33,RAMGANJMANDI DTO,linked
+Rajasthan,RJ,268,Royal Motors,RJ268,,portal_only
+Rajasthan,RJ,56,SADULSHAHAR DTO,RJ56,SADULSHAHAR DTO,linked
+Rajasthan,RJ,51,SAHAPURA (BHILWARA) DTO,RJ51,SAHAPURA (BHILWARA) DTO,linked
+Rajasthan,RJ,52,SAHAPURA (JAIPUR) DTO,RJ52,SAHAPURA (JAIPUR) DTO,linked
+Rajasthan,RJ,58,SALUMBAR DTO,RJ58,SALUMBAR DTO,linked
+Rajasthan,RJ,25,SAWAI MADHOPUR DTO,RJ25,SAWAI MADHOPUR DTO,linked
+Rajasthan,RJ,256,Schoolnet India Limited,RJ256,,portal_only
+Rajasthan,RJ,275,SHAHPURA BHILWARA FITNESS CENTER,RJ275,,portal_only
+Rajasthan,RJ,213,SHAHPURA VEHICLE FITNESS CENTER (JAIPUR),RJ213,,portal_only
+Rajasthan,RJ,208,Shanti Vehicle Fitness Testing Center,RJ208,,portal_only
+Rajasthan,RJ,227,Shashank Automobiles,RJ227,,portal_only
+Rajasthan,RJ,279,SHIV KRIPA FITNESS CENTER PVT LTD,RJ279,,portal_only
+Rajasthan,RJ,241,SHREE BALAJI FITNESS CENTER PALI,RJ241,,portal_only
+Rajasthan,RJ,211,Shree Fitness Center,RJ211,,portal_only
+Rajasthan,RJ,219,Shree Kamdhenu Fitness Center,RJ219,,portal_only
+Rajasthan,RJ,246,SHREE SHYAM VEHICLE FITNESS CENTER,RJ246,,portal_only
+Rajasthan,RJ,206,SHRI BALAJI FITNESS CENTER BIKANER,RJ206,,portal_only
+Rajasthan,RJ,205,Shri Bikaner Fitness Center,RJ205,,portal_only
+Rajasthan,RJ,259,Shri Fitness Center,RJ259,,portal_only
+Rajasthan,RJ,217,Shri Force Fitness Center,RJ217,,portal_only
+Rajasthan,RJ,214,Shri Karni Fitness Center,RJ214,,portal_only
+Rajasthan,RJ,278,SHRI MAHALAXMI FITNESS CENTER,RJ278,,portal_only
+Rajasthan,RJ,252,Shri Vinayak Auto Fitness Center,RJ252,,portal_only
+Rajasthan,RJ,23,SIKAR RTO,RJ23,SIKAR RTO,linked
+Rajasthan,RJ,212,Sikar Vehicle Fitness Center,RJ212,,portal_only
+Rajasthan,RJ,24,SIROHI DTO,RJ24,SIROHI DTO,linked
+Rajasthan,RJ,270,Speedline Auto Fitness Private Limited,RJ270,,portal_only
+Rajasthan,RJ,13,SRI GANGANAGAR DTO,RJ13,SRI GANGANAGAR DTO,linked
+Rajasthan,RJ,44,SUJANGARH DTO,RJ44,SUJANGARH DTO,linked
+Rajasthan,RJ,57,SUMERPUR DTO,RJ57,SUMERPUR DTO,linked
+Rajasthan,RJ,207,Swarna Shri Fitness Testing Center,RJ207,,portal_only
+Rajasthan,RJ,238,TIRUPATI ASSOCIATES,RJ238,,portal_only
+Rajasthan,RJ,237,TIRUPATI ASSOCIATES MORIJA CHOMU,RJ237,,portal_only
+Rajasthan,RJ,235,TIRUPATI FITNESS CENTER,RJ235,,portal_only
+Rajasthan,RJ,26,TONK DTO,RJ26,TONK DTO,linked
+Rajasthan,RJ,244,Tonk Fitness Center,RJ244,,portal_only
+Rajasthan,RJ,262,Udaipur Fitness Center,RJ262,,portal_only
+Rajasthan,RJ,27,UDAIPUR RTO,RJ27,UDAIPUR RTO,linked
+Rajasthan,RJ,264,Vaahan Fitness Center,RJ264,,portal_only
+Rajasthan,RJ,258,VATSAL ENTERPRISES,RJ258,,portal_only
+Rajasthan,RJ,142,"VIDHYADHAR NAGAR,JAIPUR DTO",RJ142,,portal_only
+Sikkim,SK,2,GYALSING,SK2,GYALSING,linked
+Sikkim,SK,4,JORETHANG,SK4,JORETHANG,linked
+Sikkim,SK,3,MANGAN,SK3,MANGAN,linked
+Sikkim,SK,5,NAMCHI,SK5,NAMCHI,linked
+Sikkim,SK,99,"Office of the Secretary, STA",SK99,,portal_only
+Sikkim,SK,7,Pakyong,SK7,Pakyong,linked
+Sikkim,SK,1,RTO GANGTOK,SK1,RTO GANGTOK,linked
+Sikkim,SK,8,"Singtam, East Sikkim",SK8,"Singtam, East Sikkim",linked
+Sikkim,SK,6,SORENG,SK6,SORENG,linked
+Telangana,TG,37,MULUGU,TG37,MULUGU,linked
+Telangana,TG,38,NARAYANPET,TG38,NARAYANPET,linked
+Telangana,TG,1,RTA ADILABAD,TG1,RTA ADILABAD,linked
+Telangana,TG,28,RTA BHADRADRI,TG28,RTA BHADRADRI,linked
+Telangana,TG,107,RTA IBRAHIMPATNAM,TG107,RTA IBRAHIMPATNAM,linked
+Telangana,TG,21,RTA JAGITYAL,TG21,RTA JAGITYAL,linked
+Telangana,TG,27,RTA JANGOAN,TG27,RTA JANGOAN,linked
+Telangana,TG,25,RTA JAYASHANKAR,TG25,RTA JAYASHANKAR,linked
+Telangana,TG,33,RTA JOGULAMBA,TG33,RTA JOGULAMBA,linked
+Telangana,TG,17,RTA KAMAREDDY,TG17,RTA KAMAREDDY,linked
+Telangana,TG,2,RTA KARIMNAGAR,TG2,RTA KARIMNAGAR,linked
+Telangana,TG,4,RTA KHAMMAM,TG4,RTA KHAMMAM,linked
+Telangana,TG,20,RTA KOMRAMBHEEM,TG20,RTA KOMRAMBHEEM,linked
+Telangana,TG,6,RTA MAHABOOBNAGAR,TG6,RTA MAHABOOBNAGAR,linked
+Telangana,TG,26,RTA MAHABUBABAD,TG26,RTA MAHABUBABAD,linked
+Telangana,TG,19,RTA MANCHERIAL,TG19,RTA MANCHERIAL,linked
+Telangana,TG,35,RTA MEDAK,TG35,RTA MEDAK,linked
+Telangana,TG,8,RTA MEDCHAL,TG8,RTA MEDCHAL,linked
+Telangana,TG,31,RTA NAGARKURNOOL,TG31,RTA NAGARKURNOOL,linked
+Telangana,TG,5,RTA NALGONDA,TG5,RTA NALGONDA,linked
+Telangana,TG,18,RTA NIRMAL,TG18,RTA NIRMAL,linked
+Telangana,TG,16,RTA NIZAMABAD,TG16,RTA NIZAMABAD,linked
+Telangana,TG,22,RTA PEDDAPALLI,TG22,RTA PEDDAPALLI,linked
+Telangana,TG,23,RTA RAJANNA,TG23,RTA RAJANNA,linked
+Telangana,TG,7,RTA RANGAREDDY,TG7,RTA RANGAREDDY,linked
+Telangana,TG,15,RTA SANGAREDDY,TG15,RTA SANGAREDDY,linked
+Telangana,TG,36,RTA SIDDIPET,TG36,RTA SIDDIPET,linked
+Telangana,TG,29,RTA SURYAPET,TG29,RTA SURYAPET,linked
+Telangana,TG,108,RTA UPPAL,TG108,RTA UPPAL,linked
+Telangana,TG,34,RTA VIKARABAD,TG34,RTA VIKARABAD,linked
+Telangana,TG,32,RTA WANAPARTHY,TG32,RTA WANAPARTHY,linked
+Telangana,TG,24,RTA WARANGAL RURAL,TG24,RTA WARANGAL,linked
+Telangana,TG,3,RTA WARANGAL URBAN,TG3,RTA HANUMAKONDA,linked
+Telangana,TG,30,RTA YADADRI,TG30,RTA YADADRI,linked
+Telangana,TG,9,RTA-HYDERABAD-CZ,TG9,RTA-HYDERABAD-CZ,linked
+Telangana,TG,11,RTA-HYDERABAD-EZ,TG11,RTA-HYDERABAD-EZ,linked
+Telangana,TG,10,RTA-HYDERABAD-NZ,TG10,RTA-HYDERABAD-NZ,linked
+Telangana,TG,12,RTA-HYDERABAD-SZ,TG12,RTA-HYDERABAD-SZ,linked
+Telangana,TG,13,RTA-HYDERABAD-WZ,TG13,RTA-HYDERABAD-WZ,linked
+Telangana,TG,116,UNIT OFFICE ARMOOR,TG116,UNIT OFFICE ARMOOR,linked
+Telangana,TG,128,UNIT OFFICE BHADRACHALAM,TG128,UNIT OFFICE BHADRACHALAM,linked
+Telangana,TG,216,UNIT OFFICE BHODAN,TG216,UNIT OFFICE BHODAN,linked
+Telangana,TG,102,UNIT OFFICE HUZURABAD,TG102,UNIT OFFICE HUZURABAD,linked
+Telangana,TG,131,UNIT OFFICE KALWAKURTHY,TG131,UNIT OFFICE KALWAKURTHY,linked
+Telangana,TG,129,UNIT OFFICE KODAD,TG129,UNIT OFFICE KODAD,linked
+Telangana,TG,121,UNIT OFFICE KORUTLA,TG121,UNIT OFFICE KORUTLA,linked
+Telangana,TG,208,UNIT OFFICE KUKATPALLY,TG208,UNIT OFFICE KUKATPALLY,linked
+Telangana,TG,305,UNIT OFFICE MIRYALAGUDA,TG305,UNIT OFFICE MIRYALAGUDA,linked
+Telangana,TG,134,UNIT OFFICE PARGI,TG134,UNIT OFFICE PARGI,linked
+Telangana,TG,415,UNIT OFFICE PATANCHERUVU,TG415,UNIT OFFICE PATANCHERUVU,linked
+Telangana,TG,132,UNIT OFFICE PEBBAIR,TG132,UNIT OFFICE PEBBAIR,linked
+Telangana,TG,122,UNIT OFFICE RAMAGUNDAM,TG122,UNIT OFFICE RAMAGUNDAM,linked
+Telangana,TG,304,UNIT OFFICE SATTUPALLI,TG304,UNIT OFFICE SATTUPALLI,linked
+Telangana,TG,207,UNIT OFFICE SHADNAGAR,TG207,UNIT OFFICE SHADNAGAR,linked
+Telangana,TG,404,UNIT OFFICE WYRA,TG404,UNIT OFFICE WYRA,linked
+Telangana,TG,215,UNIT OFFICE ZAHIRABAD,TG215,UNIT OFFICE ZAHIRABAD,linked
+Tamil Nadu,TN,641,ALANGUDI UO,TN641,ALANGUDI UO,linked
+Tamil Nadu,TN,644,ALANGULAM UO,TN644,ALANGULAM UO,linked
+Tamil Nadu,TN,611,AMBASAMUTHIRAM UO,TN611,AMBASAMUTHIRAM UO,linked
+Tamil Nadu,TN,612,AMBATTUR RTO,TN612,AMBATTUR RTO,linked
+Tamil Nadu,TN,628,AMBUR UO,TN628,AMBUR UO,linked
+Tamil Nadu,TN,609,ARAKKONAM UO,TN609,ARAKKONAM UO,linked
+Tamil Nadu,TN,516,ARANI RTO,TN516,ARANI RTO,linked
+Tamil Nadu,TN,592,ARANTHANGI UO,TN592,ARANTHANGI UO,linked
+Tamil Nadu,TN,632,ARAVAKURICHI UO,TN632,ARAVAKURICHI UO,linked
+Tamil Nadu,TN,61,ARIYALUR RTO,TN61,ARIYALUR RTO,linked
+Tamil Nadu,TN,622,ARUPPUKOTTAI UO,TN622,ARUPPUKOTTAI UO,linked
+Tamil Nadu,TN,591,ATTUR RTO,TN591,ATTUR RTO,linked
+Tamil Nadu,TN,580,AVINASHI UO,TN580,AVINASHI UO,linked
+Tamil Nadu,TN,596,BATLAGUNDU UO,TN596,BATLAGUNDU UO,linked
+Tamil Nadu,TN,578,BHAVANI UO,TN578,BHAVANI UO,linked
+Tamil Nadu,TN,19,CHENGALPATTU RTO,TN19,CHENGALPATTU RTO,linked
+Tamil Nadu,TN,1,CHENNAI (CENTRAL) RTO,TN1,CHENNAI (CENTRAL) RTO,linked
+Tamil Nadu,TN,4,CHENNAI (EAST) RTO,TN4,CHENNAI (EAST) RTO,linked
+Tamil Nadu,TN,5,CHENNAI (NORTH) RTO,TN5,CHENNAI (NORTH) RTO,linked
+Tamil Nadu,TN,3,CHENNAI (NORTH-EAST) RTO,TN3,CHENNAI (NORTH-EAST) RTO,linked
+Tamil Nadu,TN,7,CHENNAI (SOUTH) RTO,TN7,CHENNAI (SOUTH) RTO,linked
+Tamil Nadu,TN,6,CHENNAI (SOUTH-EAST) RTO,TN6,CHENNAI (SOUTH-EAST) RTO,linked
+Tamil Nadu,TN,10,CHENNAI (SOUTH-WEST) RTO,TN10,CHENNAI (SOUTH-WEST) RTO,linked
+Tamil Nadu,TN,9,CHENNAI (WEST) RTO,TN9,CHENNAI (WEST) RTO,linked
+Tamil Nadu,TN,635,CHEYYAR UO,TN635,CHEYYAR UO,linked
+Tamil Nadu,TN,544,CHIDAMBARAM RTO,TN544,CHIDAMBARAM RTO,linked
+Tamil Nadu,TN,66,COIMBATORE (CENTRAL) RTO,TN66,COIMBATORE (CENTRAL) RTO,linked
+Tamil Nadu,TN,38,COIMBATORE (NORTH) RTO,TN38,COIMBATORE (NORTH) RTO,linked
+Tamil Nadu,TN,37,COIMBATORE (SOUTH) RTO,TN37,COIMBATORE (SOUTH) RTO,linked
+Tamil Nadu,TN,99,COIMBATORE (WEST) RTO,TN99,COIMBATORE (WEST) RTO,linked
+Tamil Nadu,TN,31,CUDDALORE RTO,TN31,CUDDALORE RTO,linked
+Tamil Nadu,TN,594,DHARAPURAM RTO,TN594,DHARAPURAM RTO,linked
+Tamil Nadu,TN,29,DHARMAPURI RTO,TN29,DHARMAPURI RTO,linked
+Tamil Nadu,TN,57,DINDIGUL RTO,TN57,DINDIGUL RTO,linked
+Tamil Nadu,TN,86,ERODE (WEST) RTO,TN86,ERODE (WEST) RTO,linked
+Tamil Nadu,TN,33,ERODE RTO,TN33,ERODE RTO,linked
+Tamil Nadu,TN,627,GINGEE UO,TN627,GINGEE UO,linked
+Tamil Nadu,TN,36,GOPICHETTIPALAYAM RTO,TN36,GOPICHETTIPALAYAM RTO,linked
+Tamil Nadu,TN,582,GUDALORE UO,TN582,GUDALORE UO,linked
+Tamil Nadu,TN,514,GUDIYATHAM UO,TN514,GUDIYATHAM UO,linked
+Tamil Nadu,TN,625,GUMMIDIPOONDI UO,TN625,GUMMIDIPOONDI UO,linked
+Tamil Nadu,TN,527,HARUR UO,TN527,HARUR UO,linked
+Tamil Nadu,TN,70,HOSUR RTO,TN70,HOSUR RTO,linked
+Tamil Nadu,TN,629,ILLUPPUR UO,TN629,ILLUPPUR UO,linked
+Tamil Nadu,TN,615,KALLAKURICHI RTO,TN615,KALLAKURICHI RTO,linked
+Tamil Nadu,TN,21,KANCHEEPURAM RTO,TN21,KANCHEEPURAM RTO,linked
+Tamil Nadu,TN,593,KANGEYAM UO,TN593,KANGEYAM UO,linked
+Tamil Nadu,TN,602,KARAIKUDI UO,TN602,KARAIKUDI UO,linked
+Tamil Nadu,TN,47,KARUR RTO,TN47,KARUR RTO,linked
+Tamil Nadu,TN,607,KOVILPATTI RTO,TN607,KOVILPATTI RTO,linked
+Tamil Nadu,TN,24,KRISHNAGIRI RTO,TN24,KRISHNAGIRI RTO,linked
+Tamil Nadu,TN,585,KULITHALI UO,TN585,KULITHALI UO,linked
+Tamil Nadu,TN,638,KUMARAPALAYAM RTO,TN638,KUMARAPALAYAM RTO,linked
+Tamil Nadu,TN,68,KUMBAKONAM RTO,TN68,KUMBAKONAM RTO,linked
+Tamil Nadu,TN,85,KUNDRATHUR RTO,TN85,KUNDRATHUR RTO,linked
+Tamil Nadu,TN,631,LALKUDI UO,TN631,LALGUDI UO,linked
+Tamil Nadu,TN,64,MADURAI (CENTRAL) RTO,TN64,MADURAI (CENTRAL) RTO,linked
+Tamil Nadu,TN,59,MADURAI (NORTH) RTO,TN59,MADURAI (NORTH) RTO,linked
+Tamil Nadu,TN,58,MADURAI (SOUTH) RTO,TN58,MADURAI (SOUTH) RTO,linked
+Tamil Nadu,TN,508,MADURANTAGAM UO,TN508,MADURANTAGAM UO,linked
+Tamil Nadu,TN,584,MANAPARAI UO,TN584,MANAPARAI UO,linked
+Tamil Nadu,TN,637,MANMANGALAM UO,TN637,MANMANGALAM UO,linked
+Tamil Nadu,TN,588,MANNARGUDI UO,TN588,MANNARGUDI UO,linked
+Tamil Nadu,TN,75,MARTHANDAM RTO,TN75,MARTHANDAM RTO,linked
+Tamil Nadu,TN,589,MAYILADUTHURAI RTO,TN589,MAYILADUTHURAI RTO,linked
+Tamil Nadu,TN,22,MEENAMBAKKAM RTO,TN22,MEENAMBAKKAM RTO,linked
+Tamil Nadu,TN,600,MELUR UO,TN600,MELUR UO,linked
+Tamil Nadu,TN,40,METTUPALAYAM RTO,TN40,METTUPALAYAM RTO,linked
+Tamil Nadu,TN,590,METTUR RTO,TN590,METTUR RTO,linked
+Tamil Nadu,TN,621,MUSURI UO,TN621,MUSURI UO,linked
+Tamil Nadu,TN,51,NAGAPATTINAM RTO,TN51,NAGAPATTINAM RTO,linked
+Tamil Nadu,TN,74,NAGERCOIL RTO,TN74,NAGERCOIL RTO,linked
+Tamil Nadu,TN,28,NAMAKKAL (NORTH) RTO,TN28,NAMAKKAL (NORTH) RTO,linked
+Tamil Nadu,TN,88,NAMAKKAL (SOUTH) RTO,TN88,NAMAKKAL (SOUTH) RTO,linked
+Tamil Nadu,TN,640,NATHAM UO,TN640,NATHAM UO,linked
+Tamil Nadu,TN,562,NEYVELI UO,TN562,NEYVELI UO,linked
+Tamil Nadu,TN,595,ODDANCHATRAM  UO,TN595,ODDANCHATRAM UO,linked
+Tamil Nadu,TN,535,OMALURE UO,TN535,OMALURE UO,linked
+Tamil Nadu,TN,43,OOTY RTO,TN43,OOTY RTO,linked
+Tamil Nadu,TN,616,PALACODE UO,TN616,PALACODE UO,linked
+Tamil Nadu,TN,597,PALANI RTO,TN597,PALANI RTO,linked
+Tamil Nadu,TN,626,PANRUTI UO,TN626,PANRUTI UO,linked
+Tamil Nadu,TN,603,PARAMAKUDI UO,TN603,PARAMAKUDI UO,linked
+Tamil Nadu,TN,517,PARAMATHI VELLURE UO,TN517,PARAMATHI VELLURE UO,linked
+Tamil Nadu,TN,587,PATTUKOTTAI UNIT OFFICE,TN587,PATTUKOTTAI UNIT OFFICE,linked
+Tamil Nadu,TN,46,PERAMBALUR RTO,TN46,PERAMBALUR RTO,linked
+Tamil Nadu,TN,56,PERUNDURAI RTO,TN56,PERUNDURAI RTO,linked
+Tamil Nadu,TN,41,POLLACHI RTO,TN41,POLLACHI RTO,linked
+Tamil Nadu,TN,511,POONAMALLEE RTO,TN511,POONAMALLEE RTO,linked
+Tamil Nadu,TN,55,PUDUKOTTAI RTO,TN55,PUDUKOTTAI RTO,linked
+Tamil Nadu,TN,643,RAJAPALAYAM UO,TN643,RAJAPALAYAM UO,linked
+Tamil Nadu,TN,65,RAMANATHAPURAM RTO,TN65,RAMANATHAPURAM RTO,linked
+Tamil Nadu,TN,73,RANIPET RTO,TN73,RANIPET RTO,linked
+Tamil Nadu,TN,526,RASIPURAM UO,TN526,RASIPURAM UO,linked
+Tamil Nadu,TN,18,REDHILLS RTO,TN18,REDHILLS RTO,linked
+Tamil Nadu,TN,2,RTO CHENNAI (NORTH WEST),TN2,RTO CHENNAI (NORTH WEST),linked
+Tamil Nadu,TN,54,SALEM (EAST) RTO,TN54,SALEM (EAST) RTO,linked
+Tamil Nadu,TN,90,SALEM (SOUTH) RTO,TN90,SALEM (SOUTH) RTO,linked
+Tamil Nadu,TN,30,SALEM (WEST) RTO,TN30,SALEM (WEST) RTO,linked
+Tamil Nadu,TN,52,SANKAGIRI RTO,TN52,SANKAGIRI RTO,linked
+Tamil Nadu,TN,610,SANKARANKOVIL RTO,TN610,SANKARANKOVIL RTO,linked
+Tamil Nadu,TN,579,SATHYAMANGALAM UO,TN579,SATHYAMANGALAM UO,linked
+Tamil Nadu,TN,512,SHOLINGANALLUR RTO,TN512,SHOLINGANALLUR RTO,linked
+Tamil Nadu,TN,623,SIRKALI UO,TN623,SIRKALI UO,linked
+Tamil Nadu,TN,63,SIVAGANGAI RTO,TN63,SIVAGANGAI RTO,linked
+Tamil Nadu,TN,604,SIVAKASI RTO,TN604,SIVAKASI RTO,linked
+Tamil Nadu,TN,614,SRIPERUMBUDUR RTO,TN614,SRIPERUMBUDUR RTO,linked
+Tamil Nadu,TN,48,SRIRANGAM RTO,TN48,SRIRANGAM RTO,linked
+Tamil Nadu,TN,605,SRIVILLIPUTHUR RTO,TN605,SRIVILLIPUTHUR RTO,linked
+Tamil Nadu,TN,999,STATE TRANSPORT AUTHORITY,TN999,STATE TRANSPORT AUTHORITY,linked
+Tamil Nadu,TN,620,SULUR UO,TN620,SULUR UO,linked
+Tamil Nadu,TN,513,TAMBARAM RTO,TN513,TAMBARAM RTO,linked
+Tamil Nadu,TN,76,TENKASI RTO,TN76,TENKASI RTO,linked
+Tamil Nadu,TN,49,THANJAVUR RTO,TN49,THANJAVUR RTO,linked
+Tamil Nadu,TN,60,THENI RTO,TN60,THENI RTO,linked
+Tamil Nadu,TN,606,THIRUCHENDUR RTO,TN606,THIRUCHENDUR RTO,linked
+Tamil Nadu,TN,639,THIRUKALUKUNTRAM UO,TN639,THIRUKALUKUNTRAM UO,linked
+Tamil Nadu,TN,598,THIRUMANGALAM  UO,TN598,THIRUMANGALAM UO,linked
+Tamil Nadu,TN,624,THIRUPATTUR RTO,TN624,THIRUPATTUR RTO,linked
+Tamil Nadu,TN,630,THIRUTHURAIPOONDI UO,TN630,THIRUTHURAIPOONDI UO,linked
+Tamil Nadu,TN,634,THIRUTTANI UO,TN634,THIRUTTANI UO,linked
+Tamil Nadu,TN,69,THOOTHUKUDI RTO,TN69,THOOTHUKUDI RTO,linked
+Tamil Nadu,TN,586,THURAIYUR UO,TN586,THURAIYUR UO,linked
+Tamil Nadu,TN,571,TINDIVANAM RTO,TN571,TINDIVANAM RTO,linked
+Tamil Nadu,TN,34,TIRUCHENGODE RTO,TN34,TIRUCHENGODE RTO,linked
+Tamil Nadu,TN,45,TIRUCHI RTO,TN45,TIRUCHI RTO,linked
+Tamil Nadu,TN,81,TIRUCHI(EAST) RTO,TN81,TIRUCHI(EAST) RTO,linked
+Tamil Nadu,TN,72,TIRUNELVELI RTO,TN72,TIRUNELVELI RTO,linked
+Tamil Nadu,TN,39,TIRUPPUR (NORTH) RTO,TN39,TIRUPPUR (NORTH) RTO,linked
+Tamil Nadu,TN,42,TIRUPPUR (SOUTH) RTO,TN42,TIRUPPUR (SOUTH) RTO,linked
+Tamil Nadu,TN,20,TIRUVALLUR RTO,TN20,TIRUVALLUR RTO,linked
+Tamil Nadu,TN,25,TIRUVANNAMALAI RTO,TN25,TIRUVANNAMALAI RTO,linked
+Tamil Nadu,TN,50,TIRUVARUR RTO,TN50,TIRUVARUR RTO,linked
+Tamil Nadu,TN,583,TIRUVERANBUR UO,TN583,TIRUVERANBUR UO,linked
+Tamil Nadu,TN,581,UDUMALPET RTO,TN581,UDUMALPET RTO,linked
+Tamil Nadu,TN,577,ULUNDURPET RTO,TN577,ULUNDURPET RTO,linked
+Tamil Nadu,TN,636,USILAMPATTI UO,TN636,USILAMPATTI UO,linked
+Tamil Nadu,TN,601,UTHAMAPALAYAM UO,TN601,UTHAMAPALAYAM UO,linked
+Tamil Nadu,TN,599,VADIPATTI UO,TN599,VADIPATTI UO,linked
+Tamil Nadu,TN,613,VALAPPADI UO,TN613,VALAPPADI UO,linked
+Tamil Nadu,TN,608,VALLIYUR UO,TN608,VALLIYUR UO,linked
+Tamil Nadu,TN,633,VALPARAI UO,TN633,VALPARAI UO,linked
+Tamil Nadu,TN,515,VANIYAMBADI RTO,TN515,VANIYAMBADI RTO,linked
+Tamil Nadu,TN,617,VEDACHANDUR UO,TN617,VEDACHANDUR UO,linked
+Tamil Nadu,TN,23,VELLORE RTO,TN23,VELLORE RTO,linked
+Tamil Nadu,TN,32,VILUPPURAM RTO,TN32,VILUPPURAM RTO,linked
+Tamil Nadu,TN,553,VIRUDHACHALAM UO,TN553,VIRUDHACHALAM UO,linked
+Tamil Nadu,TN,67,VIRUDHUNAGAR RTO,TN67,VIRUDHUNAGAR RTO,linked
+Tripura,TR,4,DHALAI DTO,TR4,DHALAI DTO,linked
+Tripura,TR,3,GOMATI DTO,TR3,GOMATI DTO,linked
+Tripura,TR,6,KHOWAI DTO,TR6,KHOWAI DTO,linked
+Tripura,TR,21,NORTH TRIPURA DHM DTO,TR21,,portal_only
+Tripura,TR,5,NORTH TRIPURA DTO,TR5,NORTH TRIPURA DTO,linked
+Tripura,TR,7,SEPAHIJALA DTO,TR7,SEPAHIJALA DTO,linked
+Tripura,TR,8,SOUTH TRIPURA DTO,TR8,SOUTH TRIPURA DTO,linked
+Tripura,TR,99,STA TRIPURA,TR99,,portal_only
+Tripura,TR,2,UNAKOTI DTO,TR2,UNAKOTI DTO,linked
+Tripura,TR,1,WEST TRIPURA JTC,TR1,WEST TRIPURA JTC,linked
+Uttarakhand,UK,1,ALMORA RTO,UK1,ALMORA RTO,linked
+Uttarakhand,UK,2,BAGESHWAR ARTO,UK2,BAGESHWAR ARTO,linked
+Uttarakhand,UK,7,DEHRADUN RTO,UK7,DEHRADUN RTO,linked
+Uttarakhand,UK,4,HALDWANI RTO,UK4,HALDWANI RTO,linked
+Uttarakhand,UK,8,HARIDWAR ARTO,UK8,HARIDWAR ARTO,linked
+Uttarakhand,UK,11,KARANPRAYAG ARTO,UK11,KARANPRAYAG ARTO,linked
+Uttarakhand,UK,18,KASHIPUR ARTO,UK18,KASHIPUR ARTO,linked
+Uttarakhand,UK,15,KOTDWAR ARTO,UK15,KOTDWAR ARTO,linked
+Uttarakhand,UK,12,PAURI RTO,UK12,PAURI RTO,linked
+Uttarakhand,UK,5,PITHORAGARH ARTO,UK5,PITHORAGARH ARTO,linked
+Uttarakhand,UK,19,RAMNAGAR ARTO,UK19,RAMNAGAR ARTO,linked
+Uttarakhand,UK,20,RANIKHET ARTO,UK20,RANIKHET ARTO,linked
+Uttarakhand,UK,14,RISHIKESH ARTO,UK14,RISHIKESH ARTO,linked
+Uttarakhand,UK,17,ROORKEE ARTO,UK17,ROORKEE ARTO,linked
+Uttarakhand,UK,13,RUDRAPRAYAG ARTO,UK13,RUDRAPRAYAG ARTO,linked
+Uttarakhand,UK,111,STATE TRANSPORT AUTHORITY,UK111,,portal_only
+Uttarakhand,UK,3,TANAKPUR ARTO,UK3,TANAKPUR ARTO,linked
+Uttarakhand,UK,9,TEHRI ARTO,UK9,TEHRI ARTO,linked
+Uttarakhand,UK,6,UDHAM SINGH NAGAR ARTO,UK6,UDHAM SINGH NAGAR ARTO,linked
+Uttarakhand,UK,10,UTTARKASHI ARTO,UK10,UTTARKASHI ARTO,linked
+Uttarakhand,UK,16,VIKAS NAGAR ARTO,UK16,VIKAS NAGAR ARTO,linked
+Uttar Pradesh,UP,80,Agra RTO,UP80,Agra RTO,linked
+Uttar Pradesh,UP,45,AKBARPUR(AMBEDKAR NAGAR),UP45,AKBARPUR(AMBEDKAR NAGAR),linked
+Uttar Pradesh,UP,81,ALIGARH RTO,UP81,ALIGARH RTO,linked
+Uttar Pradesh,UP,36,Amethi ARTO,UP36,Amethi ARTO,linked
+Uttar Pradesh,UP,22,ARTO OFFICE RAMPUR,UP22,ARTO OFFICE RAMPUR,linked
+Uttar Pradesh,UP,79,AURAIYA,UP79,AURAIYA,linked
+Uttar Pradesh,UP,42,AYODHYA RTO,UP42,AYODHYA RTO,linked
+Uttar Pradesh,UP,50,Azamgarh RTO,UP50,Azamgarh RTO,linked
+Uttar Pradesh,UP,24,Badaun,UP24,Badaun,linked
+Uttar Pradesh,UP,17,Baghpat,UP17,Baghpat,linked
+Uttar Pradesh,UP,40,Bahraich,UP40,Bahraich,linked
+Uttar Pradesh,UP,60,Ballia,UP60,Ballia,linked
+Uttar Pradesh,UP,47,Balrampur,UP47,Balrampur,linked
+Uttar Pradesh,UP,90,BANDARTO,UP90,BANDARTO,linked
+Uttar Pradesh,UP,41,Barabanki ARTO,UP41,Barabanki ARTO,linked
+Uttar Pradesh,UP,25,BAREILLY,UP25,BAREILLY,linked
+Uttar Pradesh,UP,51,BASTI RTO,UP51,BASTI RTO,linked
+Uttar Pradesh,UP,66,Bhadohi(SANT RAVIDAS NAGAR),UP66,Bhadohi(SANT RAVIDAS NAGAR),linked
+Uttar Pradesh,UP,20,Bijnor,UP20,Bijnor,linked
+Uttar Pradesh,UP,13,Bulandshahar,UP13,Bulandshahar,linked
+Uttar Pradesh,UP,67,Chandauli,UP67,Chandauli,linked
+Uttar Pradesh,UP,96,Chitrakoot,UP96,Chitrakoot,linked
+Uttar Pradesh,UP,52,DEORIA,UP52,DEORIA,linked
+Uttar Pradesh,UP,82,Etah,UP82,Etah,linked
+Uttar Pradesh,UP,75,Etawah,UP75,Etawah,linked
+Uttar Pradesh,UP,76,Farrukhabad,UP76,Farrukhabad,linked
+Uttar Pradesh,UP,71,FATHEHPUR,UP71,FATHEHPUR,linked
+Uttar Pradesh,UP,83,FEROZABAD,UP83,FEROZABAD,linked
+Uttar Pradesh,UP,14,GHAZIABAD,UP14,GHAZIABAD,linked
+Uttar Pradesh,UP,61,Ghazipur,UP61,Ghazipur,linked
+Uttar Pradesh,UP,43,GONDA,UP43,GONDA,linked
+Uttar Pradesh,UP,53,Gorakhpur RTO,UP53,Gorakhpur RTO,linked
+Uttar Pradesh,UP,91,HAMIRPUR(UP),UP91,HAMIRPUR(UP),linked
+Uttar Pradesh,UP,37,Hapur,UP37,Hapur,linked
+Uttar Pradesh,UP,30,HARDOI,UP30,HARDOI,linked
+Uttar Pradesh,UP,86,HATHRAS,UP86,HATHRAS,linked
+Uttar Pradesh,UP,62,JAUNPUR,UP62,JAUNPUR,linked
+Uttar Pradesh,UP,93,JhansiRTO,UP93,JhansiRTO,linked
+Uttar Pradesh,UP,23,JPNAGAR,UP23,JPNAGAR,linked
+Uttar Pradesh,UP,74,Kannauj,UP74,Kannauj,linked
+Uttar Pradesh,UP,77,Kanpur Dehat,UP77,Kanpur Dehat,linked
+Uttar Pradesh,UP,78,KANPUR NAGAR,UP78,KANPUR NAGAR,linked
+Uttar Pradesh,UP,87,Kasganj(kashi ram nagar),UP87,Kasganj(kashi ram nagar),linked
+Uttar Pradesh,UP,73,Kaushambi,UP73,Kaushambi,linked
+Uttar Pradesh,UP,31,LAKHIMPUR KHERI,UP31,LAKHIMPUR KHERI,linked
+Uttar Pradesh,UP,94,Lalitpur,UP94,Lalitpur,linked
+Uttar Pradesh,UP,214,M/S Sai Dham Super Srv Soln Pvt Ltd Ghaziabad,UP214,,portal_only
+Uttar Pradesh,UP,321,MAHANAGAR ARTO LUCKNOW (UP321),UP321,TRANS GOMTI ARTO LUCKNOW (UP321),linked
+Uttar Pradesh,UP,56,Maharajganj,UP56,Maharajganj,linked
+Uttar Pradesh,UP,95,Mahoba,UP95,Mahoba,linked
+Uttar Pradesh,UP,84,Mainpuri,UP84,Mainpuri,linked
+Uttar Pradesh,UP,85,MATHURA,UP85,MATHURA,linked
+Uttar Pradesh,UP,54,Mau,UP54,Mau,linked
+Uttar Pradesh,UP,15,MEERUT RTO,UP15,MEERUT RTO,linked
+Uttar Pradesh,UP,63,MIRZAPUR RTO,UP63,MIRZAPUR RTO,linked
+Uttar Pradesh,UP,21,MORADABAD,UP21,MORADABAD,linked
+Uttar Pradesh,UP,12,MuzaffarNagar,UP12,MuzaffarNagar,linked
+Uttar Pradesh,UP,16,Noida,UP16,Noida,linked
+Uttar Pradesh,UP,92,Orai,UP92,Orai,linked
+Uttar Pradesh,UP,57,PADRAUNA(KUSHI NAGAR),UP57,PADRAUNA(KUSHI NAGAR),linked
+Uttar Pradesh,UP,26,Pilibhit,UP26,Pilibhit,linked
+Uttar Pradesh,UP,72,PRATAPGARH,UP72,PRATAPGARH,linked
+Uttar Pradesh,UP,70,Prayagraj RTO,UP70,Prayagraj RTO,linked
+Uttar Pradesh,UP,33,Raibareilly,UP33,Raibareilly,linked
+Uttar Pradesh,UP,11,SAHARANPUR RTO,UP11,SAHARANPUR RTO,linked
+Uttar Pradesh,UP,27,SAHJAHANPUR,UP27,SAHJAHANPUR,linked
+Uttar Pradesh,UP,38,Sambhal ARTO,UP38,Sambhal ARTO,linked
+Uttar Pradesh,UP,58,Sant Kabir Nagar,UP58,Sant Kabir Nagar,linked
+Uttar Pradesh,UP,19,SHAMLI ARTO,UP19,SHAMLI ARTO,linked
+Uttar Pradesh,UP,46,Shravasti,UP46,Shravasti,linked
+Uttar Pradesh,UP,55,Siddharth Nagar(naugarh),UP55,Siddharth Nagar(naugarh),linked
+Uttar Pradesh,UP,34,Sitapur,UP34,Sitapur,linked
+Uttar Pradesh,UP,64,SONBHADRA,UP64,SONBHADRA,linked
+Uttar Pradesh,UP,999,STATE TRANSPORT AUTHORITY,UP999,,portal_only
+Uttar Pradesh,UP,44,Sultanpur,UP44,Sultanpur,linked
+Uttar Pradesh,UP,32,TRANSPORT NAGAR RTO LUCKNOW (UP32),UP32,TRANSPORT NAGAR RTO LUCKNOW (UP32),linked
+Uttar Pradesh,UP,35,Unnao,UP35,Unnao,linked
+Uttar Pradesh,UP,65,VARANASI RTO,UP65,VARANASI RTO,linked
+West Bengal,WB,19,ALIPORE RTO,WB19,ALIPORE RTO,linked
+West Bengal,WB,69,ALIPURDUAR RTO,WB69,ALIPURDUAR RTO,linked
+West Bengal,WB,18,ARAMBAG ARTO,WB18,ARAMBAG ARTO,linked
+West Bengal,WB,27,BANGAON ARTO,WB27,BANGAON ARTO,linked
+West Bengal,WB,67,BANKURA RTO,WB67,BANKURA RTO,linked
+West Bengal,WB,25,BARASAT RTO,WB25,BARASAT RTO,linked
+West Bengal,WB,23,BARRACKPORE ARTO,WB23,BARRACKPORE ARTO,linked
+West Bengal,WB,95,BARUIPUR ARTO,WB95,BARUIPUR ARTO,linked
+West Bengal,WB,21,BASIRHAT ARTO,WB21,BASIRHAT ARTO,linked
+West Bengal,WB,9,BEHALA ARTO,WB9,BEHALA ARTO,linked
+West Bengal,WB,53,BIRBHUM RTO,WB53,BIRBHUM RTO,linked
+West Bengal,WB,87,BISHNUPUR ARTO,WB87,BISHNUPUR ARTO,linked
+West Bengal,WB,47,BOLPUR ARTO,WB47,BOLPUR ARTO,linked
+West Bengal,WB,62,BUNIADPUR ARTO,WB62,,portal_only
+West Bengal,WB,98,CANNING ARTO,WB98,,portal_only
+West Bengal,WB,83,CHANCHOL ARTO,WB83,CHANCHOL ARTO,linked
+West Bengal,WB,31,CONTAI ARTO,WB31,CONTAI ARTO,linked
+West Bengal,WB,63,COOCHBEHAR RTO,WB63,COOCHBEHAR RTO,linked
+West Bengal,WB,61,DAKSHIN DINAJPUR RTO,WB61,DAKSHIN DINAJPUR RTO,linked
+West Bengal,WB,76,DARJEELING RTO,WB76,DARJEELING RTO,linked
+West Bengal,WB,97,DIAMOND HARBOUR ARTO,WB97,DIAMOND HARBOUR ARTO,linked
+West Bengal,WB,39,DURGAPORE ARTO,WB39,DURGAPORE ARTO,linked
+West Bengal,WB,50,GHATAL ARTO,WB50,GHATAL ARTO,linked
+West Bengal,WB,32,HALDIA ARTO,WB32,HALDIA ARTO,linked
+West Bengal,WB,15,HOOGHLY RTO,WB15,HOOGHLY RTO,linked
+West Bengal,WB,11,HOWRAH RTO,WB11,HOWRAH RTO,linked
+West Bengal,WB,91,ISLAMPUR ARTO,WB91,ISLAMPUR ARTO,linked
+West Bengal,WB,71,JALPAIGURI RTO,WB71,JALPAIGURI RTO,linked
+West Bengal,WB,93,JANGIPUR ARTO,WB93,JANGIPUR ARTO,linked
+West Bengal,WB,49,JHARGRAM RTO,WB49,JHARGRAM RTO,linked
+West Bengal,WB,78,KALIMPONG RTO,WB78,KALIMPONG RTO,linked
+West Bengal,WB,43,KALNA ARTO,WB43,KALNA ARTO,linked
+West Bengal,WB,89,KALYANI ARTO,WB89,KALYANI ARTO,linked
+West Bengal,WB,99,KANDI,WB99,KANDI,linked
+West Bengal,WB,5,KASBA ARTO,WB5,KASBA ARTO,linked
+West Bengal,WB,75,KATWA ARTO,WB75,KATWA ARTO,linked
+West Bengal,WB,35,KHARAGPUR ARTO,WB35,KHARAGPUR ARTO,linked
+West Bengal,WB,65,MALDA RTO,WB65,MALDA RTO,linked
+West Bengal,WB,80,MANBAZAR,WB80,MANBAZAR,linked
+West Bengal,WB,85,MATHABHANGA ARTO,WB85,MATHABHANGA ARTO,linked
+West Bengal,WB,57,MURSHIDABAD RTO,WB57,MURSHIDABAD RTO,linked
+West Bengal,WB,51,NADIA RTO,WB51,NADIA RTO,linked
+West Bengal,WB,37,PASCHIM BURDWAN RTO,WB37,PASCHIM BURDWAN RTO,linked
+West Bengal,WB,33,PASCHIM MIDNAPORE RTO,WB33,PASCHIM MIDNAPORE RTO,linked
+West Bengal,WB,41,PURBA BURDWAN RTO,WB41,PURBA BURDWAN RTO,linked
+West Bengal,WB,55,PURULIA RTO,WB55,PURULIA RTO,linked
+West Bengal,WB,1,PVD KOLKATA,WB1,PVD KOLKATA,linked
+West Bengal,WB,81,RAGHUNATHPUR ARTO,WB81,RAGHUNATHPUR ARTO,linked
+West Bengal,WB,45,RAMPURHAT ARTO,WB45,RAMPURHAT ARTO,linked
+West Bengal,WB,7,SALTLAKE ARTO,WB7,SALTLAKE ARTO,linked
+West Bengal,WB,73,SILIGURI ARTO,WB73,SILIGURI ARTO,linked
+West Bengal,WB,17,SRIRAMPUR ARTO,WB17,SRIRAMPUR ARTO,linked
+West Bengal,WB,999,STA WEST BENGAL,WB999,,portal_only
+West Bengal,WB,997,STA-Durgapur,WB997,,portal_only
+West Bengal,WB,998,STA-North Bengal (Siliguri),WB998,,portal_only
+West Bengal,WB,29,TAMLUK RTO,WB29,TAMLUK RTO,linked
+West Bengal,WB,52,TEHATTA ARTO,WB52,TEHATTA ARTO,linked
+West Bengal,WB,13,ULUBERIA ARTO,WB13,ULUBERIA ARTO,linked
+West Bengal,WB,59,UTTAR DINAJPUR RTO,WB59,UTTAR DINAJPUR RTO,linked
+Andhra Pradesh,AP,,,AP837,Devarapalli Unit Office,legacy_only
+Assam,AS,,,AS36,BAJALI,legacy_only
+Gujarat,GJ,,,GJ40,THARAD,legacy_only
+Himachal Pradesh,HP,,,HP128,RLA SUNNI,legacy_only
+Himachal Pradesh,HP,,,HP129,RTO Dehra,legacy_only
+Manipur,MN,,,MN13,"DTO, Kakching",legacy_only
+Manipur,MN,,,MN14,"DTO, JIRIBAM",legacy_only
+Manipur,MN,,,MN15,"DTO, NONEY",legacy_only
+Mizoram,MZ,,,MZ10,KHAWZAWL,legacy_only
+Mizoram,MZ,,,MZ11,HNAHTHIAL,legacy_only

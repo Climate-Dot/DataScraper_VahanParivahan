@@ -37,6 +37,60 @@ STATE_LIST = [
     "West Bengal",
 ]
 
+# Maps each STATE_LIST entry (the full Vahan state name used throughout the
+# existing pipelines) to the 2-letter stateCode the new Parivahan Analytics
+# portal expects. Sourced from the portal's own state dropdown
+# (analytics.parivahan.gov.in/analytics/publicdashboard/vahan), confirmed
+# 1:1 against STATE_LIST on 2026-08-13. "Jammu and Kashmir" vs the portal's
+# "Jammu & Kashmir" and "UT of DNH and DD" are the only name-spelling
+# differences; the code mapping itself is unambiguous.
+STATE_NAME_TO_NEW_PORTAL_CODE = {
+    "Andaman & Nicobar Island": "AN",
+    "Andhra Pradesh": "AP",
+    "Arunachal Pradesh": "AR",
+    "Assam": "AS",
+    "Bihar": "BR",
+    "Chhattisgarh": "CG",
+    "Chandigarh": "CH",
+    "UT of DNH and DD": "DD",
+    "Delhi": "DL",
+    "Goa": "GA",
+    "Gujarat": "GJ",
+    "Himachal Pradesh": "HP",
+    "Haryana": "HR",
+    "Jharkhand": "JH",
+    "Jammu and Kashmir": "JK",
+    "Karnataka": "KA",
+    "Kerala": "KL",
+    "Ladakh": "LA",
+    "Lakshadweep": "LD",
+    "Maharashtra": "MH",
+    "Meghalaya": "ML",
+    "Manipur": "MN",
+    "Madhya Pradesh": "MP",
+    "Mizoram": "MZ",
+    "Nagaland": "NL",
+    "Odisha": "OR",
+    "Punjab": "PB",
+    "Puducherry": "PY",
+    "Rajasthan": "RJ",
+    "Sikkim": "SK",
+    "Tamil Nadu": "TN",
+    "Telangana": "TG",
+    "Tripura": "TR",
+    "Uttarakhand": "UK",
+    "Uttar Pradesh": "UP",
+    "West Bengal": "WB",
+    # The two aliases below are NOT in STATE_LIST — they're the literal
+    # strings found in fact_ev_data_by_rto.state for these two union
+    # territories, which differ from STATE_LIST's spelling. Discovered
+    # 2026-08-13 building the RTO crosswalk (4 legacy RTOs went unmatched
+    # until these were added). Keep both the STATE_LIST spelling and the
+    # DB's actual spelling mapped, since callers may key off either.
+    "Andaman and Nicobar": "AN",
+    "Dadara and Nagar Havelli": "DD",
+}
+
 MONTH_NAME_TO_NUMBER = {
     "JAN": 1,
     "FEB": 2,

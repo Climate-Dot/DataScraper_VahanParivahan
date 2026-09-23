@@ -18,6 +18,11 @@ UNIT_TEST_MODULES=(
     tests.test_dbt_contracts
     tests.test_migration_contract
     tests.test_pipeline_runtime_wiring
+    tests.test_new_portal_client
+    tests.test_vehicle_class_crosswalk_builder
+    tests.test_rto_crosswalk_builder
+    tests.test_new_portal_rto_fetch
+    tests.test_new_portal_rto_blob_snapshot
 )
 
 should_run_dbt_parse() {
