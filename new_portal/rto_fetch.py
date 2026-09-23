@@ -769,10 +769,24 @@ def main() -> None:
                 )
             return index, [], []
 
-        # Partial success is still success for the circuit breaker: the office
-        # answered, so the portal is not down. Gaps are handled by the recovery
-        # pass, not by aborting the run.
-        record_success()
+        # Partial success is success for the circuit breaker: the office
+        # answered, so the portal is not down, and the recovery pass owns the
+        # gaps. But an office that yielded *nothing* is indistinguishable from
+        # the old hard-failure case, and must still count — otherwise gap
+        # isolation silently disables the breaker exactly when a degraded portal
+        # makes it matter most (measured 2026-09-23: 67% of probes returning
+        # 500, which would otherwise grind through all 1,676 offices and a
+        # sequential recovery pass before anyone noticed).
+        if rows:
+            record_success()
+        else:
+            record_failure(label)
+            if aborted.is_set():
+                logger.error(
+                    "%s consecutive offices yielded no rows; aborting rather "
+                    "than continuing against a portal that is not serving data.",
+                    ABORT_AFTER_CONSECUTIVE_FAILURES,
+                )
         logger.info(
             "[%s/%s] %s -> %s rows%s",
             next(completed),
