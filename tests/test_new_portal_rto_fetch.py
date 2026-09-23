@@ -1,0 +1,432 @@
+import csv
+import re
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from new_portal import rto_fetch, schema
+
+
+class SchemaTests(unittest.TestCase):
+    def test_all_portal_fuel_labels_map_to_distinct_columns(self):
+        columns = list(schema.FUEL_LABEL_TO_COLUMN.values())
+        self.assertEqual(len(columns), len(set(columns)))
+
+    def test_fuel_column_names_are_sql_safe(self):
+        for column in schema.FUEL_COLUMNS:
+            self.assertRegex(column, r"^[a-z][a-z0-9_]*$")
+
+    def test_specific_fuel_label_slugs(self):
+        self.assertEqual(schema.fuel_label_to_column("PETROL(E20)/HYBRID/CNG"), "petrol_e20_hybrid_cng")
+        self.assertEqual(schema.fuel_label_to_column("BIO-CNG/BIO-GAS"), "bio_cng_bio_gas")
+        self.assertEqual(schema.fuel_label_to_column("ELECTRIC(BOV)"), "electric_bov")
+        self.assertEqual(schema.fuel_label_to_column("NOT APPLICABLE"), "not_applicable")
+
+    def test_portal_absent_fuels_are_still_columns(self):
+        # NULL, not dropped and not zero-filled — CLAUDE.md safety rule 4.
+        for column in schema.FUEL_COLUMNS_NOT_ON_NEW_PORTAL:
+            self.assertIn(column, schema.FUEL_COLUMNS)
+            self.assertNotIn(column, schema.FUEL_LABEL_TO_COLUMN.values())
+
+    def test_csv_columns_are_unique_and_cover_the_grain(self):
+        self.assertEqual(len(schema.CSV_COLUMNS), len(set(schema.CSV_COLUMNS)))
+        for column in schema.KEY_COLUMNS:
+            self.assertIn(column, schema.CSV_COLUMNS)
+
+    def test_default_status_scope_is_all_statuses_only(self):
+        self.assertEqual(schema.DEFAULT_STATUS_SCOPES, [schema.STATUS_SCOPE_ALL])
+        self.assertIn(schema.STATUS_SCOPE_ACTIVE, schema.STATUS_SCOPES)
+
+    def test_parse_year_as_string(self):
+        self.assertEqual(schema.parse_year_as_string("2026-August"), (2026, 8))
+        self.assertEqual(schema.parse_year_as_string("2013-January"), (2013, 1))
+
+    def test_parse_year_as_string_rejects_garbage(self):
+        with self.assertRaises(ValueError):
+            schema.parse_year_as_string("2026-Smarch")
+
+
+class MigrationParityTests(unittest.TestCase):
+    """The migration SQL and schema.py must not drift apart.
+
+    Ingestion does `INSERT INTO final SELECT * FROM staging`, so a column-order
+    mismatch would silently write values into the wrong columns.
+    """
+
+    MIGRATION = (
+        Path(__file__).resolve().parent.parent
+        / "sql"
+        / "migrations"
+        / "2026-08-18_new_portal_rto_v2_tables.sql"
+    )
+
+    def _columns_of(self, table: str) -> list[str]:
+        sql = self.MIGRATION.read_text()
+        block = re.search(rf"CREATE TABLE dbo\.{table} \((.*?)\n\);", sql, re.S)
+        self.assertIsNotNone(block, f"{table} not found in the migration")
+        return re.findall(r"^\s*\[(\w+)\]", block.group(1), re.M)
+
+    def test_final_table_matches_csv_columns_in_order(self):
+        self.assertEqual(
+            self._columns_of("fact_ev_data_by_rto_v2"),
+            schema.CSV_COLUMNS + ["inserted_at"],
+        )
+
+    def test_staging_table_matches_final_table(self):
+        self.assertEqual(
+            self._columns_of("staging_fact_ev_data_by_rto_v2"),
+            self._columns_of("fact_ev_data_by_rto_v2"),
+        )
+
+
+class LoadRtoTargetsTests(unittest.TestCase):
+    def _write(self, rows):
+        tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(tmpdir.cleanup)
+        path = Path(tmpdir.name) / "rto_code_crosswalk.csv"
+        with path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=[
+                    "state", "state_code", "new_rto_code", "new_rto_name",
+                    "legacy_rto_code", "legacy_rto_name", "link_status",
+                ],
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+        return path
+
+    def test_portal_only_rtos_are_included(self):
+        # Decided 2026-08-18: V2 ingests all 1,676 live RTOs, not just linked.
+        path = self._write([
+            {"state": "Haryana", "state_code": "HR", "new_rto_code": "99",
+             "new_rto_name": "NEW OFFICE", "legacy_rto_code": "HR99",
+             "legacy_rto_name": "", "link_status": "portal_only"},
+        ])
+        self.assertEqual(len(rto_fetch.load_rto_targets(path)), 1)
+
+    def test_legacy_only_rtos_are_skipped(self):
+        path = self._write([
+            {"state": "Mizoram", "state_code": "MZ", "new_rto_code": "",
+             "new_rto_name": "", "legacy_rto_code": "MZ10",
+             "legacy_rto_name": "KHAWZAWL", "link_status": "legacy_only"},
+        ])
+        self.assertEqual(rto_fetch.load_rto_targets(path), [])
+
+    def test_state_filter(self):
+        path = self._write([
+            {"state": "Haryana", "state_code": "HR", "new_rto_code": "1",
+             "new_rto_name": "A", "legacy_rto_code": "HR1",
+             "legacy_rto_name": "A", "link_status": "linked"},
+            {"state": "Maharashtra", "state_code": "MH", "new_rto_code": "12",
+             "new_rto_name": "PUNE", "legacy_rto_code": "MH12",
+             "legacy_rto_name": "PUNE", "link_status": "linked"},
+        ])
+        targets = rto_fetch.load_rto_targets(path, states=["MH"])
+        self.assertEqual([t["legacy_rto_code"] for t in targets], ["MH12"])
+
+    def test_real_seed_loads_and_covers_both_ingestible_statuses(self):
+        targets = rto_fetch.load_rto_targets()
+        self.assertGreater(len(targets), 1600)
+        statuses = {t["link_status"] for t in targets}
+        self.assertEqual(statuses, {"linked", "portal_only"})
+
+
+class NormalizeClassLabelTests(unittest.TestCase):
+    def test_case_differences_collapse(self):
+        self.assertEqual(
+            rto_fetch.normalize_class_label("Motor Car"),
+            rto_fetch.normalize_class_label("MOTOR CAR"),
+        )
+
+    def test_the_motorised_cycle_spelling_gap_collapses(self):
+        # D2: the portal drops the ">" and doubles the space, which sent this
+        # class to "Others" instead of 2W_Personal.
+        self.assertEqual(
+            rto_fetch.normalize_class_label("Motorised Cycle (CC  25cc)"),
+            rto_fetch.normalize_class_label("MOTORISED CYCLE (CC > 25CC)"),
+        )
+
+    def test_distinct_classes_stay_distinct(self):
+        # The normalization must not merge two classes that are genuinely
+        # different, or counts from one would land on the other.
+        self.assertNotEqual(
+            rto_fetch.normalize_class_label("TRAILER (COMMERCIAL)"),
+            rto_fetch.normalize_class_label("TRAILER (AGRICULTURAL)"),
+        )
+
+    def test_every_seeded_class_gets_a_unique_key(self):
+        dimensions = rto_fetch.load_vehicle_class_dimensions()
+        with rto_fetch.VEHICLE_CLASS_CROSSWALK_PATH.open(newline="", encoding="utf-8") as f:
+            seeded = [row["vehicle_class"].strip() for row in csv.DictReader(f)]
+        self.assertEqual(len(dimensions), len(seeded))
+
+
+class LookupDimensionsTests(unittest.TestCase):
+    def test_matches_case_insensitively(self):
+        # Portal says "Motor Car"; the mapping file says "MOTOR CAR".
+        dimensions = rto_fetch.load_vehicle_class_dimensions()
+        _, vtype, category, use_type = rto_fetch.lookup_dimensions("Motor Car", dimensions)
+        self.assertEqual((vtype, category, use_type), ("4W_Personal", "4-Wheelers", "Personal"))
+
+    def test_returns_v1_spelling_not_the_portals(self):
+        # D1: writing the portal's title case would break every join against
+        # fact_ev_data_by_rto, which stores upper case.
+        dimensions = rto_fetch.load_vehicle_class_dimensions()
+        canonical, *_ = rto_fetch.lookup_dimensions("Motor Car", dimensions)
+        self.assertEqual(canonical, "MOTOR CAR")
+
+    def test_motorised_cycle_resolves_to_two_wheeler_not_others(self):
+        # D2 end to end: this used to come back as Others/Others/Others.
+        dimensions = rto_fetch.load_vehicle_class_dimensions()
+        canonical, vtype, category, use_type = rto_fetch.lookup_dimensions(
+            "Motorised Cycle (CC  25cc)", dimensions
+        )
+        self.assertEqual(canonical, "MOTORISED CYCLE (CC > 25CC)")
+        self.assertEqual((vtype, category, use_type), ("2W_Personal", "2-Wheelers", "Personal"))
+
+    def test_unknown_class_defaults_to_others_and_warns(self):
+        with self.assertLogs(rto_fetch.logger, level="WARNING"):
+            resolved = rto_fetch.lookup_dimensions("FLYING CAR", {})
+        # Keeps the source's own label rather than inventing a canonical name.
+        self.assertEqual(resolved, ("FLYING CAR", "Others", "Others", "Others"))
+
+    def test_real_seed_resolves_a_known_class(self):
+        dimensions = rto_fetch.load_vehicle_class_dimensions()
+        self.assertIn(rto_fetch.normalize_class_label("MOTOR CAR"), dimensions)
+
+
+def _portal_stub(class_breakdown, fuel_breakdowns, monthly):
+    portal = mock.Mock()
+    portal.get_class_distribution.return_value = class_breakdown
+    portal.get_fuel_type_breakdown.side_effect = lambda **kw: fuel_breakdowns[kw["vehicle_classes"]]
+    portal.get_duration_wise_registration.side_effect = (
+        lambda **kw: monthly[(kw["vehicle_classes"], kw["vehicle_fuels"][0])]
+    )
+    return portal
+
+
+class FetchRtoYearTests(unittest.TestCase):
+    def setUp(self):
+        self.rto = {
+            "state": "Maharashtra", "state_code": "MH", "new_rto_code": "12",
+            "new_rto_name": "PUNE", "legacy_rto_code": "MH12",
+            "legacy_rto_name": "PUNE", "link_status": "linked",
+        }
+        # Keyed the way load_vehicle_class_dimensions keys it, and carrying the
+        # canonical V1 spelling as the first element.
+        self.dimensions = {
+            rto_fetch.normalize_class_label("MOTOR CAR"): ("MOTOR CAR", "4W", "LMV", "Personal")
+        }
+
+    def _fetch(self, portal, status_scopes=None):
+        return rto_fetch.fetch_rto_year(
+            portal, self.rto, 2026, self.dimensions,
+            status_scopes=status_scopes, sleep_seconds=0, sleep_func=lambda _: None,
+        )
+
+    def test_builds_one_row_per_month_and_class(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [100]},
+            {"Motor Car": {"labels": ["PETROL", "PURE EV"], "data": [70, 30]}},
+            {
+                ("Motor Car", "PETROL"): [
+                    {"yearAsString": "2026-January", "registeredVehicleCount": 40},
+                    {"yearAsString": "2026-February", "registeredVehicleCount": 30},
+                ],
+                ("Motor Car", "PURE EV"): [
+                    {"yearAsString": "2026-January", "registeredVehicleCount": 30},
+                ],
+            },
+        )
+
+        rows = self._fetch(portal)
+
+        # 2 months x 1 class x 1 status scope (ALL_STATUSES only by default)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({r["status_scope"] for r in rows}, {"ALL_STATUSES"})
+        january = next(r for r in rows if r["month"] == 1)
+        self.assertEqual(january["petrol"], 40)
+        self.assertEqual(january["pure_ev"], 30)
+        self.assertEqual(january["total"], 70)
+        self.assertEqual(january["date"], "2026-01-01")
+        self.assertEqual(january["rto_code"], 12)
+        self.assertEqual(january["legacy_rto_code"], "MH12")
+        self.assertEqual(january["vehicle_type"], "4W")
+
+    def test_total_equals_the_sum_of_reported_fuels(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [10]},
+            {"Motor Car": {"labels": ["PETROL", "DIESEL"], "data": [6, 4]}},
+            {
+                ("Motor Car", "PETROL"): [{"yearAsString": "2026-March", "registeredVehicleCount": 6}],
+                ("Motor Car", "DIESEL"): [{"yearAsString": "2026-March", "registeredVehicleCount": 4}],
+            },
+        )
+
+        for row in self._fetch(portal):
+            fuels = sum(row[c] for c in schema.FUEL_COLUMNS if row[c] != "")
+            self.assertEqual(row["total"], fuels)
+
+    def test_unreported_fuels_stay_blank_rather_than_zero(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [5]},
+            {"Motor Car": {"labels": ["PETROL"], "data": [5]}},
+            {("Motor Car", "PETROL"): [{"yearAsString": "2026-April", "registeredVehicleCount": 5}]},
+        )
+
+        row = self._fetch(portal)[0]
+
+        self.assertEqual(row["diesel"], "")
+        self.assertEqual(row["bio_methane"], "")
+
+    def test_zero_count_classes_and_fuels_are_never_queried(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car", "Ambulance"], "data": [5, 0]},
+            {"Motor Car": {"labels": ["PETROL", "DIESEL"], "data": [5, 0]}},
+            {("Motor Car", "PETROL"): [{"yearAsString": "2026-May", "registeredVehicleCount": 5}]},
+        )
+
+        self._fetch(portal)
+
+        queried_classes = {c.kwargs["vehicle_classes"] for c in portal.get_fuel_type_breakdown.call_args_list}
+        self.assertEqual(queried_classes, {"Motor Car"})
+        queried_fuels = {c.kwargs["vehicle_fuels"][0] for c in portal.get_duration_wise_registration.call_args_list}
+        self.assertEqual(queried_fuels, {"PETROL"})
+
+    def test_unknown_fuel_label_is_dropped_with_a_warning(self):
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [5]},
+            {"Motor Car": {"labels": ["ANTIMATTER"], "data": [5]}},
+            {},
+        )
+
+        with self.assertLogs(rto_fetch.logger, level="WARNING") as captured:
+            rows = self._fetch(portal)
+
+        self.assertEqual(rows, [])
+        self.assertIn("ANTIMATTER", captured.output[0])
+
+    def test_defaults_to_all_statuses_only(self):
+        # Decided 2026-08-19: ACTIVE is an as-of-today measure that decays with
+        # age, so it is not ingested. See new_portal/schema.py.
+        portal = _portal_stub({"labels": [], "data": []}, {}, {})
+
+        self._fetch(portal)
+
+        used = [c.kwargs["archive_types"] for c in portal.get_class_distribution.call_args_list]
+        self.assertEqual(used, [rto_fetch.ARCHIVE_TYPES_ALL_STATUSES])
+
+    def test_active_scope_can_still_be_requested_explicitly(self):
+        portal = _portal_stub({"labels": [], "data": []}, {}, {})
+
+        self._fetch(portal, status_scopes=["ALL_STATUSES", "ACTIVE"])
+
+        used = [c.kwargs["archive_types"] for c in portal.get_class_distribution.call_args_list]
+        self.assertEqual(
+            used, [rto_fetch.ARCHIVE_TYPES_ALL_STATUSES, rto_fetch.ARCHIVE_TYPES_ACTIVE_ONLY]
+        )
+
+    def test_each_extra_scope_costs_another_full_pass(self):
+        # Guards the doubling claim in the docs: no endpoint returns more than
+        # one archive-status scope per request.
+        portal = _portal_stub(
+            {"labels": ["Motor Car"], "data": [5]},
+            {"Motor Car": {"labels": ["PETROL"], "data": [5]}},
+            {("Motor Car", "PETROL"): [{"yearAsString": "2026-June", "registeredVehicleCount": 5}]},
+        )
+
+        self._fetch(portal, status_scopes=["ALL_STATUSES"])
+        one_scope = portal.get_duration_wise_registration.call_count
+        portal.get_duration_wise_registration.reset_mock()
+        self._fetch(portal, status_scopes=["ALL_STATUSES", "ACTIVE"])
+
+        self.assertEqual(portal.get_duration_wise_registration.call_count, one_scope * 2)
+
+
+class WriteRowsTests(unittest.TestCase):
+    def test_header_matches_schema_exactly(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "out.csv"
+            rto_fetch.write_rows([], path)
+            with path.open(newline="", encoding="utf-8") as f:
+                header = next(csv.reader(f))
+        self.assertEqual(header, schema.CSV_COLUMNS)
+
+
+class IngestorWiringTests(unittest.TestCase):
+    """The ingestor must look for exactly the file the fetcher writes.
+
+    NewPortalRtoIngest is not instantiated here: its base class reads real DB
+    credentials from config.yaml at construction time, which does not exist in
+    CI. The wiring these assert on is all module-level.
+    """
+
+    def test_ingestor_reads_the_path_the_fetcher_writes(self):
+        from new_portal import rto_ingest
+
+        self.assertIs(rto_ingest.build_output_path, rto_fetch.build_output_path)
+        self.assertEqual(rto_ingest.FILE_PREFIX, rto_fetch.FILE_PREFIX)
+
+    def test_replacement_scope_columns_exist_in_the_schema(self):
+        from new_portal import rto_ingest
+
+        for column in rto_ingest.REPLACEMENT_SCOPE_COLUMNS:
+            self.assertIn(column, schema.CSV_COLUMNS)
+
+    def test_replacement_scope_is_year_wide_not_month_wide(self):
+        # A fetch pulls a whole year, so the delete must clear the whole year;
+        # scoping to the month would strand rows for months the refetch dropped.
+        from new_portal import rto_ingest
+
+        self.assertIn("year", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+        self.assertNotIn("date", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+
+    def test_status_scope_is_in_the_replacement_scope(self):
+        # Otherwise ingesting one scope would wipe the other's rows.
+        from new_portal import rto_ingest
+
+        self.assertIn("status_scope", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+
+    def test_state_code_is_in_the_replacement_scope(self):
+        # Otherwise a --states MH run would delete every other state's rows
+        # for that year, since the delete matches staging via EXISTS.
+        from new_portal import rto_ingest
+
+        self.assertIn("state_code", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+
+    def test_replacement_scope_excludes_rto_code(self):
+        # Deliberate: scoping to the RTO would strand rows for an office that
+        # legitimately reported nothing this run (V1's orphaned-row bug).
+        from new_portal import rto_ingest
+
+        self.assertNotIn("rto_code", rto_ingest.REPLACEMENT_SCOPE_COLUMNS)
+
+
+class AbortThresholdTests(unittest.TestCase):
+    """Guards the 2026-08-20 outage behaviour.
+
+    The portal's /analytics backend went down mid-run; because a failed session
+    creation was not cached, every RTO retried it and 96 failed RTOs produced
+    401 requests against an already-struggling service.
+    """
+
+    def test_abort_threshold_is_set_and_modest(self):
+        self.assertGreater(rto_fetch.ABORT_AFTER_CONSECUTIVE_FAILURES, 0)
+        self.assertLess(
+            rto_fetch.ABORT_AFTER_CONSECUTIVE_FAILURES,
+            len(rto_fetch.load_rto_targets()),
+            "aborting must trip well before the full RTO list is exhausted",
+        )
+
+    def test_a_client_is_built_once_per_thread_not_once_per_rto(self):
+        # The amplification bug: a client that fails to start was never cached,
+        # so every subsequent RTO on that thread retried session creation.
+        source = (Path(rto_fetch.__file__)).read_text()
+        self.assertIn("thread_state.client = client", source)
+        self.assertIn("preflight_client", source)
+
+
+if __name__ == "__main__":
+    unittest.main()

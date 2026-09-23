@@ -1,0 +1,77 @@
+vehicle_class,vehicle_type,vehicle_category,vehicle_use_type,source
+ADAPTED VEHICLE,Others,Others,Others,authoritative_mapping_file
+AGRICULTURAL TRACTOR,Others,Others,Others,authoritative_mapping_file
+AMBULANCE,Others,Others,Others,authoritative_mapping_file
+ANIMAL AMBULANCE,Others,Others,Others,authoritative_mapping_file
+ARMOURED/SPECIALISED VEHICLE,Others,Others,Others,authoritative_mapping_file
+ARTICULATED VEHICLE,Others,Others,Others,authoritative_mapping_file
+AUXILIARY TRAILER,Others,Others,Others,authoritative_mapping_file
+BREAKDOWN VAN,Others,Others,Others,authoritative_mapping_file
+BULLDOZER,Others,Others,Others,authoritative_mapping_file
+BUS,Bus,Bus,Shared,authoritative_mapping_file
+CAMPER VAN / TRAILER,Others,Others,Others,authoritative_mapping_file
+CAMPER VAN / TRAILER (PRIVATE USE),Others,Others,Personal,authoritative_mapping_file
+CASH VAN,Others,Others,Others,authoritative_mapping_file
+CONSTRUCTION EQUIPMENT VEHICLE,Others,Others,Others,authoritative_mapping_file
+CONSTRUCTION EQUIPMENT VEHICLE (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+CRANE MOUNTED VEHICLE,Others,Others,Others,authoritative_mapping_file
+DUMPER,Others,Others,Others,authoritative_mapping_file
+EARTH MOVING EQUIPMENT,Others,Others,Others,authoritative_mapping_file
+EDUCATIONAL INSTITUTION BUS,Institution Bus,Bus,Shared,authoritative_mapping_file
+E-RICKSHAW WITH CART (G),3W_Goods_LowSpeed,3-Wheelers,Goods LowSpeed,authoritative_mapping_file
+E-RICKSHAW(P),3W_Shared_LowSpeed,3-Wheelers,Shared LowSpeed,authoritative_mapping_file
+EXCAVATOR (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+EXCAVATOR (NT),Others,Others,Others,authoritative_mapping_file
+FIRE FIGHTING VEHICLE,Others,Others,Others,authoritative_mapping_file
+FIRE TENDERS,Others,Others,Others,authoritative_mapping_file
+FORK LIFT,Others,Others,Others,authoritative_mapping_file
+GOODS CARRIER,Others,Others,Others,authoritative_mapping_file
+HARVESTER,Others,Others,Others,authoritative_mapping_file
+HEARSES,Others,Others,Others,authoritative_mapping_file
+LIBRARY VAN,Others,Others,Others,authoritative_mapping_file
+LUXURY CAB,4W_Shared,4-Wheelers,Shared,authoritative_mapping_file
+MAXI CAB,Others,Others,Others,authoritative_mapping_file
+M-CYCLE/SCOOTER,2W_Personal,2-Wheelers,Personal,authoritative_mapping_file
+M-CYCLE/SCOOTER-WITH SIDE CAR,2W_Personal,2-Wheelers,Personal,authoritative_mapping_file
+MOBILE CANTEEN,Others,Others,Others,authoritative_mapping_file
+MOBILE CLINIC,Others,Others,Others,authoritative_mapping_file
+MOBILE WORKSHOP,Others,Others,Others,authoritative_mapping_file
+MODULAR HYDRAULIC TRAILER,Others,Others,Others,authoritative_mapping_file
+MOPED,2W_Personal,2-Wheelers,Personal,authoritative_mapping_file
+MOTOR CAB,4W_Shared,4-Wheelers,Shared,authoritative_mapping_file
+MOTOR CAR,4W_Personal,4-Wheelers,Personal,authoritative_mapping_file
+MOTOR CARAVAN,Others,Others,Others,authoritative_mapping_file
+MOTOR CYCLE/SCOOTER-SIDECAR(T),Others,Others,Others,authoritative_mapping_file
+MOTOR CYCLE/SCOOTER-USED FOR HIRE,2W_Shared,2-Wheelers,Shared,authoritative_mapping_file
+MOTOR CYCLE/SCOOTER-WITH TRAILER,Others,Others,Others,authoritative_mapping_file
+MOTORISED CYCLE (CC > 25CC),2W_Personal,2-Wheelers,Personal,authoritative_mapping_file
+OMNI BUS,Bus,Bus,Shared,authoritative_mapping_file
+OMNI BUS (PRIVATE USE),Bus,Bus,Personal,authoritative_mapping_file
+POWER TILLER,Others,Others,Others,authoritative_mapping_file
+POWER TILLER (COMMERCIAL),Others,Others,Personal,authoritative_mapping_file
+PRIVATE SERVICE VEHICLE,Others,Others,Others,authoritative_mapping_file
+PRIVATE SERVICE VEHICLE (INDIVIDUAL USE),Others,Others,Personal,authoritative_mapping_file
+PULLER TRACTOR,Others,Others,Others,defaulted_others
+QUADRICYCLE (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+QUADRICYCLE (PRIVATE),Others,Others,Personal,authoritative_mapping_file
+RECOVERY VEHICLE,Others,Others,Others,authoritative_mapping_file
+ROAD ROLLER,Others,Others,Others,authoritative_mapping_file
+SCHOOL BUS,Others,Others,Others,defaulted_others
+SEMI-TRAILER (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+SNORKED LADDERS,Others,Others,Others,authoritative_mapping_file
+THREE WHEELER (GOODS),3W_Goods,3-Wheelers,Goods,authoritative_mapping_file
+THREE WHEELER (PASSENGER),3W_Shared,3-Wheelers,Shared,authoritative_mapping_file
+THREE WHEELER (PERSONAL),3W_Personal,3-Wheelers,Personal,authoritative_mapping_file
+TOW TRUCK,Others,Others,Others,authoritative_mapping_file
+TOWER WAGON,Others,Others,Others,authoritative_mapping_file
+TRACTOR (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+TRACTOR-TROLLEY(COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+TRAILER (AGRICULTURAL),Others,Others,Others,authoritative_mapping_file
+TRAILER (COMMERCIAL),Others,Others,Others,authoritative_mapping_file
+TRAILER FOR PERSONAL USE,Others,Others,Others,authoritative_mapping_file
+TREE TRIMMING VEHICLE,Others,Others,Others,authoritative_mapping_file
+VEHICLE FITTED WITH COMPRESSOR,Others,Others,Others,authoritative_mapping_file
+VEHICLE FITTED WITH GENERATOR,Others,Others,Others,authoritative_mapping_file
+VEHICLE FITTED WITH RIG,Others,Others,Others,authoritative_mapping_file
+VINTAGE MOTOR VEHICLE,Others,Others,Others,defaulted_others
+X-RAY VAN,Others,Others,Others,authoritative_mapping_file

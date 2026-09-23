@@ -1,3 +1,9 @@
 PyYAML==6.0.2
 openpyxl==3.1.2
 pandas==2.2.1
+requests==2.32.3
+# utils.py imports selenium at module scope and etl_preprocessing.py imports
+# utils, so tests/test_shared_etl_support.py cannot load without it. Unlike
+# azure/pyodbc (which need system libs and so use the guarded-import pattern),
+# selenium is a plain pip install, so pinning it here is simpler than guarding.
+selenium==4.16.0

@@ -1,0 +1,276 @@
+{
+  "info": {
+    "_postman_id": "8be46c4b-7425-4874-8946-e97fd10f482e",
+    "name": "Vahan API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14881123"
+  },
+  "item": [
+    {
+      "name": "RTO by State",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://analytics.parivahan.gov.in/analytics/json_rtos?stateCode=HP",
+          "protocol": "https",
+          "host": [
+            "analytics",
+            "parivahan",
+            "gov",
+            "in"
+          ],
+          "path": [
+            "analytics",
+            "json_rtos"
+          ],
+          "query": [
+            {
+              "key": "stateCode",
+              "value": "HP"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "State wise - EV - Two Wheeler",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://analytics.parivahan.gov.in/analytics/publicdashboard/vahandashboard/durationWiseRegistrationTable?stateCode=MH&rtoCode=0&toYear=2026&fromYear=2026&vehicleFuels%5B%5D=ELECTRIC(BOV)&vehicleFuels%5B%5D=PURE%20EV&calendarType=3&timePeriod=0&vehicleCategoryGroup%5B%5D=Two%20Wheeler&fitnessCheck=0&vehicleType=&archiveTypeAC=ACTIVE_COMPLIANT&archiveTypeANC=ACTIVE_NON_COMPLIANT&archiveTypePA=&archiveTypeTA=&archiveTypeNA=",
+          "protocol": "https",
+          "host": [
+            "analytics",
+            "parivahan",
+            "gov",
+            "in"
+          ],
+          "path": [
+            "analytics",
+            "publicdashboard",
+            "vahandashboard",
+            "durationWiseRegistrationTable"
+          ],
+          "query": [
+            {
+              "key": "stateCode",
+              "value": "MH"
+            },
+            {
+              "key": "rtoCode",
+              "value": "0"
+            },
+            {
+              "key": "toYear",
+              "value": "2026"
+            },
+            {
+              "key": "fromYear",
+              "value": "2026"
+            },
+            {
+              "key": "vehicleFuels%5B%5D",
+              "value": "ELECTRIC(BOV)"
+            },
+            {
+              "key": "vehicleFuels%5B%5D",
+              "value": "PURE%20EV"
+            },
+            {
+              "key": "calendarType",
+              "value": "3"
+            },
+            {
+              "key": "timePeriod",
+              "value": "0"
+            },
+            {
+              "key": "vehicleCategoryGroup%5B%5D",
+              "value": "Two%20Wheeler"
+            },
+            {
+              "key": "fitnessCheck",
+              "value": "0"
+            },
+            {
+              "key": "vehicleType",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeAC",
+              "value": "ACTIVE_COMPLIANT"
+            },
+            {
+              "key": "archiveTypeANC",
+              "value": "ACTIVE_NON_COMPLIANT"
+            },
+            {
+              "key": "archiveTypePA",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeTA",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeNA",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "OEM Name",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://analytics.parivahan.gov.in/analytics/publicdashboard/lazy/vehicle-makers?page=0&size=8000&search=",
+          "protocol": "https",
+          "host": [
+            "analytics",
+            "parivahan",
+            "gov",
+            "in"
+          ],
+          "path": [
+            "analytics",
+            "publicdashboard",
+            "lazy",
+            "vehicle-makers"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "8000"
+            },
+            {
+              "key": "search",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "State - RTO - Category wise OEM",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://analytics.parivahan.gov.in/analytics/publicdashboard/vahandashboard/top5Makerchart?fromYear=2026&toYear=2026&stateCode=MH&rtoCode=12&vehicleClasses=&vehicleMakers=&vehicleSubCategories=&vehicleEmissions=&vehicleFuels=ELECTRIC%28BOV%29%2CPURE+EV&timePeriod=0&vehicleCategoryGroup=Two+Wheeler&evType=&vehicleStatus=&vehicleOwnerType=&fitnessCheck=0&vehicleType=&archiveTypeAC=ACTIVE_COMPLIANT&archiveTypeANC=ACTIVE_NON_COMPLIANT&archiveTypePA=&archiveTypeTA=&archiveTypeNA=",
+          "protocol": "https",
+          "host": [
+            "analytics",
+            "parivahan",
+            "gov",
+            "in"
+          ],
+          "path": [
+            "analytics",
+            "publicdashboard",
+            "vahandashboard",
+            "top5Makerchart"
+          ],
+          "query": [
+            {
+              "key": "fromYear",
+              "value": "2026"
+            },
+            {
+              "key": "toYear",
+              "value": "2026"
+            },
+            {
+              "key": "stateCode",
+              "value": "MH"
+            },
+            {
+              "key": "rtoCode",
+              "value": "12"
+            },
+            {
+              "key": "vehicleClasses",
+              "value": ""
+            },
+            {
+              "key": "vehicleMakers",
+              "value": ""
+            },
+            {
+              "key": "vehicleSubCategories",
+              "value": ""
+            },
+            {
+              "key": "vehicleEmissions",
+              "value": ""
+            },
+            {
+              "key": "vehicleFuels",
+              "value": "ELECTRIC%28BOV%29%2CPURE+EV"
+            },
+            {
+              "key": "timePeriod",
+              "value": "0"
+            },
+            {
+              "key": "vehicleCategoryGroup",
+              "value": "Two+Wheeler"
+            },
+            {
+              "key": "evType",
+              "value": ""
+            },
+            {
+              "key": "vehicleStatus",
+              "value": ""
+            },
+            {
+              "key": "vehicleOwnerType",
+              "value": ""
+            },
+            {
+              "key": "fitnessCheck",
+              "value": "0"
+            },
+            {
+              "key": "vehicleType",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeAC",
+              "value": "ACTIVE_COMPLIANT"
+            },
+            {
+              "key": "archiveTypeANC",
+              "value": "ACTIVE_NON_COMPLIANT"
+            },
+            {
+              "key": "archiveTypePA",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeTA",
+              "value": ""
+            },
+            {
+              "key": "archiveTypeNA",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
