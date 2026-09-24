@@ -44,6 +44,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import collections
 import csv
 import dataclasses
 import itertools
@@ -119,19 +120,41 @@ DEFAULT_SLEEP_SECONDS = 0.2
 # trigger 429s, which retries papered over but which is not a design to ship.
 DEFAULT_WORKERS = 8
 
-# If this many RTOs fail back to back, stop the run rather than grinding through
-# the remaining offices. Learned the hard way 2026-08-20: the portal's
-# /analytics backend went down mid-run (503 from every path and every IP, a load
-# balancer "No server is available" page), and because a failed session creation
-# was not cached, every RTO retried it — 96 failed RTOs generated 401 requests
-# against an already-struggling service. A run that cannot reach the portal
-# should fail fast and loudly, not keep knocking.
-ABORT_AFTER_CONSECUTIVE_FAILURES = 25
+# The breaker exists to stop a run when the portal is not serving data at all,
+# without stopping one that is merely having a bad day. It was added after
+# 2026-08-20, when the /analytics backend went down mid-run and 96 failed RTOs
+# generated 401 requests against an already-struggling service.
+#
+# "N consecutive failures" cannot tell those apart. Failures on this portal are
+# per-office and clustered — an office's outcome is stable within a window
+# (measured 3/3 identical across 8 offices) and flips over minutes — so a small
+# state whose offices all fail together produces a long consecutive run while
+# the portal is still serving most of the country. That aborted a run at office
+# 133 which had already collected 5,072 rows from 71 healthy offices.
+#
+# A rolling failure rate distinguishes them: a dead portal fails ~everything, a
+# degraded one fails a fraction. 37% failure keeps going; 26 dead offices in a
+# row does not.
+ABORT_WINDOW = 50
+ABORT_MIN_SAMPLE = 25
+ABORT_FAILURE_RATE = 0.9
 
 # How long the recovery pass waits before retrying gapped offices. The portal's
 # intermittent 500s clear over minutes, not seconds (measured 2026-09-23), so
 # retrying immediately mostly re-hits the same errors.
 RECOVERY_SETTLE_SECONDS = 120.0
+
+# In-line retries are deliberately off by default, which is not the obvious
+# choice, so: the client's own 3-attempt / 5s-linear-backoff policy costs ~15s
+# per failed call and measurably does not work on this portal — 3 attempts moved
+# a Mizoram sweep from 13 failures to 11. In a degraded nationwide run that
+# bought ~nothing for ~42% of wall-clock time (434 gaps x 15s across 8 workers,
+# against 32 minutes elapsed).
+#
+# The recovery pass is where retrying actually pays, because it waits minutes
+# and rebuilds the session rather than hammering the same one within seconds.
+# So the main pass fails fast and hands the work to recovery.
+DEFAULT_RETRY_ATTEMPTS = 1
 
 
 def build_output_path(year: int, output_dir: Path | None = None) -> Path:
@@ -457,6 +480,105 @@ def _build_row(
     return row
 
 
+def should_abort(recent_outcomes) -> bool:
+    """Whether the recent failure rate means the portal has stopped serving.
+
+    `recent_outcomes` is an iterable of booleans, True for a failed office, over
+    a rolling window of the most recent offices. Returns True once the window is
+    almost entirely failures.
+
+    The threshold is deliberately high. A degraded portal that still answers a
+    third of offices is worth continuing against — that run collects real rows
+    and the recovery pass mops up the rest. Only near-total failure means there
+    is nothing to be gained by carrying on.
+    """
+    outcomes = list(recent_outcomes)
+    if not outcomes:
+        return False
+    return sum(outcomes) / len(outcomes) >= ABORT_FAILURE_RATE
+
+
+def office_counts_as_failure(rows: list[dict], gaps: list[Gap]) -> bool:
+    """Whether one office's result should count toward the circuit breaker.
+
+    Three outcomes, only one of which is a failure:
+
+    - **rows, with or without gaps** — the office answered. Success, even if
+      partial; the recovery pass owns the gaps.
+    - **no rows, no gaps** — the office genuinely reported nothing this year.
+      Common and legitimate: the first 13 offices in the national list are small
+      Andaman islands with no 2026 registrations at all. Counting these would
+      abort a perfectly healthy run before it reached the mainland.
+    - **no rows, and gaps** — every call we made failed. Indistinguishable from
+      the hard failure the breaker exists for, so it counts.
+
+    The middle case is why "did it return rows?" is not the right test on its
+    own, and the last is why "did it return at all?" is not either.
+    """
+    return not rows and bool(gaps)
+
+
+def build_progress_path(year: int, output_dir: Path | None = None) -> Path:
+    csv_path = build_output_path(year, output_dir)
+    return csv_path.with_name(f"{csv_path.stem}__progress.jsonl")
+
+
+def load_progress(path: Path) -> dict[str, tuple[list[dict], list[Gap]]]:
+    """{rto_label: (rows, gaps)} from a previous run's checkpoint.
+
+    Later lines win, so re-attempting an office simply appends a better result.
+    A truncated final line — the run was killed mid-write — is skipped rather
+    than aborting the load; losing one office's checkpoint costs one re-fetch.
+    """
+    if not path.exists():
+        return {}
+
+    progress: dict[str, tuple[list[dict], list[Gap]]] = {}
+    with path.open(encoding="utf-8") as f:
+        for line_number, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+                progress[entry["rto_label"]] = (
+                    entry["rows"],
+                    [Gap(**g) for g in entry["gaps"]],
+                )
+            except (json.JSONDecodeError, KeyError, TypeError):
+                logger.warning(
+                    "Skipping unreadable checkpoint line %s in %s; that office "
+                    "will be re-fetched.",
+                    line_number, path,
+                )
+    return progress
+
+
+def append_progress(path: Path, rto_label: str, rows: list[dict], gaps: list[Gap]) -> None:
+    """Record one office's result. Append-only so a kill cannot corrupt earlier lines."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "rto_label": rto_label,
+        "rows": rows,
+        "gaps": [dataclasses.asdict(g) for g in gaps],
+    }
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+        f.flush()
+
+
+def office_is_complete(entry: tuple[list[dict], list[Gap]]) -> bool:
+    """Whether a checkpointed office needs no further work.
+
+    Complete means "no gaps" rather than "has rows", because a genuinely empty
+    office is finished too. Anything with gaps is re-attempted on the next run,
+    which folds resume and recovery into the same mechanism: a later window
+    gets a fresh chance at exactly the offices that were short.
+    """
+    _, gaps = entry
+    return not gaps
+
+
 def build_gap_manifest_path(year: int, output_dir: Path | None = None) -> Path:
     csv_path = build_output_path(year, output_dir)
     return csv_path.with_name(f"{csv_path.stem}__gaps.json")
@@ -493,6 +615,7 @@ def recover_gaps(
     sleep_seconds: float = DEFAULT_SLEEP_SECONDS,
     sleep_func=time.sleep,
     settle_seconds: float = RECOVERY_SETTLE_SECONDS,
+    workers: int = DEFAULT_WORKERS,
 ) -> tuple[dict[str, list[dict]], list[Gap]]:
     """Second pass over the offices that came back with gaps.
 
@@ -514,6 +637,16 @@ def recover_gaps(
     failures 13 -> 11). The failures clear on a timescale of minutes, so the
     recovery pass waits before starting and builds new sessions rather than
     reusing the ones that just saw errors.
+
+    ## Why it runs in parallel
+
+    This was sequential on one session at first, on the assumption that gapped
+    offices would be a minority. On a degraded portal they are not: a nationwide
+    sample had 83% of offices carrying at least one gap, which would have meant
+    re-fetching ~1,391 offices one at a time — roughly 8 hours, longer than the
+    main pass it was meant to patch up. It now parallelises the same way the
+    main pass does, with one session per worker, since the portal serializes
+    concurrent requests that share a JSESSIONID.
     """
     if not gaps:
         return {}, []
@@ -521,8 +654,8 @@ def recover_gaps(
     labels = sorted({g.rto_label for g in gaps})
     logger.info(
         "Recovery pass: %s gap(s) across %s office(s); waiting %ss for the "
-        "portal to settle before retrying.",
-        len(gaps), len(labels), settle_seconds,
+        "portal to settle before retrying with %s worker(s).",
+        len(gaps), len(labels), settle_seconds, workers,
     )
     sleep_func(settle_seconds)
 
@@ -530,21 +663,26 @@ def recover_gaps(
     for g in gaps:
         gaps_by_label.setdefault(g.rto_label, []).append(g)
 
-    recovered_rows: dict[str, list[dict]] = {}
-    remaining: list[Gap] = []
-    portal = client_factory()
+    thread_state = threading.local()
 
-    for label in labels:
+    def portal_for_thread() -> NewPortalClient:
+        client = getattr(thread_state, "client", None)
+        if client is None:
+            client = client_factory()
+            thread_state.client = client
+        return client
+
+    def recover_one(label: str):
+        """Returns (label, rows_or_None, gaps_to_keep)."""
         rto = targets_by_label.get(label)
         if rto is None:
             # Should not happen; keep the gap rather than dropping it silently.
-            remaining.extend(gaps_by_label[label])
-            continue
+            return label, None, gaps_by_label[label]
 
         before = len(gaps_by_label[label])
         try:
             rows, retry_gaps = fetch_rto_year(
-                portal,
+                portal_for_thread(),
                 rto,
                 year,
                 vehicle_class_dimensions,
@@ -554,25 +692,36 @@ def recover_gaps(
             )
         except Exception:
             logger.exception("Recovery failed outright for %s", label)
-            remaining.extend(gaps_by_label[label])
-            continue
+            return label, None, gaps_by_label[label]
 
         if len(retry_gaps) < before:
-            recovered_rows[label] = rows
-            remaining.extend(retry_gaps)
             logger.info(
                 "Recovered %s: %s gap(s) -> %s, %s rows",
                 label, before, len(retry_gaps), len(rows),
             )
-        else:
-            # No improvement. Keep the first pass's rows and its gaps so a worse
-            # retry can never shrink what we already had.
-            remaining.extend(gaps_by_label[label])
-            logger.warning(
-                "Recovery did not improve %s (%s gap(s) before, %s after); "
-                "keeping the first pass.",
-                label, before, len(retry_gaps),
-            )
+            return label, rows, retry_gaps
+
+        # No improvement. Keep the first pass's rows and its gaps so a worse
+        # retry can never shrink what we already had.
+        logger.warning(
+            "Recovery did not improve %s (%s gap(s) before, %s after); "
+            "keeping the first pass.",
+            label, before, len(retry_gaps),
+        )
+        return label, None, gaps_by_label[label]
+
+    if workers == 1:
+        results = [recover_one(label) for label in labels]
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            results = list(pool.map(recover_one, labels))
+
+    recovered_rows: dict[str, list[dict]] = {}
+    remaining: list[Gap] = []
+    for label, rows, keep_gaps in results:
+        if rows is not None:
+            recovered_rows[label] = rows
+        remaining.extend(keep_gaps)
 
     return recovered_rows, remaining
 
@@ -631,6 +780,25 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help=(
+            "Ignore any checkpoint and re-fetch every office. Without this, a "
+            "run resumes: offices already collected without gaps are skipped, "
+            "and gapped ones get another attempt."
+        ),
+    )
+    parser.add_argument(
+        "--retry-attempts",
+        type=int,
+        default=DEFAULT_RETRY_ATTEMPTS,
+        help=(
+            f"In-line attempts per portal call (default {DEFAULT_RETRY_ATTEMPTS}). "
+            "Kept at 1 on purpose: retrying within seconds measurably does not "
+            "work on this portal, and the recovery pass retries properly later."
+        ),
+    )
+    parser.add_argument(
         "--allow-gaps",
         action="store_true",
         help=(
@@ -685,6 +853,39 @@ def main() -> None:
     if args.workers < 1:
         parser.error("--workers must be at least 1")
 
+    # Resume. The portal swings between serving and dead on a timescale of
+    # minutes (2026-09-23: three runs reached 26, 133 and 320 offices before
+    # conditions collapsed), so a run that must finish in one clean window may
+    # never finish at all. Checkpointing each office turns an abort into a
+    # resume point, and the dataset accumulates across short good windows.
+    progress_path = build_progress_path(year, args.output_dir)
+    if args.refresh and progress_path.exists():
+        progress_path.unlink()
+        logger.info("--refresh: discarded the previous checkpoint at %s", progress_path)
+
+    progress = load_progress(progress_path)
+    progress_lock = threading.Lock()
+
+    def checkpoint(rto_label: str, rows: list[dict], gaps: list[Gap]) -> None:
+        with progress_lock:
+            append_progress(progress_path, rto_label, rows, gaps)
+
+    def label_of(rto: dict) -> str:
+        return f"{rto['state_code']}/{rto['new_rto_code']} {rto['new_rto_name']}"
+
+    # Offices already finished cleanly are skipped; anything gapped is
+    # re-attempted, which folds resume and recovery into one mechanism.
+    done = {
+        label for label, entry in progress.items() if office_is_complete(entry)
+    }
+    pending = [rto for rto in targets if label_of(rto) not in done]
+    if progress:
+        logger.info(
+            "Resuming from %s: %s office(s) already complete, %s to attempt. "
+            "Pass --refresh to start clean.",
+            progress_path, len(done), len(pending),
+        )
+
     # One session per worker thread; see DEFAULT_WORKERS above for why sharing a
     # single session is nearly useless. Well under the portal's ~300 limit on
     # session creation.
@@ -693,7 +894,7 @@ def main() -> None:
     sessions_lock = threading.Lock()
 
     def new_client() -> NewPortalClient:
-        client = NewPortalClient()
+        client = NewPortalClient(retry_attempts=args.retry_attempts)
         client.session.mount("https://", HTTPAdapter(pool_connections=2, pool_maxsize=2))
         client.start_session()
         return client
@@ -725,21 +926,24 @@ def main() -> None:
     failures: list[str] = []
     failures_lock = threading.Lock()
     completed = itertools.count(1)
-    consecutive_failures = 0
+    recent = collections.deque(maxlen=ABORT_WINDOW)
     aborted = threading.Event()
 
+    def _check_breaker():
+        """Caller must hold failures_lock."""
+        if len(recent) >= ABORT_MIN_SAMPLE and should_abort(recent):
+            aborted.set()
+
     def record_failure(label):
-        nonlocal consecutive_failures
         with failures_lock:
             failures.append(label)
-            consecutive_failures += 1
-            if consecutive_failures >= ABORT_AFTER_CONSECUTIVE_FAILURES:
-                aborted.set()
+            recent.append(True)
+            _check_breaker()
 
     def record_success():
-        nonlocal consecutive_failures
         with failures_lock:
-            consecutive_failures = 0
+            recent.append(False)
+            _check_breaker()
 
     def fetch_one(indexed):
         index, rto = indexed
@@ -763,9 +967,9 @@ def main() -> None:
             record_failure(label)
             if aborted.is_set():
                 logger.error(
-                    "%s consecutive failures; aborting the run rather than "
-                    "continuing to hammer the portal.",
-                    ABORT_AFTER_CONSECUTIVE_FAILURES,
+                    "Over %.0f%% of the last %s offices failed; aborting the run "
+                    "rather than continuing to hammer the portal.",
+                    ABORT_FAILURE_RATE * 100, ABORT_WINDOW,
                 )
             return index, [], []
 
@@ -777,27 +981,29 @@ def main() -> None:
         # makes it matter most (measured 2026-09-23: 67% of probes returning
         # 500, which would otherwise grind through all 1,676 offices and a
         # sequential recovery pass before anyone noticed).
-        if rows:
-            record_success()
-        else:
+        if office_counts_as_failure(rows, gaps):
             record_failure(label)
             if aborted.is_set():
                 logger.error(
-                    "%s consecutive offices yielded no rows; aborting rather "
-                    "than continuing against a portal that is not serving data.",
-                    ABORT_AFTER_CONSECUTIVE_FAILURES,
+                    "Over %.0f%% of the last %s offices failed every call; "
+                    "aborting rather than continuing against a portal that is "
+                    "not serving data.",
+                    ABORT_FAILURE_RATE * 100, ABORT_WINDOW,
                 )
+        else:
+            record_success()
+        checkpoint(label, rows, gaps)
         logger.info(
             "[%s/%s] %s -> %s rows%s",
             next(completed),
-            len(targets),
+            len(pending),
             label,
             len(rows),
             f" ({len(gaps)} gap(s))" if gaps else "",
         )
         return index, rows, gaps
 
-    indexed_targets = list(enumerate(targets))
+    indexed_targets = list(enumerate(pending))
     if args.workers == 1:
         results = [fetch_one(item) for item in indexed_targets]
     else:
@@ -809,34 +1015,50 @@ def main() -> None:
         args.workers, len(sessions_created),
     )
 
+    # Merge this run's results over whatever the checkpoint already held. An
+    # office skipped as complete keeps its stored rows; an office re-attempted
+    # keeps whichever attempt had fewer gaps, so a bad window can never shrink
+    # what a good one already collected.
+    for index, rows, rto_gaps in results:
+        label = label_of(pending[index])
+        previous = progress.get(label)
+        if previous is None or len(rto_gaps) <= len(previous[1]):
+            progress[label] = (rows, rto_gaps)
+
+    by_label = {label_of(rto): rto for rto in targets}
     rows_by_index: dict[int, list[dict]] = {}
     label_by_index: dict[int, str] = {}
     gaps: list[Gap] = []
-    for index, rows, rto_gaps in results:
-        rows_by_index[index] = rows
-        label_by_index[index] = (
-            f"{targets[index]['state_code']}/{targets[index]['new_rto_code']} "
-            f"{targets[index]['new_rto_name']}"
-        )
-        gaps.extend(rto_gaps)
+    for index, rto in enumerate(targets):
+        label = label_of(rto)
+        stored_rows, stored_gaps = progress.get(label, ([], []))
+        rows_by_index[index] = stored_rows
+        label_by_index[index] = label
+        gaps.extend(stored_gaps)
 
     # Recovery pass, unless the run already bailed out — retrying into a portal
     # that just failed 25 offices in a row would be pointless.
     if gaps and not aborted.is_set() and not args.no_recovery:
-        targets_by_label = {label_by_index[i]: targets[i] for i in rows_by_index}
         recovered, gaps = recover_gaps(
             gaps,
-            targets_by_label,
+            by_label,
             year,
             vehicle_class_dimensions,
             client_factory=new_client,
             status_scopes=status_scopes,
             sleep_seconds=args.sleep_seconds,
             settle_seconds=args.recovery_wait,
+            workers=args.workers,
         )
+        # Recovered offices are checkpointed too, so their work survives a later
+        # abort exactly as the main pass's does.
+        remaining_by_label: dict[str, list[Gap]] = {}
+        for gap in gaps:
+            remaining_by_label.setdefault(gap.rto_label, []).append(gap)
         for index, label in label_by_index.items():
             if label in recovered:
                 rows_by_index[index] = recovered[label]
+                checkpoint(label, recovered[label], remaining_by_label.get(label, []))
 
     # Sort by the original target order so the CSV is byte-identical regardless
     # of how many workers produced it, and diffable between runs.
@@ -854,18 +1076,29 @@ def main() -> None:
         # A stale manifest from an earlier run would misreport a clean pull.
         manifest_path.unlink()
 
+    complete = sum(
+        1
+        for rto in targets
+        if label_of(rto) in progress and office_is_complete(progress[label_of(rto)])
+    )
+    resume_hint = (
+        f"Progress is checkpointed at {progress_path} — {complete} of "
+        f"{len(targets)} office(s) are complete. Re-running resumes from there "
+        f"rather than starting over."
+    )
+
     if aborted.is_set():
         raise SystemExit(
-            f"ABORTED after {ABORT_AFTER_CONSECUTIVE_FAILURES} consecutive RTO "
-            f"failures ({len(failures)} total). The CSV is incomplete and must "
-            f"not be ingested. Check whether the portal is up before retrying."
+            f"ABORTED: over {ABORT_FAILURE_RATE:.0%} of the last {ABORT_WINDOW} "
+            f"offices failed ({len(failures)} failures this run). The CSV is "
+            f"incomplete and must not be ingested. {resume_hint}"
         )
 
     if failures:
         raise SystemExit(
-            f"{len(failures)} of {len(targets)} RTOs failed to fetch "
+            f"{len(failures)} of {len(pending)} attempted RTOs failed to fetch "
             f"(e.g. {', '.join(failures[:5])}). The CSV holds only the RTOs that "
-            f"succeeded — do not ingest it as a complete snapshot."
+            f"succeeded — do not ingest it as a complete snapshot. {resume_hint}"
         )
 
     if gaps:
@@ -882,9 +1115,15 @@ def main() -> None:
             logger.warning("%s Proceeding anyway because --allow-gaps was set.", message)
         else:
             raise SystemExit(
-                f"{message} Re-run when the portal is healthier, or pass "
-                f"--allow-gaps to ingest this pull knowing it is incomplete."
+                f"{message} {resume_hint} Re-run when the portal is healthier, "
+                f"or pass --allow-gaps to ingest this pull knowing it is incomplete."
             )
+
+    # Every office finished cleanly. Drop the checkpoint so a later run for this
+    # year starts fresh instead of resuming stale state.
+    if progress_path.exists():
+        progress_path.unlink()
+        logger.info("Run complete with no gaps; removed %s", progress_path)
 
 
 if __name__ == "__main__":
