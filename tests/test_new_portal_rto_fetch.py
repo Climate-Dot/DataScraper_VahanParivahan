@@ -799,6 +799,41 @@ class ProgressCheckpointTests(unittest.TestCase):
         complete = sum(1 for v in progress.values() if rto_fetch.office_is_complete(v))
         self.assertEqual(complete, 1)
 
+    def test_unvisited_offices_are_attempted_before_gapped_ones(self):
+        """Otherwise every attempt re-walks the same early offices.
+
+        With "everything not complete, in list order", the second real attempt
+        tried 385 offices of which only 21 were new — offices past ~450 would
+        never be reached however many attempts ran.
+        """
+        targets = [{"state_code": "XX", "new_rto_code": str(i), "new_rto_name": "O"}
+                   for i in range(1, 6)]
+        label_of = lambda r: f"{r['state_code']}/{r['new_rto_code']} {r['new_rto_name']}"
+        gap = [self.gap]
+        progress = {
+            label_of(targets[0]): ([], gap),        # gapped, early in the list
+            label_of(targets[1]): ([{"t": 1}], []),  # complete
+            label_of(targets[2]): ([], gap),        # gapped
+        }
+        done = {label_of(targets[1])}
+
+        ordered = rto_fetch.order_pending(targets, progress, done, label_of)
+
+        # Offices 4 and 5 have never been seen; they must come first.
+        self.assertEqual(
+            [label_of(r) for r in ordered],
+            ["XX/4 O", "XX/5 O", "XX/1 O", "XX/3 O"],
+        )
+
+    def test_completed_offices_are_never_reattempted(self):
+        targets = [{"state_code": "XX", "new_rto_code": str(i), "new_rto_name": "O"}
+                   for i in range(1, 4)]
+        label_of = lambda r: f"{r['state_code']}/{r['new_rto_code']} {r['new_rto_name']}"
+        progress = {label_of(t): ([{"t": 1}], []) for t in targets}
+        done = set(progress)
+
+        self.assertEqual(rto_fetch.order_pending(targets, progress, done, label_of), [])
+
     def test_appends_are_safe_from_concurrent_writers(self):
         # Eight workers checkpoint as they finish; no line may be interleaved.
         lock = threading.Lock()
