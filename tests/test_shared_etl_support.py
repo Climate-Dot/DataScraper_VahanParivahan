@@ -6,6 +6,7 @@ from unittest import mock
 import pandas as pd
 
 import etl_blob_upload
+import etl_ingestion
 from etl_ingestion import BaseSqlServerIngestor
 from etl_preprocessing import BaseExcelPreprocessor
 
@@ -31,12 +32,15 @@ STORAGE_CONFIG = {
 class RecordingCursor:
     def __init__(self):
         self.executed = []
+        self.execute_params = []
         self.executemany_calls = []
         self.fast_executemany = False
         self.closed = False
 
-    def execute(self, query):
+    def execute(self, query, params=None):
         self.executed.append(query)
+        if params is not None:
+            self.execute_params.append(list(params))
 
     def executemany(self, query, data):
         self.executemany_calls.append((query, list(data)))
@@ -183,6 +187,94 @@ class SharedSqlIngestionTests(unittest.TestCase):
                 ("02/06/2026", None, "BUS"),
             ],
         )
+
+    def test_staging_load_is_chunked(self):
+        """One giant executemany hangs on wide tables.
+
+        pyodbc's fast_executemany builds a single parameter array per call, so
+        144,182 rows x 51 columns = 7.35M parameters hung indefinitely — 34
+        minutes, no rows landed. V1's ~16k-row loads never reached that size.
+        """
+        ingestor = DummyIngestor()
+        connection = RecordingConnection()
+        rows = 1 + 2 * etl_ingestion.INSERT_CHUNK_SIZE
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "big.csv"
+            with csv_path.open("w", encoding="utf-8") as f:
+                f.write("date,state,vehicle_class\n")
+                for i in range(rows):
+                    f.write(f"01/06/2026,Telangana,CLASS{i}\n")
+
+            with mock.patch.object(ingestor, "connect", return_value=connection):
+                inserted = ingestor.data_ingest_from_file(csv_path)
+
+        self.assertEqual(inserted, rows)
+        calls = connection.cursor_instance.executemany_calls
+        self.assertEqual(len(calls), 3, "expected one call per chunk")
+        self.assertEqual([len(c[1]) for c in calls],
+                         [etl_ingestion.INSERT_CHUNK_SIZE,
+                          etl_ingestion.INSERT_CHUNK_SIZE, 1])
+        # Every row still lands exactly once, in order.
+        staged = [row for _, chunk in calls for row in chunk]
+        self.assertEqual(len(staged), rows)
+        self.assertEqual(staged[0][2], "CLASS0")
+        self.assertEqual(staged[-1][2], f"CLASS{rows - 1}")
+        # Still one commit for the staging load, so semantics are unchanged.
+        self.assertEqual(connection.commit_count, 2)
+
+    def test_multirow_insert_packs_rows_under_the_parameter_ceiling(self):
+        """SQL Server rejects >2100 parameters, and exactly 2100 also fails."""
+        self.assertEqual(etl_ingestion.rows_per_multirow_statement(50), 41)
+        self.assertLess(41 * 50, etl_ingestion.MAX_STATEMENT_PARAMETERS)
+        self.assertEqual(etl_ingestion.rows_per_multirow_statement(3), 696)
+        # A table wider than the ceiling still makes progress, one row at a time.
+        self.assertEqual(etl_ingestion.rows_per_multirow_statement(5000), 1)
+
+    def test_multirow_path_is_opt_in_and_v1_is_unaffected(self):
+        # V1 loads ~16k rows a month on a path that has worked for years.
+        self.assertFalse(DummyIngestor().use_multirow_insert)
+
+    def test_multirow_load_sends_every_row_once_in_order(self):
+        ingestor = DummyIngestor()
+        ingestor.use_multirow_insert = True
+        connection = RecordingConnection()
+        rows = 100
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "multi.csv"
+            with csv_path.open("w", encoding="utf-8") as f:
+                f.write("date,state,vehicle_class\n")
+                for i in range(rows):
+                    f.write(f"01/06/2026,,CLASS{i}\n")
+            with mock.patch.object(ingestor, "connect", return_value=connection):
+                inserted = ingestor.data_ingest_from_file(csv_path)
+
+        self.assertEqual(inserted, rows)
+        # No executemany at all on this path.
+        self.assertEqual(connection.cursor_instance.executemany_calls, [])
+        inserts = [q for q in connection.cursor_instance.executed
+                   if q.startswith("INSERT INTO staging_demo")]
+        self.assertTrue(inserts)
+        # Empty CSV cells still become NULL, exactly as on the executemany path.
+        params = connection.cursor_instance.execute_params
+        flat = [v for p in params for v in p]
+        self.assertEqual(flat.count(None), rows)
+        self.assertEqual(len([v for v in flat if v == "CLASS0"]), 1)
+        self.assertEqual(len([v for v in flat if v == f"CLASS{rows - 1}"]), 1)
+
+    def test_a_small_load_still_uses_a_single_call(self):
+        ingestor = DummyIngestor()
+        connection = RecordingConnection()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "small.csv"
+            csv_path.write_text(
+                "date,state,vehicle_class\n01/06/2026,Telangana,MOTOR CAR\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(ingestor, "connect", return_value=connection):
+                ingestor.data_ingest_from_file(csv_path)
+        self.assertEqual(len(connection.cursor_instance.executemany_calls), 1)
 
     def test_data_ingest_from_file_skips_empty_csv(self):
         ingestor = DummyIngestor()
