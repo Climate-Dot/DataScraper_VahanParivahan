@@ -834,6 +834,56 @@ class ProgressCheckpointTests(unittest.TestCase):
 
         self.assertEqual(rto_fetch.order_pending(targets, progress, done, label_of), [])
 
+    def test_a_retry_with_equal_gaps_but_fewer_rows_is_rejected(self):
+        """The row-loss bug: `<=` let a worse retry overwrite a better pull.
+
+        Two attempts can gap the same *number* of calls while gapping different
+        ones, so equal gap counts do not mean equal data. Replacing on `<=`
+        moved a real dataset from 16,931 rows down to 16,578.
+        """
+        previous = ([{"r": i} for i in range(100)], [self.gap, self.gap])
+        worse = [{"r": i} for i in range(40)]
+        self.assertFalse(rto_fetch.is_better_result(worse, [self.gap, self.gap], previous))
+
+    def test_a_retry_with_equal_gaps_and_more_rows_is_accepted(self):
+        previous = ([{"r": 1}], [self.gap])
+        better = [{"r": 1}, {"r": 2}]
+        self.assertTrue(rto_fetch.is_better_result(better, [self.gap], previous))
+
+    def test_fewer_gaps_always_wins(self):
+        previous = ([{"r": i} for i in range(100)], [self.gap, self.gap])
+        # Fewer rows but fewer gaps: still the better result, because the gap
+        # is the thing that makes a row count untrustworthy.
+        self.assertTrue(rto_fetch.is_better_result([{"r": 1}], [self.gap], previous))
+
+    def test_more_gaps_always_loses(self):
+        previous = ([], [self.gap])
+        self.assertFalse(
+            rto_fetch.is_better_result([{"r": i} for i in range(99)],
+                                       [self.gap, self.gap], previous)
+        )
+
+    def test_anything_beats_nothing_recorded(self):
+        self.assertTrue(rto_fetch.is_better_result([], [self.gap], None))
+
+    def test_repeated_merges_never_lose_rows(self):
+        # The property that actually matters: sweeping forever cannot shrink
+        # the dataset.
+        best = None
+        attempts = [
+            ([{"r": i} for i in range(100)], [self.gap, self.gap]),
+            ([{"r": i} for i in range(40)], [self.gap, self.gap]),
+            ([{"r": i} for i in range(10)], [self.gap]),
+            ([{"r": i} for i in range(5)], [self.gap, self.gap, self.gap]),
+        ]
+        seen = []
+        for rows, gaps in attempts:
+            if rto_fetch.is_better_result(rows, gaps, best):
+                best = (rows, gaps)
+            seen.append((len(best[0]), len(best[1])))
+        # Gaps monotonically non-increasing; rows never drop while gaps are equal.
+        self.assertEqual(seen, [(100, 2), (100, 2), (10, 1), (10, 1)])
+
     def test_appends_are_safe_from_concurrent_writers(self):
         # Eight workers checkpoint as they finish; no line may be interleaved.
         lock = threading.Lock()

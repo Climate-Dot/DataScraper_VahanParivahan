@@ -590,6 +590,33 @@ def office_is_complete(entry: tuple[list[dict], list[Gap]]) -> bool:
     return not gaps
 
 
+def is_better_result(
+    new_rows: list[dict],
+    new_gaps: list[Gap],
+    previous: tuple[list[dict], list[Gap]] | None,
+) -> bool:
+    """Whether a fresh attempt should replace what the checkpoint holds.
+
+    Fewer gaps wins. On an equal gap count, more rows wins — and that tie-break
+    is the whole point of this function rather than a bare `<=`.
+
+    Two attempts can gap the same *number* of calls while gapping *different*
+    ones, because availability is per-office and rotates. Replacing on `<=`
+    therefore let a retry that happened to lose bigger classes overwrite a
+    better earlier pull: observed 2026-09-24, a sweep over already-covered
+    offices moved the dataset from 16,931 rows to 16,578 while gaps barely
+    changed. While sweeps were still extending coverage the losses were masked
+    by new offices; once coverage completed, every sweep was re-attempts and the
+    loss would have dominated.
+    """
+    if previous is None:
+        return True
+    previous_rows, previous_gaps = previous
+    if len(new_gaps) != len(previous_gaps):
+        return len(new_gaps) < len(previous_gaps)
+    return len(new_rows) > len(previous_rows)
+
+
 def order_pending(targets, progress, done, label_of) -> list[dict]:
     """Offices to attempt, never-visited ones first.
 
@@ -1057,16 +1084,15 @@ def main() -> None:
 
     # Merge this run's results over whatever the checkpoint already held. An
     # office skipped as complete keeps its stored rows; an office re-attempted
-    # keeps whichever attempt had fewer gaps, so a bad window can never shrink
-    # what a good one already collected.
+    # keeps the better of the two (see is_better_result), so a bad window can
+    # never shrink what a good one already collected.
     for index, rows, rto_gaps in results:
         if rows is None:
             # Never attempted (run already aborted) or crashed outright. Leave
             # whatever the checkpoint held so the office is retried next time.
             continue
         label = label_of(pending[index])
-        previous = progress.get(label)
-        if previous is None or len(rto_gaps) <= len(previous[1]):
+        if is_better_result(rows, rto_gaps, progress.get(label)):
             progress[label] = (rows, rto_gaps)
 
     by_label = {label_of(rto): rto for rto in targets}
