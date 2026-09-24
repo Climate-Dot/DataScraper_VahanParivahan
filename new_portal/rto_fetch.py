@@ -133,11 +133,22 @@ DEFAULT_WORKERS = 8
 # 133 which had already collected 5,072 rows from 71 healthy offices.
 #
 # A rolling failure rate distinguishes them: a dead portal fails ~everything, a
-# degraded one fails a fraction. 37% failure keeps going; 26 dead offices in a
-# row does not.
-ABORT_WINDOW = 50
-ABORT_MIN_SAMPLE = 25
-ABORT_FAILURE_RATE = 0.9
+# degraded one fails a fraction.
+#
+# The window is wide on purpose. Availability here is per-office and rotates
+# over minutes, and the sweep visits offices grouped by state, so an entire
+# region can be unavailable while the rest of the country serves normally —
+# measured 2026-09-24: HP/HR offices failing 29 of 32 while Mumbai, Lucknow and
+# Chennai answered every request. A 50-office window treated that as a dead
+# portal and abandoned a sweep whose later regions were fine.
+#
+# 200 offices at 95% is narrow enough that only a portal-wide outage trips it,
+# and wide enough that no single region can. The cost of being wrong is small:
+# failing offices are fast, so 200 of them is around two minutes of light load,
+# and an abort no longer loses anything now that runs resume.
+ABORT_WINDOW = 200
+ABORT_MIN_SAMPLE = 100
+ABORT_FAILURE_RATE = 0.95
 
 # How long the recovery pass waits before retrying gapped offices. The portal's
 # intermittent 500s clear over minutes, not seconds (measured 2026-09-23), so
