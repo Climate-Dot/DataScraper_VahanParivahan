@@ -62,6 +62,11 @@ class NewPortalRtoIngest(BaseSqlServerIngestor):
                 "status_scope",
             ],
             missing_file_hint="new_portal.rto_fetch",
+            # A nationwide year is ~144k rows across 50 columns. On the default
+            # executemany path that is 4.6 hours of per-row round trips against
+            # an idle database; multi-row statements bring it to ~33 minutes.
+            # See etl_ingestion.MAX_STATEMENT_PARAMETERS for the measurements.
+            use_multirow_insert=True,
         )
 
     def ingest_year(self, year: int) -> int:
