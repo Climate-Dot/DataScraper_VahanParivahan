@@ -1,9 +1,11 @@
 import csv
 import json
+import threading
 import re
 import tempfile
 import unittest
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from unittest import mock
 
 from new_portal import client, rto_fetch, schema
@@ -628,8 +630,181 @@ class RecoverGapsTests(unittest.TestCase):
                 client_factory=factory,
                 sleep_func=lambda _: None,
                 settle_seconds=0,
+                workers=1,
             )
         factory.assert_called_once()
+
+    def test_it_recovers_offices_in_parallel(self):
+        """Sequential recovery was slower than the pass it patched up.
+
+        At 83% of offices carrying a gap, one-at-a-time recovery over ~1,391
+        offices is roughly 8 hours — longer than the main pass. It must fan out.
+        """
+        targets = {
+            f"MZ/{i} OFFICE {i}": {
+                "state": "Mizoram", "state_code": "MZ", "new_rto_code": str(i),
+                "new_rto_name": f"OFFICE {i}", "legacy_rto_code": f"MZ{i}",
+                "legacy_rto_name": f"OFFICE {i}", "link_status": "linked",
+            }
+            for i in range(1, 9)
+        }
+        gaps = [
+            rto_fetch.Gap(
+                state_code="MZ", rto_code=i, rto_name=f"OFFICE {i}",
+                status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_MONTHLY,
+                vehicle_class="Motor Car", fuel_label="DIESEL",
+            )
+            for i in range(1, 9)
+        ]
+        # A barrier makes this deterministic: it only releases once `workers`
+        # calls are in flight at the same moment. Counting distinct thread names
+        # would pass spuriously, since a fast mock lets one thread drain the
+        # whole queue before the others are scheduled.
+        barrier = threading.Barrier(4, timeout=5)
+
+        def wait_for_peers(*a, **k):
+            barrier.wait()
+            return [{"total": 1}], []
+
+        with mock.patch.object(rto_fetch, "fetch_rto_year", side_effect=wait_for_peers):
+            recovered, remaining = rto_fetch.recover_gaps(
+                gaps, targets, 2026, {},
+                client_factory=mock.Mock(),
+                sleep_func=lambda _: None,
+                settle_seconds=0,
+                workers=4,
+            )
+
+        self.assertEqual(len(recovered), 8)
+        self.assertEqual(remaining, [])
+
+    def test_each_worker_gets_its_own_session(self):
+        # The portal serializes concurrent requests sharing a JSESSIONID, so
+        # sharing one client across workers would erase the parallelism.
+        targets = {
+            f"MZ/{i} OFFICE {i}": {
+                "state": "Mizoram", "state_code": "MZ", "new_rto_code": str(i),
+                "new_rto_name": f"OFFICE {i}", "legacy_rto_code": f"MZ{i}",
+                "legacy_rto_name": f"OFFICE {i}", "link_status": "linked",
+            }
+            for i in range(1, 5)
+        }
+        gaps = [
+            rto_fetch.Gap(
+                state_code="MZ", rto_code=i, rto_name=f"OFFICE {i}",
+                status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_MONTHLY,
+            )
+            for i in range(1, 5)
+        ]
+        factory = mock.Mock(side_effect=lambda: mock.Mock())
+        seen = set()
+
+        def record_client(portal, *a, **k):
+            seen.add(id(portal))
+            return [{"total": 1}], []
+
+        with mock.patch.object(rto_fetch, "fetch_rto_year", side_effect=record_client):
+            rto_fetch.recover_gaps(
+                gaps, targets, 2026, {},
+                client_factory=factory,
+                sleep_func=lambda _: None,
+                settle_seconds=0,
+                workers=4,
+            )
+
+        # One client per thread that actually ran, never one shared by all.
+        self.assertEqual(factory.call_count, len(seen))
+
+
+class ProgressCheckpointTests(unittest.TestCase):
+    """Resume across portal windows.
+
+    The portal swings between serving and dead within minutes — three runs on
+    2026-09-23 reached 26, 133 and 320 offices before conditions collapsed, and
+    each abort discarded everything. Checkpointing turns an abort into a resume
+    point so the dataset accumulates across short good windows.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "progress.jsonl"
+        self.gap = rto_fetch.Gap(
+            state_code="MZ", rto_code=1, rto_name="AIZAWL DTO",
+            status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_MONTHLY,
+            vehicle_class="Motor Car", fuel_label="DIESEL", error="HTTP 500",
+        )
+
+    def test_path_sits_beside_the_csv(self):
+        csv_path = rto_fetch.build_output_path(2026, Path(self.tmp.name))
+        progress = rto_fetch.build_progress_path(2026, Path(self.tmp.name))
+        self.assertEqual(progress.parent, csv_path.parent)
+        self.assertTrue(progress.name.endswith("__progress.jsonl"))
+
+    def test_a_missing_checkpoint_is_simply_empty(self):
+        self.assertEqual(rto_fetch.load_progress(self.path), {})
+
+    def test_round_trips_rows_and_gaps(self):
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", [{"total": 5}], [self.gap])
+        loaded = rto_fetch.load_progress(self.path)
+        rows, gaps = loaded["MZ/1 AIZAWL DTO"]
+        self.assertEqual(rows, [{"total": 5}])
+        self.assertEqual(gaps, [self.gap])
+
+    def test_a_later_entry_supersedes_an_earlier_one(self):
+        # Re-attempting an office appends; the newest result must win.
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", [], [self.gap])
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", [{"total": 9}], [])
+        rows, gaps = rto_fetch.load_progress(self.path)["MZ/1 AIZAWL DTO"]
+        self.assertEqual(rows, [{"total": 9}])
+        self.assertEqual(gaps, [])
+
+    def test_a_truncated_final_line_does_not_lose_the_file(self):
+        # A killed run can leave a half-written line; that costs one re-fetch,
+        # not the whole checkpoint.
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", [{"total": 5}], [])
+        with self.path.open("a", encoding="utf-8") as f:
+            f.write('{"rto_label": "MZ/2 LUNGLEI", "rows": [{"tot')
+        with self.assertLogs(rto_fetch.logger, level="WARNING"):
+            loaded = rto_fetch.load_progress(self.path)
+        self.assertEqual(list(loaded), ["MZ/1 AIZAWL DTO"])
+
+    def test_completeness_means_no_gaps_not_no_rows(self):
+        # A genuinely empty office is finished; a gapped one is not.
+        self.assertTrue(rto_fetch.office_is_complete(([], [])))
+        self.assertTrue(rto_fetch.office_is_complete(([{"total": 1}], [])))
+        self.assertFalse(rto_fetch.office_is_complete(([], [self.gap])))
+        self.assertFalse(rto_fetch.office_is_complete(([{"total": 1}], [self.gap])))
+
+    def test_appends_are_safe_from_concurrent_writers(self):
+        # Eight workers checkpoint as they finish; no line may be interleaved.
+        lock = threading.Lock()
+
+        def write(i):
+            with lock:
+                rto_fetch.append_progress(self.path, f"MZ/{i} OFFICE", [{"total": i}], [])
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            list(pool.map(write, range(40)))
+
+        loaded = rto_fetch.load_progress(self.path)
+        self.assertEqual(len(loaded), 40)
+        self.assertEqual(loaded["MZ/7 OFFICE"][0], [{"total": 7}])
+
+
+class RetryPolicyTests(unittest.TestCase):
+    def test_in_line_retries_default_to_one_attempt(self):
+        """Fail fast in the main pass; the recovery pass does the real retrying.
+
+        3 attempts with 5s linear backoff cost ~15s per failed call and moved a
+        Mizoram sweep from 13 failures to only 11 — ~42% of nationwide
+        wall-clock for almost nothing.
+        """
+        self.assertEqual(rto_fetch.DEFAULT_RETRY_ATTEMPTS, 1)
+
+    def test_the_client_still_defaults_to_patient_retries(self):
+        # Only the bulk fetch opts out; other callers keep the safer default.
+        self.assertGreater(client.DEFAULT_RETRY_ATTEMPTS, 1)
 
 
 class AbortThresholdTests(unittest.TestCase):
@@ -640,10 +815,11 @@ class AbortThresholdTests(unittest.TestCase):
     401 requests against an already-struggling service.
     """
 
-    def test_abort_threshold_is_set_and_modest(self):
-        self.assertGreater(rto_fetch.ABORT_AFTER_CONSECUTIVE_FAILURES, 0)
+    def test_abort_window_is_set_and_modest(self):
+        self.assertGreater(rto_fetch.ABORT_MIN_SAMPLE, 0)
+        self.assertLessEqual(rto_fetch.ABORT_MIN_SAMPLE, rto_fetch.ABORT_WINDOW)
         self.assertLess(
-            rto_fetch.ABORT_AFTER_CONSECUTIVE_FAILURES,
+            rto_fetch.ABORT_WINDOW,
             len(rto_fetch.load_rto_targets()),
             "aborting must trip well before the full RTO list is exhausted",
         )
@@ -655,17 +831,78 @@ class AbortThresholdTests(unittest.TestCase):
         self.assertIn("thread_state.client = client", source)
         self.assertIn("preflight_client", source)
 
-    def test_gap_isolation_does_not_disable_the_breaker(self):
-        """An office that yields no rows must still count as a failure.
 
-        Gap isolation turned every office into a "success" as long as it
-        returned, which silently disabled the breaker on a fully degraded
-        portal — the case it exists for. A zero-row office is indistinguishable
-        from the old hard-failure case, so it has to count.
-        """
-        source = (Path(rto_fetch.__file__)).read_text()
-        self.assertIn("if rows:\n            record_success()", source)
-        self.assertIn("consecutive offices yielded no rows", source)
+class ShouldAbortTests(unittest.TestCase):
+    """A dead portal must stop the run; a merely bad one must not.
+
+    "N consecutive failures" could not tell those apart. Failures here are
+    per-office and clustered, so a small state whose offices all fail together
+    produced a long consecutive run while the portal was still serving most of
+    the country — it killed a run at office 133 that already held 5,072 rows
+    from 71 healthy offices.
+    """
+
+    def test_a_dead_portal_aborts(self):
+        self.assertTrue(rto_fetch.should_abort([True] * 50))
+
+    def test_the_real_degraded_run_would_not_have_aborted(self):
+        # 37% failure, the rate that killed the previous run. 71 offices were
+        # returning real rows at the time.
+        window = [True] * 19 + [False] * 31
+        self.assertFalse(rto_fetch.should_abort(window))
+
+    def test_a_clustered_run_of_failures_does_not_abort_on_its_own(self):
+        # 25 consecutive failures inside a window that is otherwise healthy —
+        # exactly the Arunachal Pradesh cluster.
+        window = [False] * 25 + [True] * 25
+        self.assertFalse(rto_fetch.should_abort(window))
+
+    def test_threshold_is_at_the_boundary(self):
+        self.assertTrue(rto_fetch.should_abort([True] * 45 + [False] * 5))
+        self.assertFalse(rto_fetch.should_abort([True] * 44 + [False] * 6))
+
+    def test_an_empty_window_never_aborts(self):
+        self.assertFalse(rto_fetch.should_abort([]))
+
+    def test_the_breaker_needs_a_minimum_sample(self):
+        # Otherwise the first few offices, which are Andaman islands, could
+        # abort a healthy run before it reaches the mainland.
+        self.assertGreaterEqual(rto_fetch.ABORT_MIN_SAMPLE, 25)
+
+class OfficeFailureClassificationTests(unittest.TestCase):
+    """What counts toward the circuit breaker.
+
+    Two regressions live here. Gap isolation first made every office that
+    *returned* a success, which disabled the breaker on a degraded portal — the
+    case it exists for. Over-correcting to "no rows = failure" then counted
+    genuinely empty offices, which would abort a healthy run: the first 13
+    offices in the national list are Andaman islands with no 2026 data.
+    """
+
+    GAP = rto_fetch.Gap(
+        state_code="MZ", rto_code=1, rto_name="AIZAWL DTO",
+        status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_CLASS_DISTRIBUTION,
+    )
+
+    def test_rows_are_a_success(self):
+        self.assertFalse(rto_fetch.office_counts_as_failure([{"total": 1}], []))
+
+    def test_rows_with_gaps_are_still_a_success(self):
+        # Partial data means the office answered; the recovery pass owns gaps.
+        self.assertFalse(rto_fetch.office_counts_as_failure([{"total": 1}], [self.GAP]))
+
+    def test_a_genuinely_empty_office_is_not_a_failure(self):
+        # No rows AND no gaps = the office reported nothing, and nothing failed.
+        self.assertFalse(rto_fetch.office_counts_as_failure([], []))
+
+    def test_no_rows_with_gaps_is_a_failure(self):
+        # Every call failed — indistinguishable from a hard failure.
+        self.assertTrue(rto_fetch.office_counts_as_failure([], [self.GAP]))
+
+    def test_twenty_five_empty_offices_would_not_trip_the_breaker(self):
+        # The Andaman case, end to end.
+        empties = [rto_fetch.office_counts_as_failure([], []) for _ in range(25)]
+        self.assertEqual(sum(empties), 0)
 
 
 if __name__ == "__main__":
