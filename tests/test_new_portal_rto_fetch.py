@@ -776,6 +776,29 @@ class ProgressCheckpointTests(unittest.TestCase):
         self.assertFalse(rto_fetch.office_is_complete(([], [self.gap])))
         self.assertFalse(rto_fetch.office_is_complete(([{"total": 1}], [self.gap])))
 
+    def test_an_unattempted_office_is_not_recorded_as_complete(self):
+        """The abort path must not mark 1,586 untouched offices as done.
+
+        `fetch_one` returns None for an office it skipped (run already aborted)
+        or one that crashed. Returning ([], []) instead made those
+        indistinguishable from a genuinely empty office, and the run reported
+        "1617 of 1676 complete" when the real figure was 31.
+        """
+        results = [
+            (0, [{"total": 5}], []),   # fetched
+            (1, None, None),           # skipped after the abort
+            (2, None, None),           # crashed
+        ]
+        progress = {}
+        for index, rows, gaps in results:
+            if rows is None:
+                continue
+            progress[f"office-{index}"] = (rows, gaps)
+
+        self.assertEqual(list(progress), ["office-0"])
+        complete = sum(1 for v in progress.values() if rto_fetch.office_is_complete(v))
+        self.assertEqual(complete, 1)
+
     def test_appends_are_safe_from_concurrent_writers(self):
         # Eight workers checkpoint as they finish; no line may be interleaved.
         lock = threading.Lock()

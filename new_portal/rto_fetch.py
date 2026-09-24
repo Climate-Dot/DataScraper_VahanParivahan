@@ -949,7 +949,10 @@ def main() -> None:
         index, rto = indexed
         label = f"{rto['state_code']}/{rto['new_rto_code']} {rto['new_rto_name']}"
         if aborted.is_set():
-            return index, [], []
+            # None, not ([], []) — an office we never attempted must not look
+            # like one that reported nothing, or the merge below records it as
+            # complete and a later resume skips it entirely.
+            return index, None, None
         try:
             rows, gaps = fetch_rto_year(
                 portal_for_thread(),
@@ -971,7 +974,9 @@ def main() -> None:
                     "rather than continuing to hammer the portal.",
                     ABORT_FAILURE_RATE * 100, ABORT_WINDOW,
                 )
-            return index, [], []
+            # None for the same reason as the abort path: an office that blew up
+            # is not an office that reported nothing, and must be re-attempted.
+            return index, None, None
 
         # Partial success is success for the circuit breaker: the office
         # answered, so the portal is not down, and the recovery pass owns the
@@ -1020,6 +1025,10 @@ def main() -> None:
     # keeps whichever attempt had fewer gaps, so a bad window can never shrink
     # what a good one already collected.
     for index, rows, rto_gaps in results:
+        if rows is None:
+            # Never attempted (run already aborted) or crashed outright. Leave
+            # whatever the checkpoint held so the office is retried next time.
+            continue
         label = label_of(pending[index])
         previous = progress.get(label)
         if previous is None or len(rto_gaps) <= len(previous[1]):
