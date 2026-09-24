@@ -537,7 +537,13 @@ def build_progress_path(year: int, output_dir: Path | None = None) -> Path:
 def load_progress(path: Path) -> dict[str, tuple[list[dict], list[Gap]]]:
     """{rto_label: (rows, gaps)} from a previous run's checkpoint.
 
-    Later lines win, so re-attempting an office simply appends a better result.
+    The BEST entry per office wins, not the last. The file is append-only, so
+    every attempt an office ever had is still on disk — ranking on load makes
+    the checkpoint self-healing: a bad write can never be the one that counts,
+    whatever order the appends happened in. That property salvaged 5,315 rows
+    on 2026-09-24 after a faulty merge rule had overwritten good pulls with
+    worse ones (14,865 rows by last-wins, 20,180 by best-wins).
+
     A truncated final line — the run was killed mid-write — is skipped rather
     than aborting the load; losing one office's checkpoint costs one re-fetch.
     """
@@ -552,10 +558,13 @@ def load_progress(path: Path) -> dict[str, tuple[list[dict], list[Gap]]]:
                 continue
             try:
                 entry = json.loads(line)
-                progress[entry["rto_label"]] = (
+                candidate = (
                     entry["rows"],
                     [Gap(**g) for g in entry["gaps"]],
                 )
+                label = entry["rto_label"]
+                if is_better_result(*candidate, progress.get(label)):
+                    progress[label] = candidate
             except (json.JSONDecodeError, KeyError, TypeError):
                 logger.warning(
                     "Skipping unreadable checkpoint line %s in %s; that office "
@@ -597,24 +606,43 @@ def is_better_result(
 ) -> bool:
     """Whether a fresh attempt should replace what the checkpoint holds.
 
-    Fewer gaps wins. On an equal gap count, more rows wins — and that tie-break
-    is the whole point of this function rather than a bare `<=`.
+    ## Why gap *count* is the wrong thing to rank on
 
-    Two attempts can gap the same *number* of calls while gapping *different*
-    ones, because availability is per-office and rotates. Replacing on `<=`
-    therefore let a retry that happened to lose bigger classes overwrite a
-    better earlier pull: observed 2026-09-24, a sweep over already-covered
-    offices moved the dataset from 16,931 rows to 16,578 while gaps barely
-    changed. While sweeps were still extending coverage the losses were masked
-    by new offices; once coverage completed, every sweep was re-attempts and the
-    loss would have dominated.
+    Gaps have wildly different blast radius, which the Gap docstring spells out
+    and an earlier version of this function ignored. A `class_distribution`
+    failure produces exactly ONE gap and loses the entire office; a partially
+    served office produces MANY gaps and keeps most of its data. Ranking by
+    fewest gaps therefore prefers the catastrophic failure:
+
+        attempt A: 100 rows, 5 monthly gaps        <- clearly better
+        attempt B:   0 rows, 1 class_distribution gap
+
+    Observed 2026-09-24: ranking on gap count moved the dataset from 16,578 rows
+    to 14,865 while the gap count "improved" from 4,308 to 2,920. The metric got
+    better as the data got worse.
+
+    ## The rule
+
+    1. A gap-free result is authoritative — every question was asked and
+       answered — so it beats any gapped result, and a gap-free office is done.
+    2. Otherwise prefer more rows: rows are the deliverable, and a gap only
+       matters relative to the data actually obtained.
+    3. Equal rows: prefer fewer gaps.
     """
     if previous is None:
         return True
     previous_rows, previous_gaps = previous
-    if len(new_gaps) != len(previous_gaps):
-        return len(new_gaps) < len(previous_gaps)
-    return len(new_rows) > len(previous_rows)
+
+    if not new_gaps or not previous_gaps:
+        # At least one side is authoritative. A gap-free result wins; if both
+        # are gap-free, take the fuller one.
+        if bool(new_gaps) != bool(previous_gaps):
+            return not new_gaps
+        return len(new_rows) > len(previous_rows)
+
+    if len(new_rows) != len(previous_rows):
+        return len(new_rows) > len(previous_rows)
+    return len(new_gaps) < len(previous_gaps)
 
 
 def order_pending(targets, progress, done, label_of) -> list[dict]:

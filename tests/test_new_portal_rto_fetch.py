@@ -850,18 +850,32 @@ class ProgressCheckpointTests(unittest.TestCase):
         better = [{"r": 1}, {"r": 2}]
         self.assertTrue(rto_fetch.is_better_result(better, [self.gap], previous))
 
-    def test_fewer_gaps_always_wins(self):
-        previous = ([{"r": i} for i in range(100)], [self.gap, self.gap])
-        # Fewer rows but fewer gaps: still the better result, because the gap
-        # is the thing that makes a row count untrustworthy.
-        self.assertTrue(rto_fetch.is_better_result([{"r": 1}], [self.gap], previous))
+    def test_one_catastrophic_gap_does_not_beat_many_small_ones(self):
+        """Gap *count* is the wrong metric: blast radius differs hugely.
 
-    def test_more_gaps_always_loses(self):
-        previous = ([], [self.gap])
-        self.assertFalse(
-            rto_fetch.is_better_result([{"r": i} for i in range(99)],
-                                       [self.gap, self.gap], previous)
-        )
+        A class_distribution failure is ONE gap and loses the whole office; a
+        partly served office is MANY gaps and keeps most of its data. Ranking on
+        fewest gaps preferred the catastrophe and moved a real dataset from
+        16,578 rows to 14,865 while the gap count "improved" 4,308 -> 2,920.
+        """
+        total_loss = ([], [rto_fetch.Gap(
+            state_code="MZ", rto_code=1, rto_name="AIZAWL DTO",
+            status_scope="ALL_STATUSES", stage=rto_fetch.STAGE_CLASS_DISTRIBUTION,
+        )])
+        mostly_fine = ([{"r": i} for i in range(100)], [self.gap] * 5)
+        self.assertTrue(rto_fetch.is_better_result(*mostly_fine, total_loss))
+        self.assertFalse(rto_fetch.is_better_result(*total_loss, mostly_fine))
+
+    def test_a_gap_free_result_is_authoritative(self):
+        # Every question asked and answered beats a gapped pull, even a fuller
+        # one — and a gap-free office is finished.
+        gapped = ([{"r": i} for i in range(100)], [self.gap])
+        clean = ([{"r": i} for i in range(90)], [])
+        self.assertTrue(rto_fetch.is_better_result(*clean, gapped))
+        self.assertFalse(rto_fetch.is_better_result(*gapped, clean))
+
+    def test_a_genuinely_empty_office_beats_a_gapped_one(self):
+        self.assertTrue(rto_fetch.is_better_result([], [], ([], [self.gap])))
 
     def test_anything_beats_nothing_recorded(self):
         self.assertTrue(rto_fetch.is_better_result([], [self.gap], None))
@@ -873,16 +887,30 @@ class ProgressCheckpointTests(unittest.TestCase):
         attempts = [
             ([{"r": i} for i in range(100)], [self.gap, self.gap]),
             ([{"r": i} for i in range(40)], [self.gap, self.gap]),
-            ([{"r": i} for i in range(10)], [self.gap]),
-            ([{"r": i} for i in range(5)], [self.gap, self.gap, self.gap]),
+            ([], [self.gap]),                                    # catastrophic
+            ([{"r": i} for i in range(5)], [self.gap] * 3),
+            ([{"r": i} for i in range(120)], [self.gap]),
         ]
         seen = []
         for rows, gaps in attempts:
             if rto_fetch.is_better_result(rows, gaps, best):
                 best = (rows, gaps)
-            seen.append((len(best[0]), len(best[1])))
-        # Gaps monotonically non-increasing; rows never drop while gaps are equal.
-        self.assertEqual(seen, [(100, 2), (100, 2), (10, 1), (10, 1)])
+            seen.append(len(best[0]))
+        self.assertEqual(seen, [100, 100, 100, 100, 120])
+        self.assertEqual(seen, sorted(seen), "held row count must never fall")
+
+    def test_load_keeps_the_best_entry_not_the_last(self):
+        """Append-only plus rank-on-load makes the checkpoint self-healing.
+
+        A bad write can never be the one that counts, whatever order the
+        appends happened in. This recovered 5,315 rows after a faulty merge
+        rule had overwritten good pulls.
+        """
+        good = [{"r": i} for i in range(50)]
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", good, [self.gap])
+        rto_fetch.append_progress(self.path, "MZ/1 AIZAWL DTO", [], [self.gap])
+        rows, _ = rto_fetch.load_progress(self.path)["MZ/1 AIZAWL DTO"]
+        self.assertEqual(len(rows), 50)
 
     def test_appends_are_safe_from_concurrent_writers(self):
         # Eight workers checkpoint as they finish; no line may be interleaved.
