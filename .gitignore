@@ -20,4 +20,5 @@ tests/fixtures/*.xlsx
 # CSV is its blob snapshot (new_portal/rto_blob_snapshot.py).
 new_portal_rto_ev_data_*.csv
 new_portal_rto_ev_data_*__gaps.json
+new_portal_rto_ev_data_*__progress.jsonl
 run_logs/
