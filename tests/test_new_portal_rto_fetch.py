@@ -904,7 +904,7 @@ class ShouldAbortTests(unittest.TestCase):
         self.assertTrue(rto_fetch.should_abort([True] * 50))
 
     def test_the_real_degraded_run_would_not_have_aborted(self):
-        # 37% failure, the rate that killed the previous run. 71 offices were
+        # 37% failure, the rate that killed an early run. 71 offices were
         # returning real rows at the time.
         window = [True] * 19 + [False] * 31
         self.assertFalse(rto_fetch.should_abort(window))
@@ -915,9 +915,20 @@ class ShouldAbortTests(unittest.TestCase):
         window = [False] * 25 + [True] * 25
         self.assertFalse(rto_fetch.should_abort(window))
 
+    def test_an_entire_bad_region_does_not_abort_the_sweep(self):
+        """The HP/HR case: 29 of 32 offices failing inside a healthy sweep.
+
+        Offices are visited grouped by state and availability rotates per
+        office, so a whole region can be down while the rest of the country
+        serves normally. A narrow window read that as a dead portal and
+        abandoned a sweep whose later regions were fine.
+        """
+        window = [False] * 168 + [True] * 29 + [False] * 3
+        self.assertFalse(rto_fetch.should_abort(window))
+
     def test_threshold_is_at_the_boundary(self):
-        self.assertTrue(rto_fetch.should_abort([True] * 45 + [False] * 5))
-        self.assertFalse(rto_fetch.should_abort([True] * 44 + [False] * 6))
+        self.assertTrue(rto_fetch.should_abort([True] * 190 + [False] * 10))
+        self.assertFalse(rto_fetch.should_abort([True] * 189 + [False] * 11))
 
     def test_an_empty_window_never_aborts(self):
         self.assertFalse(rto_fetch.should_abort([]))
