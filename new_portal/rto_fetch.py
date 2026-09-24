@@ -579,6 +579,29 @@ def office_is_complete(entry: tuple[list[dict], list[Gap]]) -> bool:
     return not gaps
 
 
+def order_pending(targets, progress, done, label_of) -> list[dict]:
+    """Offices to attempt, never-visited ones first.
+
+    Ordering matters more than it looks. `pending` was simply "everything not
+    complete", in the crosswalk's own order, so every attempt re-walked the same
+    early gapped offices and spent its healthy window there. Measured across two
+    attempts on 2026-09-23: the second attempted 385 offices and only 21 of them
+    were new, leaving offices past ~450 untouched no matter how many attempts
+    ran.
+
+    Visiting unexplored offices first means each window extends coverage, and
+    gapped offices are retried with whatever time is left. Both still get
+    attempted in one pass; only the priority differs.
+    """
+    unvisited = [rto for rto in targets if label_of(rto) not in progress]
+    gapped = [
+        rto
+        for rto in targets
+        if label_of(rto) in progress and label_of(rto) not in done
+    ]
+    return unvisited + gapped
+
+
 def build_gap_manifest_path(year: int, output_dir: Path | None = None) -> Path:
     csv_path = build_output_path(year, output_dir)
     return csv_path.with_name(f"{csv_path.stem}__gaps.json")
@@ -878,12 +901,13 @@ def main() -> None:
     done = {
         label for label, entry in progress.items() if office_is_complete(entry)
     }
-    pending = [rto for rto in targets if label_of(rto) not in done]
+    pending = order_pending(targets, progress, done, label_of)
     if progress:
+        never_tried = sum(1 for rto in targets if label_of(rto) not in progress)
         logger.info(
-            "Resuming from %s: %s office(s) already complete, %s to attempt. "
-            "Pass --refresh to start clean.",
-            progress_path, len(done), len(pending),
+            "Resuming from %s: %s complete, %s never attempted, %s gapped. "
+            "Unvisited offices go first. Pass --refresh to start clean.",
+            progress_path, len(done), never_tried, len(pending) - never_tried,
         )
 
     # One session per worker thread; see DEFAULT_WORKERS above for why sharing a
