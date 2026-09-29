@@ -23,6 +23,7 @@ UNIT_TEST_MODULES=(
     tests.test_rto_crosswalk_builder
     tests.test_new_portal_rto_fetch
     tests.test_new_portal_rto_blob_snapshot
+    tests.test_new_portal_rto_bulk_ingest
 )
 
 should_run_dbt_parse() {
