@@ -73,13 +73,24 @@ for YEAR in $YEARS; do
     continue
   fi
 
-  log "$YEAR: ingesting $rows rows"
-  if ./venv/bin/python -u -m new_portal.rto_ingest --year "$YEAR" \
+  # Load by having the server read the snapshot out of blob storage: ~1m40s for
+  # a year against ~36 minutes pushing the same rows up as INSERTs. Falls back
+  # to the row-by-row path if that fails for any reason — an expired SAS or a
+  # permissions change should cost time, not a year of data.
+  log "$YEAR: ingesting $rows rows (bulk)"
+  if ./venv/bin/python -u -m new_portal.rto_bulk_ingest --year "$YEAR" \
        > "run_logs/ingest_${YEAR}.log" 2>&1; then
     loaded=$(already_loaded "$YEAR")
     log "$YEAR: DONE — $loaded rows in fact_ev_data_by_rto_v2"
   else
-    log "$YEAR: INGEST FAILED — see run_logs/ingest_${YEAR}.log"
+    log "$YEAR: bulk ingest failed, falling back to the row-by-row path"
+    if ./venv/bin/python -u -m new_portal.rto_ingest --year "$YEAR" \
+         >> "run_logs/ingest_${YEAR}.log" 2>&1; then
+      loaded=$(already_loaded "$YEAR")
+      log "$YEAR: DONE via fallback — $loaded rows in fact_ev_data_by_rto_v2"
+    else
+      log "$YEAR: INGEST FAILED both ways — see run_logs/ingest_${YEAR}.log"
+    fi
   fi
 done
 
