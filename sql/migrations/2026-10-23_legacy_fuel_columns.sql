@@ -1,0 +1,175 @@
+-- ===========================================================================
+-- Legacy Vahan fuel headers: add `ethanol` and `petrol_ethanol`, then backfill
+-- RTO history.
+--
+-- WRITTEN AFTER THE FACT. The work was executed on 2026-10-23 by the scripts in
+-- /tmp/ffwork on the production VM (rebuild, then a month-by-month UPDATE), not
+-- by running this file. It is recorded here because the repo requires every
+-- risky migration to carry its backup and rollback notes. Re-running it is NOT
+-- idempotent; read it as the record of what happened.
+--
+-- WHY
+-- Vahan renamed two fuel-column headers effective May 2026:
+--     "ETHANOL"        -> "ETHANOL(E100)"
+--     "PETROL/ETHANOL" -> "PETROL(E20)"
+-- Only the new spellings were in COMMON_FUEL_COLUMN_RENAME_MAP, so for reports
+-- dated April 2026 and earlier those two columns were dropped at preprocessing
+-- and never stored. Measured shortfall of SUM(fuel columns) against SUM(total):
+-- ~0% through 2022 (the columns existed but were empty), 1.3% in 2023, 2.0% in
+-- 2024, rising with E20 adoption to ~39% by Dec 2025 and ~40% in early 2026.
+-- A 29,182-file header sweep (every office in one full month per year,
+-- 2013-2026) confirmed these are the only two unmapped fuel headers in the
+-- entire corpus.
+--
+-- The legacy headers were given their OWN columns rather than being folded into
+-- ethanol_e100/petrol_e20: treating them as the same fuel is an inference the
+-- source does not support, and the 2026-06-21 repair migration explicitly
+-- reversed an earlier attempt to carry legacy values into the newer semantic
+-- fields. Whether to combine them is a business decision.
+-- ===========================================================================
+
+-- ---------------------------------------------------------------------------
+-- STEP 1 - rebuild all six raw/staging tables to add the two columns.
+--
+-- A rebuild rather than ALTER ... ADD, so the new columns sit in the derived
+-- order [dimensions..., *COMMON_FUEL_COLUMN_RENAME_MAP.values(), inserted_at]
+-- and the physical layout stays identical to sources.yml and the map.
+-- ALTER would have appended after inserted_at instead. Measured cost of the
+-- rebuild: ~10,900 rows/s server-side, about 6 minutes for all six tables.
+--
+-- Applied to, in this order (smallest first):
+--     staging_fact_ev_data_by_state                 (929 rows,      47 -> 49 cols)
+--     staging_fact_oem_data_by_state_and_category   (9,101 rows,    48 -> 50 cols)
+--     staging_fact_ev_data_by_rto                   (16,493 rows,   49 -> 51 cols)
+--     fact_ev_data_by_state                         (125,140 rows,  47 -> 49 cols)
+--     fact_oem_data_by_state_and_category           (1,102,265,     48 -> 50 cols)
+--     fact_ev_data_by_rto                           (2,324,451,     49 -> 51 cols)
+--
+-- Each table was done as: CREATE <t>__rebuild with the target column list ->
+-- INSERT the original columns explicitly (so inserted_at is COPIED, never
+-- allowed to fall to its DEFAULT) -> compare a CHECKSUM_AGG fingerprint of
+-- every original column between source and copy -> only on an exact match,
+-- sp_rename the original to <t>_prerebuild_backup_20261023 and the copy into
+-- its place. A fingerprint mismatch dropped the copy and renamed nothing.
+--
+-- Pattern, shown for one table:
+--
+--   CREATE TABLE [dbo].[fact_ev_data_by_rto__rebuild] (
+--       [year] NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       ...
+--       [electric_bov]   NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       [ethanol]        NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,  -- new
+--       [ethanol_e100]   NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       ...
+--       [petrol_e20_lpg] NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       [petrol_ethanol] NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,  -- new
+--       [petrol_hybrid]  NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       ...
+--       [total]       NVARCHAR(MAX) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+--       [inserted_at] DATETIME NULL
+--           CONSTRAINT [DF_fact_ev_data_by_rto_inserted_at] DEFAULT (getdate())
+--   );
+--
+--   INSERT INTO [dbo].[fact_ev_data_by_rto__rebuild] (<every original column>)
+--   SELECT <every original column> FROM [dbo].[fact_ev_data_by_rto];
+--
+--   EXEC sp_rename 'dbo.fact_ev_data_by_rto',
+--                  'fact_ev_data_by_rto_prerebuild_backup_20261023';
+--   EXEC sp_rename 'dbo.fact_ev_data_by_rto__rebuild', 'fact_ev_data_by_rto';
+--
+-- Verified after each table: row count equal, CHECKSUM_AGG identical on every
+-- original column, column order equal to the target, inserted_at still DATETIME
+-- with its (getdate()) default, both new columns 100% NULL, and the distinct set
+-- of inserted_at values identical to the backup (81,664 distinct values on the
+-- RTO table).
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- STEP 2 - backfill the two columns for RTO history from the validated
+-- parallel table fact_ev_data_by_rto_fuelfix.
+--
+-- An UPDATE of two columns rather than a table swap, so inserted_at and every
+-- other column are preserved byte-for-byte, and so the office-rename duplicate
+-- rows that a full reprocess regenerates are ignored rather than inserted (the
+-- INNER JOIN drops them).
+--
+-- Run month by month over the 160 months from 2013-01 to 2026-04 that carry
+-- legacy-column data. Months from 2026-05 were deliberately skipped: they
+-- post-date the rename, so their legacy columns are legitimately NULL.
+-- 2,243,507 rows updated in 54 minutes.
+--
+--   UPDATE p
+--   SET p.ethanol        = f.ethanol,
+--       p.petrol_ethanol = f.petrol_ethanol
+--   FROM dbo.fact_ev_data_by_rto AS p
+--   INNER JOIN dbo.fact_ev_data_by_rto_fuelfix AS f
+--     ON  CONVERT(DATE, f.[date], 103) = CONVERT(DATE, p.[date], 103)
+--     AND f.state         = p.state
+--     AND f.rto_code      = p.rto_code
+--     AND f.rto_name      = p.rto_name
+--     AND f.vehicle_class = p.vehicle_class
+--   WHERE CONVERT(DATE, p.[date], 103) = @month
+--     AND CONVERT(DATE, f.[date], 103) = @month;
+--
+-- Only these two columns are ever SET. inserted_at, ethanol_e100 and petrol_e20
+-- are never touched.
+--
+-- Note on the join key: it has three duplicate groups in production, all AR27
+-- (Keyi Panyor, Arunachal Pradesh) in May 2026, caused by two name casings that
+-- the SQL_Latin1_General_CP1_CI_AS collation treats as equal. The paired rows
+-- hold identical data and May 2026 is outside the backfill range, so they are
+-- unaffected.
+--
+-- Verified after: row count, SUM(total), SUM(electric_bov + pure_ev) and the
+-- count of distinct inserted_at values all unchanged; and SUM(total) minus the
+-- sum of all 38 fuel columns is exactly 0 in every year 2013-2026 (it was up to
+-- 40% before). Recovered 10,222,130 vehicles: petrol_ethanol 10,220,911 plus
+-- ethanol 1,219.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- STEP 3 - curated layer.
+--
+-- The three curated models gained the two columns and
+-- on_schema_change='append_new_columns'. That setting adds a new column to an
+-- existing incremental table but does NOT backfill it, so a one-off full
+-- refresh was required to populate history:
+--
+--   dbt run --full-refresh --select rto_wise_ev_data oem_wise_ev_data state_wise_ev_data
+--
+-- Verified after: each curated row count equals its raw table's, SUM(total) and
+-- SUM(electric_bov + pure_ev) unchanged, the distinct set of inserted_at values
+-- equal to raw, and for rto_wise_ev_data the fuel columns sum exactly to total
+-- in every year.
+--
+-- SCOPE: only RTO history was backfilled. fact_oem_data_by_state_and_category
+-- and fact_ev_data_by_state have the two columns and will populate correctly
+-- from May 2026 onward, but their pre-May-2026 history is NOT reprocessed, so
+-- summing their fuel columns still falls ~20% short of total in recent years.
+-- Reprocessing them is separate, deferred work.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- ROLLBACK
+--
+-- Undo the backfill only (keeps the columns):
+--   UPDATE dbo.fact_ev_data_by_rto SET ethanol = NULL, petrol_ethanol = NULL;
+--   -- then: dbt run --full-refresh --select rto_wise_ev_data
+--
+-- Undo the whole change, per table:
+--   DROP TABLE  dbo.<table>;
+--   EXEC sp_rename 'dbo.<table>_prerebuild_backup_20261023', '<table>';
+--   -- then revert pipeline_constants.py, sources.yml and the curated models,
+--   -- and full-refresh the three models.
+--
+-- Backups to retain until the curated layer has been trusted for a full
+-- monthly cycle:
+--   fact_ev_data_by_rto_prerebuild_backup_20261023
+--   staging_fact_ev_data_by_rto_prerebuild_backup_20261023
+--   fact_oem_data_by_state_and_category_prerebuild_backup_20261023
+--   staging_fact_oem_data_by_state_and_category_prerebuild_backup_20261023
+--   fact_ev_data_by_state_prerebuild_backup_20261023
+--   staging_fact_ev_data_by_state_prerebuild_backup_20261023
+--   fact_ev_data_by_rto_fuelfix                              (the reprocess source)
+--   fact_ev_data_by_rto_fuelfix_renamedup_backup_20261023     (122 office-rename dups)
+-- ---------------------------------------------------------------------------

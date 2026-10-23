@@ -142,8 +142,21 @@ class PipelineSchemaRegressionTests(unittest.TestCase):
             self.skipTest(f"Sample workbook not found at {SAMPLE_WORKBOOK}")
 
         df = pd.read_excel(SAMPLE_WORKBOOK, skiprows=3, index_col=0)
-        expected_headers = set(COMMON_FUEL_COLUMN_RENAME_MAP.keys()) | {"Unnamed: 1"}
-        self.assertEqual(set(df.columns), expected_headers)
+        headers = set(df.columns)
+        known = set(COMMON_FUEL_COLUMN_RENAME_MAP.keys()) | {"Unnamed: 1"}
+        # Vahan leaves the Total header blank, so pandas names it from its
+        # position, and reports exist in 27-, 37- and 39-column widths
+        # (Unnamed: 26 / 36 / 38). Only the current width is in the map;
+        # _normalize_report_total_column recovers the others positionally.
+        unmapped = {h for h in headers - known if not str(h).startswith("Unnamed:")}
+        self.assertEqual(
+            unmapped, set(), f"unmapped Vahan headers: {sorted(unmapped)}"
+        )
+        # A single report carries one header generation, never both. If this
+        # ever fails, the rename map cannot route both onto distinct columns
+        # and etl_preprocessing needs a per-file tie-break.
+        self.assertFalse({"ETHANOL", "ETHANOL(E100)"} <= headers)
+        self.assertFalse({"PETROL/ETHANOL", "PETROL(E20)"} <= headers)
 
     def test_rto_preprocessing_outputs_expected_columns(self):
         module = load_module("rto_level/rto_level_data_pre_processing.py", "rto_pre")

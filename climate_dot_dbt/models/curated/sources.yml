@@ -52,6 +52,8 @@ sources:
             description: "Number of dual diesel LNG vehicles"
           - name: electric_bov
             description: "Number of battery-operated electric vehicles"
+          - name: ethanol
+            description: "Number of vehicles reported under the pre-May-2026 ETHANOL header"
           - name: ethanol_e100
             description: "Number of ethanol E100 vehicles"
           - name: flex_fuel_bio_diesel
@@ -86,6 +88,8 @@ sources:
             description: "Number of petrol E20 hybrid CNG vehicles"
           - name: petrol_e20_lpg
             description: "Number of petrol E20 LPG vehicles"
+          - name: petrol_ethanol
+            description: "Number of vehicles reported under the pre-May-2026 PETROL/ETHANOL header"
           - name: petrol_hybrid
             description: "Number of petrol hybrid vehicles"
           - name: petrol_hybrid_cng
@@ -149,6 +153,8 @@ sources:
             description: "Number of dual diesel LNG vehicles"
           - name: electric_bov
             description: "Number of battery-operated electric vehicles"
+          - name: ethanol
+            description: "Number of vehicles reported under the pre-May-2026 ETHANOL header"
           - name: ethanol_e100
             description: "Number of ethanol E100 vehicles"
           - name: flex_fuel_bio_diesel
@@ -183,6 +189,8 @@ sources:
             description: "Number of petrol E20 hybrid CNG vehicles"
           - name: petrol_e20_lpg
             description: "Number of petrol E20 LPG vehicles"
+          - name: petrol_ethanol
+            description: "Number of vehicles reported under the pre-May-2026 PETROL/ETHANOL header"
           - name: petrol_hybrid
             description: "Number of petrol hybrid vehicles"
           - name: petrol_hybrid_cng
@@ -248,6 +256,8 @@ sources:
             description: "Number of dual diesel LNG vehicles"
           - name: electric_bov
             description: "Number of battery-operated electric vehicles"
+          - name: ethanol
+            description: "Number of vehicles reported under the pre-May-2026 ETHANOL header"
           - name: ethanol_e100
             description: "Number of ethanol E100 vehicles"
           - name: flex_fuel_bio_diesel
@@ -282,6 +292,8 @@ sources:
             description: "Number of petrol E20 hybrid CNG vehicles"
           - name: petrol_e20_lpg
             description: "Number of petrol E20 LPG vehicles"
+          - name: petrol_ethanol
+            description: "Number of vehicles reported under the pre-May-2026 PETROL/ETHANOL header"
           - name: petrol_hybrid
             description: "Number of petrol hybrid vehicles"
           - name: petrol_hybrid_cng

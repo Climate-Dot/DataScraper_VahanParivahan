@@ -1,6 +1,7 @@
 {{
     config(
         materialized='incremental',
+        on_schema_change='append_new_columns',
         unique_key=['date', 'state', 'vehicle_type', 'vehicle_category', 'vehicle_use_type', 'vehicle_class']
     )
 }}
@@ -26,6 +27,7 @@ SELECT
     CAST(REPLACE(dual_diesel_cng, ',', '') AS INT) as dual_diesel_cng,
     CAST(REPLACE(dual_diesel_lng, ',', '') AS INT) as dual_diesel_lng,
     CAST(REPLACE(electric_bov, ',', '') AS INT) as electric_bov,
+    CAST(REPLACE(ethanol, ',', '') AS INT) as ethanol,
     CAST(REPLACE(ethanol_e100, ',', '') AS INT) as ethanol_e100,
     CAST(REPLACE(flex_fuel_bio_diesel, ',', '') AS INT) as flex_fuel_bio_diesel,
     CAST(REPLACE(flex_fuel_ethanol, ',', '') AS INT) as flex_fuel_ethanol,
@@ -43,6 +45,7 @@ SELECT
     CAST(REPLACE(petrol_e20_hybrid, ',', '') AS INT) as petrol_e20_hybrid,
     CAST(REPLACE(petrol_e20_hybrid_cng, ',', '') AS INT) as petrol_e20_hybrid_cng,
     CAST(REPLACE(petrol_e20_lpg, ',', '') AS INT) as petrol_e20_lpg,
+    CAST(REPLACE(petrol_ethanol, ',', '') AS INT) as petrol_ethanol,
     CAST(REPLACE(petrol_hybrid, ',', '') AS INT) as petrol_hybrid,
     CAST(REPLACE(petrol_hybrid_cng, ',', '') AS INT) as petrol_hybrid_cng,
     CAST(REPLACE(petrol_lpg, ',', '') AS INT) as petrol_lpg,

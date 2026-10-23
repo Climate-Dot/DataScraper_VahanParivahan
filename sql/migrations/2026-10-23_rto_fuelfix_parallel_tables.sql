@@ -1,0 +1,122 @@
+-- Parallel RTO tables for validating the ethanol/E20 fuel-header mapping fix.
+--
+-- Background: Vahan renamed two fuel headers effective May 2026
+--   "ETHANOL"        -> "ETHANOL(E100)"
+--   "PETROL/ETHANOL" -> "PETROL(E20)"
+-- Only the new spellings were in COMMON_FUEL_COLUMN_RENAME_MAP, so for reports
+-- dated April 2026 and earlier those two columns were dropped at preprocessing
+-- and stored as NULL. Measured loss: ~0% through 2022 (the columns were empty),
+-- 1.3% in 2023, 2.0% in 2024, up to 39% by Dec 2025 and ~40% in early 2026,
+-- and it varies 0%-27% BY STATE depending on when each state was last scraped.
+--
+-- These tables let the corrected mapping be reprocessed and validated WITHOUT
+-- touching fact_ev_data_by_rto. Promotion to the production table is a separate,
+-- later decision. DDL is generated from the production tables so types cannot
+-- drift; both are nvarchar(MAX) like their sources.
+--
+-- Rollback: DROP TABLE dbo.fact_ev_data_by_rto_fuelfix;
+--           DROP TABLE dbo.staging_fact_ev_data_by_rto_fuelfix;
+
+CREATE TABLE [dbo].[fact_ev_data_by_rto_fuelfix] (
+    [year] nvarchar(MAX) NULL,
+    [month] nvarchar(MAX) NULL,
+    [day] nvarchar(MAX) NULL,
+    [date] nvarchar(MAX) NULL,
+    [state] nvarchar(MAX) NULL,
+    [rto_name] nvarchar(MAX) NULL,
+    [rto_code] nvarchar(MAX) NULL,
+    [vehicle_type] nvarchar(MAX) NULL,
+    [vehicle_category] nvarchar(MAX) NULL,
+    [vehicle_use_type] nvarchar(MAX) NULL,
+    [vehicle_class] nvarchar(MAX) NULL,
+    [bio_cng_bio_gas] nvarchar(MAX) NULL,
+    [bio_diesel_b100] nvarchar(MAX) NULL,
+    [bio_methane] nvarchar(MAX) NULL,
+    [cng_only] nvarchar(MAX) NULL,
+    [diesel] nvarchar(MAX) NULL,
+    [diesel_hybrid] nvarchar(MAX) NULL,
+    [di_methyl_ether] nvarchar(MAX) NULL,
+    [dual_diesel_bio_cng] nvarchar(MAX) NULL,
+    [dual_diesel_cng] nvarchar(MAX) NULL,
+    [dual_diesel_lng] nvarchar(MAX) NULL,
+    [electric_bov] nvarchar(MAX) NULL,
+    [ethanol_e100] nvarchar(MAX) NULL,
+    [flex_fuel_bio_diesel] nvarchar(MAX) NULL,
+    [flex_fuel_ethanol] nvarchar(MAX) NULL,
+    [fuel_cell_hydrogen] nvarchar(MAX) NULL,
+    [hcng] nvarchar(MAX) NULL,
+    [hydrogen_ice] nvarchar(MAX) NULL,
+    [lng] nvarchar(MAX) NULL,
+    [lpg_only] nvarchar(MAX) NULL,
+    [methanol] nvarchar(MAX) NULL,
+    [not_applicable] nvarchar(MAX) NULL,
+    [petrol] nvarchar(MAX) NULL,
+    [petrol_cng] nvarchar(MAX) NULL,
+    [petrol_e20] nvarchar(MAX) NULL,
+    [petrol_e20_cng] nvarchar(MAX) NULL,
+    [petrol_e20_hybrid] nvarchar(MAX) NULL,
+    [petrol_e20_hybrid_cng] nvarchar(MAX) NULL,
+    [petrol_e20_lpg] nvarchar(MAX) NULL,
+    [petrol_hybrid] nvarchar(MAX) NULL,
+    [petrol_hybrid_cng] nvarchar(MAX) NULL,
+    [petrol_lpg] nvarchar(MAX) NULL,
+    [petrol_methanol] nvarchar(MAX) NULL,
+    [plug_in_hybrid_ev] nvarchar(MAX) NULL,
+    [pure_ev] nvarchar(MAX) NULL,
+    [solar] nvarchar(MAX) NULL,
+    [strong_hybrid_ev] nvarchar(MAX) NULL,
+    [total] nvarchar(MAX) NULL,
+    [inserted_at] datetime NULL
+);
+
+CREATE TABLE [dbo].[staging_fact_ev_data_by_rto_fuelfix] (
+    [year] nvarchar(MAX) NULL,
+    [month] nvarchar(MAX) NULL,
+    [day] nvarchar(MAX) NULL,
+    [date] nvarchar(MAX) NULL,
+    [state] nvarchar(MAX) NULL,
+    [rto_name] nvarchar(MAX) NULL,
+    [rto_code] nvarchar(MAX) NULL,
+    [vehicle_type] nvarchar(MAX) NULL,
+    [vehicle_category] nvarchar(MAX) NULL,
+    [vehicle_use_type] nvarchar(MAX) NULL,
+    [vehicle_class] nvarchar(MAX) NULL,
+    [bio_cng_bio_gas] nvarchar(MAX) NULL,
+    [bio_diesel_b100] nvarchar(MAX) NULL,
+    [bio_methane] nvarchar(MAX) NULL,
+    [cng_only] nvarchar(MAX) NULL,
+    [diesel] nvarchar(MAX) NULL,
+    [diesel_hybrid] nvarchar(MAX) NULL,
+    [di_methyl_ether] nvarchar(MAX) NULL,
+    [dual_diesel_bio_cng] nvarchar(MAX) NULL,
+    [dual_diesel_cng] nvarchar(MAX) NULL,
+    [dual_diesel_lng] nvarchar(MAX) NULL,
+    [electric_bov] nvarchar(MAX) NULL,
+    [ethanol_e100] nvarchar(MAX) NULL,
+    [flex_fuel_bio_diesel] nvarchar(MAX) NULL,
+    [flex_fuel_ethanol] nvarchar(MAX) NULL,
+    [fuel_cell_hydrogen] nvarchar(MAX) NULL,
+    [hcng] nvarchar(MAX) NULL,
+    [hydrogen_ice] nvarchar(MAX) NULL,
+    [lng] nvarchar(MAX) NULL,
+    [lpg_only] nvarchar(MAX) NULL,
+    [methanol] nvarchar(MAX) NULL,
+    [not_applicable] nvarchar(MAX) NULL,
+    [petrol] nvarchar(MAX) NULL,
+    [petrol_cng] nvarchar(MAX) NULL,
+    [petrol_e20] nvarchar(MAX) NULL,
+    [petrol_e20_cng] nvarchar(MAX) NULL,
+    [petrol_e20_hybrid] nvarchar(MAX) NULL,
+    [petrol_e20_hybrid_cng] nvarchar(MAX) NULL,
+    [petrol_e20_lpg] nvarchar(MAX) NULL,
+    [petrol_hybrid] nvarchar(MAX) NULL,
+    [petrol_hybrid_cng] nvarchar(MAX) NULL,
+    [petrol_lpg] nvarchar(MAX) NULL,
+    [petrol_methanol] nvarchar(MAX) NULL,
+    [plug_in_hybrid_ev] nvarchar(MAX) NULL,
+    [pure_ev] nvarchar(MAX) NULL,
+    [solar] nvarchar(MAX) NULL,
+    [strong_hybrid_ev] nvarchar(MAX) NULL,
+    [total] nvarchar(MAX) NULL,
+    [inserted_at] datetime NULL
+);

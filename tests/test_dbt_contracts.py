@@ -81,11 +81,19 @@ class DbtContractTests(unittest.TestCase):
         for filename, source_name in checks.items():
             sql = (curated_dir / filename).read_text()
             self.assertIn(f"source('raw_data', '{source_name}')", sql)
-            self.assertNotIn("petrol_ethanol", sql)
             self.assertNotIn("electric_vehicles", sql)
-            self.assertIn("ethanol_e100", sql)
-            self.assertIn("petrol_e20", sql)
             self.assertIn("inserted_at", sql)
+            # Vahan renamed two fuel headers in May 2026. Both generations are
+            # loaded, into SEPARATE columns. The 2026-06-21 repair migration
+            # reversed an earlier attempt to carry the legacy values into the
+            # newer semantic fields, so each must appear in its own right and
+            # neither may be aliased onto the other.
+            for column in ("ethanol", "ethanol_e100", "petrol_ethanol", "petrol_e20"):
+                self.assertIn(f"as {column},", sql)
+            # Default on_schema_change is 'ignore' in dbt 1.8, which would add
+            # the SELECT columns while silently leaving them off the existing
+            # table and still reporting success.
+            self.assertIn("on_schema_change='append_new_columns'", sql)
 
 
 if __name__ == "__main__":
