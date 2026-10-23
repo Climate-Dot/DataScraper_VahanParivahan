@@ -35,11 +35,13 @@ Consequences for anyone querying these models:
 
 - `total` is authoritative and always has been.
 - `electric_bov` and `pure_ev` are unaffected and have always been correct.
-- In `rto_wise_ev_data`, the fuel columns now sum exactly to `total` in every year
-  (verified 2013-2026, gap 0).
-- In `oem_wise_ev_data` and `state_wise_ev_data` the legacy columns exist but their
-  pre-May-2026 history has **not** been reprocessed yet, so summing their fuel columns
-  still falls short of `total` by roughly 20% in recent years. Use `total` for those.
+- In `rto_wise_ev_data` and `oem_wise_ev_data`, the fuel columns now sum exactly to
+  `total` in every year (verified 2013-2026, gap 0).
+- In `state_wise_ev_data` the legacy columns exist but its history has **not** been
+  reprocessed, so summing its fuel columns still falls short of `total` by roughly 20%
+  in recent years. Use `total` there. Note also that State's raw files only exist in
+  blob from 2024-10, so 21 months of its history cannot be reprocessed at all without
+  re-scraping (about 7% of its shortfall).
 
 The physical column order of the raw tables, the column order in `sources.yml`, and
 `COMMON_FUEL_COLUMN_RENAME_MAP` are all kept in the same order deliberately

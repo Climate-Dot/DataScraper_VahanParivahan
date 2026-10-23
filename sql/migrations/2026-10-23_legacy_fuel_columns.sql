@@ -173,3 +173,89 @@
 --   fact_ev_data_by_rto_fuelfix                              (the reprocess source)
 --   fact_ev_data_by_rto_fuelfix_renamedup_backup_20261023     (122 office-rename dups)
 -- ---------------------------------------------------------------------------
+
+-- ===========================================================================
+-- STEP 4 - OEM (added later the same day, after the RTO work above).
+--
+-- Scope was extended to OEM on request. Three distinct defects were found and
+-- all three are now fixed; fact_oem_data_by_state_and_category reconciles
+-- exactly (gap 0) in every year 2013-2026.
+--
+-- 4a. The same legacy-header problem as RTO. OEM's PETROL/ETHANOL column turned
+--     out to carry data as far back as 2014 - unlike RTO, where pre-2023 was
+--     effectively empty - so the reprocess covers 2013-01 to 2026-04, not just
+--     2023 onward. One Tamil Nadu row in 2014-01 alone holds 17,687 vehicles.
+--
+-- 4b. A SEPARATE pre-existing defect: six newer fuel columns were 0 for the
+--     whole of 2023-2026 because those months were ingested before the
+--     2026-06-19 schema refresh added the columns, so the values were dropped:
+--         petrol_e20_cng         449,986
+--         petrol_e20_hybrid      117,739
+--         petrol_e20_lpg              76
+--         flex_fuel_bio_diesel         4
+--         petrol_e20_hybrid_cng        2
+--         petrol_hybrid_cng            3
+--     Their total, 567,810, was exactly OEM's residual gap after 4a.
+--
+-- 4c. September 2024 was MISSING from production entirely (0 rows). The raw
+--     files exist in blob and reprocessed cleanly to 7,525 rows / 1,725,189
+--     vehicles / 159,425 EVs. Inserted, after backing the table up to
+--     fact_oem_data_by_state_and_category_pre_sep2024_backup_20261023.
+--     Production went from 164 to 165 distinct months. Why the month was never
+--     loaded has NOT been investigated.
+--
+-- Mechanics: 103,352 + 299,404 raw files were pulled from blob with a 16-thread
+-- downloader (~75-80 files/s; a single-threaded fetch would have taken ~6 hours
+-- instead of ~85 minutes), reprocessed into
+-- fact_oem_data_by_state_and_category_fuelfix (160 months, 0 failures), then
+-- promoted by the same in-place UPDATE pattern as RTO, over EIGHT columns:
+--
+--   UPDATE p SET p.ethanol = f.ethanol, p.petrol_ethanol = f.petrol_ethanol,
+--                p.petrol_e20_cng = f.petrol_e20_cng, ... (8 in all)
+--   FROM dbo.fact_oem_data_by_state_and_category AS p
+--   INNER JOIN dbo.fact_oem_data_by_state_and_category_fuelfix AS f
+--     ON  CONVERT(DATE,f.[date],103) = CONVERT(DATE,p.[date],103)
+--     AND f.state = p.state AND f.maker = p.maker
+--     AND f.vehicle_class = p.vehicle_class
+--   WHERE CONVERT(DATE,p.[date],103) = @month ...;
+--
+-- 1,058,308 rows updated in 793s. The join key (date, state, maker,
+-- vehicle_class) is not unique - nine duplicate groups exist, all
+-- KUMAR ENGINEERING / TRAILER AGRICULTURAL, and their paired rows hold
+-- DIFFERENT totals, so the join is genuinely ambiguous. A guard asserted that
+-- every duplicate group carries identical values for all eight copied columns
+-- (it does), which makes the ambiguity unable to change the outcome; the
+-- migration aborts if that ever stops being true.
+--
+-- 54 production rows were left unmatched and keep NULL. They are all one
+-- Karnataka maker whose name contains embedded carriage returns
+-- (' \r\nM/S. VENKAT ENGINEERING WORKS, JAIPATNA \r\n '), which the reprocess
+-- normalises differently. Combined volume is about 20 vehicles and they hold no
+-- legacy-column data, which the gap-0 result confirms.
+--
+-- Verified after: row count, SUM(total), SUM(electric_bov + pure_ev) and the
+-- distinct inserted_at set all unchanged by the UPDATE; EV then rose by exactly
+-- 159,425 from the 4c insert and by nothing else; and the fuel columns sum
+-- exactly to total in every year. oem_wise_ev_data was then full-refreshed and
+-- matches raw at 1,109,790 rows with gap 0.
+--
+-- NOT DONE: fact_ev_data_by_state. Left deliberately; it still shows a ~20%
+-- shortfall in recent years. Its raw files also only exist in blob from
+-- 2024-10, so 21 of the 40 months that matter cannot be reprocessed at all
+-- without re-scraping - about 852,702 vehicles, 6.8% of its shortfall.
+--
+-- Additional backups from this step, to retain alongside those above:
+--   fact_oem_data_by_state_and_category_pre_sep2024_backup_20261023
+--   fact_oem_data_by_state_and_category_fuelfix
+--   staging_fact_oem_data_by_state_and_category_fuelfix
+--
+-- Rollback for step 4:
+--   DELETE FROM dbo.fact_oem_data_by_state_and_category
+--    WHERE CONVERT(DATE,[date],103) = '2024-09-01';          -- undo 4c
+--   UPDATE dbo.fact_oem_data_by_state_and_category
+--      SET ethanol = NULL, petrol_ethanol = NULL, petrol_e20_cng = NULL,
+--          petrol_e20_hybrid = NULL, petrol_e20_hybrid_cng = NULL,
+--          petrol_e20_lpg = NULL, petrol_hybrid_cng = NULL,
+--          flex_fuel_bio_diesel = NULL;                      -- undo 4a + 4b
+--   -- then: dbt run --full-refresh --select oem_wise_ev_data
+-- ===========================================================================

@@ -25,3 +25,4 @@ run_logs/
 
 # one-off fuel-mapping reprocess progress (runtime state, VM-local)
 rto_level/fuel_mapping_fix/progress.txt
+oem_level/fuel_mapping_fix/progress.txt

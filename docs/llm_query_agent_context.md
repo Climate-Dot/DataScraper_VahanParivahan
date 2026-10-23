@@ -44,7 +44,6 @@ produces a confident, wrong number.
 
 | Question | Why |
 |---|---|
-| Fuel-mix breakdown from `oem_wise_ev_data` | Its pre-May-2026 legacy fuel columns are not populated, so it omits ~20% of recent registrations. Use `rto_wise_ev_data`. See §3. |
 | A single-column figure for a fuel spanning May 2026 | `petrol_e20`/`petrol_ethanol` and `ethanol_e100`/`ethanol` each cover one side of a rename. Add the pair. See §3. |
 | Manufacturer by district or RTO office | OEM data has no geography below state. |
 | Anything after the latest loaded month | Check `MAX(date)`. |
@@ -185,21 +184,18 @@ SUM(COALESCE(petrol_e20, 0) + COALESCE(petrol_ethanol, 0))
 | table | do the fuel columns reconcile to `total`? |
 |---|---|
 | `rto_wise_ev_data` | **Yes — exactly, in every year 2013 onward.** |
-| `oem_wise_ev_data` | **No.** Short by roughly 20% in recent years. |
+| `oem_wise_ev_data` | **Yes — exactly, in every year 2013 onward.** |
 
-`rto_wise_ev_data` has had its pre-May-2026 legacy columns populated;
-`oem_wise_ev_data` has the columns but its history has not been reprocessed yet.
+Both have had their pre-May-2026 legacy columns populated, so fuel-mix breakdowns
+from either table are complete and add up to `total`.
 
 What this means for you:
 
-- **EV figures are unaffected in both tables, in every period.** `electric_bov` and
-  `pure_ev` are never NULL, so every EV number and EV-share percentage is sound.
-- **`total` is authoritative in both tables**, for "all vehicles" and as a denominator.
-- **Build fuel-mix breakdowns from `rto_wise_ev_data`**, where they are complete and add
-  up to `total`.
-- **Never build a fuel-mix breakdown from `oem_wise_ev_data`.** It silently omits about a
-  fifth of recent registrations. If a question needs fuel mix *by manufacturer*, say it
-  cannot be answered reliably rather than returning a short total.
+- **EV figures are sound in both tables, in every period.** `electric_bov` and
+  `pure_ev` are never NULL.
+- **`total` is authoritative** for "all vehicles" and as a denominator.
+- **Fuel-mix breakdowns are reliable from both tables.** Remember to add each rename
+  pair so a fuel is not split across the May 2026 boundary.
 
 ---
 
@@ -707,8 +703,8 @@ if it were a measured result.
 
 ## 12. Known data-quality caveats
 
-- **In `rto_wise_ev_data` the fuel columns reconcile exactly to `total` in every year.**
-  In `oem_wise_ev_data` they do not, by roughly 20% in recent years — see §3.
+- **The fuel columns reconcile exactly to `total` in every year** in both
+  `rto_wise_ev_data` and `oem_wise_ev_data` — see §3.
 - **Pre-2019 EV counts are very small** (single thousands nationally). Percentage
   growth rates off those bases are volatile and not very meaningful.
 - The underlying portal occasionally revises past months. Figures can shift
