@@ -1,3 +1,9 @@
+-- ###########################################################################
+-- THIS FILE IS A RECORD, NOT A RUNNABLE SCRIPT.
+-- It contains NO executable SQL. Running it through sqlcmd is a silent no-op.
+-- The work it describes was executed on 2026-10-23 by scripts on the VM.
+-- ###########################################################################
+
 -- ===========================================================================
 -- Legacy Vahan fuel headers: add `ethanol` and `petrol_ethanol`, then backfill
 -- RTO history.
@@ -258,4 +264,66 @@
 --          petrol_e20_lpg = NULL, petrol_hybrid_cng = NULL,
 --          flex_fuel_bio_diesel = NULL;                      -- undo 4a + 4b
 --   -- then: dbt run --full-refresh --select oem_wise_ev_data
+-- ===========================================================================
+
+-- ===========================================================================
+-- STEP 5 - EVERYTHING ELSE TOUCHED IN PRODUCTION ON 2026-10-23
+--
+-- Added after a code review found three production mutations that no artifact
+-- recorded. Listed here so nothing about this day is undocumented.
+--
+-- 5a. Three monthly ETL runs against production raw tables, as cutover tests.
+--     Each ran the real preprocessing + ingestion entrypoints to prove the
+--     November cron works on the new 51/50/49-column schema. Because
+--     data_ingest() uses replacement_scope_columns=["date"], each run DELETED
+--     that whole month from the production raw table before re-inserting it -
+--     that is how the monthly pipeline always behaves, not something special
+--     to this change:
+--
+--       fact_ev_data_by_rto                   2026-07   16,350 rows
+--       fact_oem_data_by_state_and_category   2026-09    9,101 rows
+--       fact_ev_data_by_state                 2026-09      929 rows
+--
+--     Verified byte-identical before and after in each case (per-column
+--     CHECKSUM_AGG, row count, SUM(total), EV). The ONLY column that changed is
+--     inserted_at, which now reads 2026-10-23 for those three month-groups
+--     instead of their original 2026-10-01/2026-09-01 load times. These are the
+--     only three months in the whole database whose inserted_at differs from
+--     its *_prerebuild_backup_20261023 snapshot.
+--
+-- 5b. 41 orphaned rows deleted from the CURATED table rto_wise_ev_data, backed
+--     up to rto_wise_ev_data_jul_orphan_backup_20261023.
+--
+--     These were July-2026 curated rows left stranded by an earlier (2026-10-01)
+--     re-ingest of July: the raw month was replaced and shrank from 16,391 to
+--     16,350 rows, but the incremental model MERGEs on unique_key and never
+--     deletes, so 41 rows that no longer existed in raw stayed in curated. They
+--     carry inserted_at = 2026-08-04 (the original broken load) across 8 rto_code
+--     values, and overstated July by 2,121 vehicles. Raw and curated are now
+--     exactly in sync at 2,324,451 rows.
+--
+--     This is a pre-existing defect in the incremental models, not caused by
+--     this change: any month that is reprocessed into FEWER rows than before
+--     leaves the difference behind in curated until a --full-refresh. It will
+--     recur. The full refresh run in step 3 would have cleared it anyway; the
+--     targeted delete happened first.
+--
+-- 5c. Nothing else. No production DELETE or INSERT occurred beyond 5a, 5b, and
+--     the September-2024 OEM insert in step 4c.
+--
+-- ROLLBACK WARNING - read before using the table-level rollback above.
+--
+-- The *_prerebuild_backup_20261023 snapshots were taken BEFORE 5a and before
+-- step 4c. Restoring them therefore also reverts:
+--   - the September 2024 OEM insert (7,525 rows / 1,725,189 registrations /
+--     159,425 EVs) - this data would be LOST, as production never held it;
+--   - the three re-ingested months in 5a, reverting them to their previous
+--     snapshots (same values, older inserted_at).
+--
+-- Prefer the COLUMN-LEVEL rollback (SET ethanol = NULL, petrol_ethanol = NULL,
+-- and for OEM the other six columns) which undoes this change and nothing else.
+-- Use the table-level rollback only if the rebuild itself is in doubt.
+--
+-- Backup to retain, in addition to those listed above:
+--   rto_wise_ev_data_jul_orphan_backup_20261023   (41 curated rows, 5b)
 -- ===========================================================================

@@ -1,5 +1,20 @@
 """One-off RTO preprocessing that keeps the legacy fuel headers as their own columns.
 
+SUPERSEDED, AND RETAINED ONLY AS A RECORD. This module built
+fact_ev_data_by_rto_fuelfix on 2026-10-23, at a point when the shared
+COMMON_FUEL_COLUMN_RENAME_MAP still carried only the post-May-2026 header
+spellings and so could not emit these two columns. Later the same day both
+spellings were added to that map, which made this subclass redundant: the
+production preprocessor now produces identical output, `column_rename_map.update`
+below is a no-op, and `_coerce_numeric_output_columns` re-coerces columns the
+base class already handles. The OEM equivalent
+(oem_level/fuel_mapping_fix/reprocess_oem_to_fuelfix.py) needed no subclass for
+exactly that reason.
+
+Do not build on this. For any new reprocess, call the production preprocessor.
+It is kept because it is how the RTO parallel table was actually produced, and
+deleting it would leave that table unexplained.
+
 NOT used by cron. The production path (rto_level/rto_level_data_pre_processing.py)
 is untouched; this subclasses it so the two share all behaviour except the fuel
 column map.

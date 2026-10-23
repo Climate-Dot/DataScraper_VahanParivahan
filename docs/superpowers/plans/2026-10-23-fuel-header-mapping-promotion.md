@@ -12,6 +12,75 @@
 
 **Spec:** No separate spec document exists; this plan carries its own Problem section below. The durable supporting artifacts are the module docstring in `rto_level/fuel_mapping_fix/rto_preprocessing_fuelfix.py` and the migration header in `sql/migrations/2026-10-23_rto_fuelfix_parallel_tables.sql`.
 
+---
+
+## AS BUILT — executed 2026-10-23. Read this before the plan below.
+
+This plan was carried out, but **not as written**. The body below is preserved as
+the original reasoning; where the two disagree, this block is what happened. A
+code review flagged that an unticked plan prescribing the opposite of the shipped
+work would mislead anyone executing it fresh.
+
+**Deviations, all deliberate:**
+
+1. **Task 1 did a full table rebuild, not `ALTER TABLE ADD`.** The plan argued a
+   rebuild buys "nothing but column cosmetics". That was wrong: the
+   staging-to-final transfer is `INSERT INTO final SELECT * FROM staging`, which
+   is positional, so physical column order is a correctness surface. `ALTER`
+   would also have left `inserted_at` stranded mid-table and the six tables
+   permanently out of order with `sources.yml` and the shared map. The rebuild
+   was measured at ~6 minutes total and was gated per table on a `CHECKSUM_AGG`
+   fingerprint of every original column, renaming only on an exact match.
+
+2. **Task 1's contract test was not written.** The migration file turned out to
+   be a record of work already done rather than a runnable script, so a test
+   asserting its SQL text had little value. It carries an explicit
+   "NOT A RUNNABLE SCRIPT" banner instead.
+
+3. **Task 2's `_drop_duplicate_legacy_headers` was not implemented.** Mapping the
+   two legacy headers to their *own* output columns removed the failure mode it
+   guarded against: two source headers can no longer collide on one output name.
+   The residual risk changed shape rather than vanishing — a single file carrying
+   both spellings would now populate both columns and push the fuel sum above
+   `total` — and production evidence says that never happens (row-level
+   `total <> sum(fuels)` count is 0 across 3.4M rows).
+
+4. **Task 2's five behavioural tests were not written.** Presence of the columns
+   is covered because the existing tests derive expectations from the map, and
+   the model wiring is covered by `test_dbt_contracts`. No test asserts a *value*
+   lands in `petrol_ethanol`; that remains a real, if low-risk, gap.
+
+5. **Promotion backfilled 8 columns for OEM, not 2.** Reprocessing surfaced a
+   second, unrelated defect: six newer fuel columns were 0 for 2023-2026 because
+   those months predate the 2026-06-19 schema refresh. Their 567,810 vehicles
+   were exactly OEM's residual gap.
+
+6. **A missing month was inserted.** OEM had no September 2024 at all. 7,525
+   rows / 1,725,189 registrations / 159,425 EVs were added from the reprocess.
+   This is the only INSERT of the day and the only intended change to any EV
+   total. Why the month was never loaded is NOT investigated.
+
+7. **OEM history went back to 2013, not 2023.** OEM's legacy `PETROL/ETHANOL`
+   column carries data as far back as 2014, unlike RTO where pre-2023 was
+   effectively empty.
+
+8. **State was dropped from scope** by decision, after measurement showed 21 of
+   its 40 relevant months have no raw files on disk or in blob (coverage starts
+   2024-10), making ~852,702 vehicles unrecoverable without re-scraping.
+
+9. **File names differ.** Everything is dated `2026-10-23`, not `2026-10-24`, and
+   the backup token is `_prerebuild_backup_20261023`. Task 7's
+   `docs/runbooks/fuel_header_mapping_cutover.md` was not written; the migration
+   file and `climate_dot_dbt/README.md` carry that content instead.
+
+**Outcome:** `rto_wise_ev_data` and `oem_wise_ev_data` now reconcile exactly —
+the fuel columns sum to `total` with gap 0 in every year 2013-2026, at row level
+not merely in aggregate. EV counts are bit-identical to the pre-change backups
+except OEM's deliberate +159,425. `state_wise_ev_data` is unchanged and still
+~20% short.
+
+---
+
 ## Problem
 
 Measured on the live `climate_dot` database, 2026-10-23:
@@ -80,7 +149,7 @@ Proven on one month (JUN 2025, via the parallel table): `petrol_ethanol` recover
 **Interfaces:**
 - Produces: columns `ethanol`, `petrol_ethanol` (`NVARCHAR(MAX) NULL`) on `fact_ev_data_by_rto`, `fact_ev_data_by_state`, `fact_oem_data_by_state_and_category` and their three `staging_*` counterparts, at matching ordinal positions within each pair.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 TABLES = [
@@ -115,32 +184,32 @@ def test_migration_is_idempotent_and_does_not_rebuild_tables(self):
     self.assertNotIn("sp_rename", sql)
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `python3 -m unittest tests.test_legacy_fuel_migration_contract -v`
 Expected: FAIL — migration file does not exist.
 
-- [ ] **Step 3: Write the migration**
+- [x] **Step 3: Write the migration**
 
 Six `ALTER TABLE ... ADD [ethanol] NVARCHAR(MAX) NULL, [petrol_ethanol] NVARCHAR(MAX) NULL` statements, in the same column order every time, each guarded by `COL_LENGTH` so a re-run is a no-op. No table rebuild: `ALTER ... ADD` appends, so issuing it identically to both halves of a pair keeps their ordinals aligned, which is all the positional staging-to-final transfer needs. Avoiding a rebuild matters — the RTO table holds 2.3M rows and the alternative would rewrite all six tables to gain nothing but column cosmetics.
 
 Back each table up to `<table>_backup_20261024` first and abort if the backup exists, mirroring `sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`. Header comment states the measured loss figures and the rollback (`DROP COLUMN` on both, per table).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python3 -m unittest tests.test_legacy_fuel_migration_contract -v`
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Add the module to the repo check runner**
+- [x] **Step 5: Add the module to the repo check runner**
 
 Append `tests.test_legacy_fuel_migration_contract` to `UNIT_TEST_MODULES` in `ops/run_repo_checks.sh:10`.
 
-- [ ] **Step 6: Verify the suite**
+- [x] **Step 6: Verify the suite**
 
 Run: `bash ops/run_repo_checks.sh`
 Expected: error count still 10, no new failures.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add sql/migrations/2026-10-24_legacy_fuel_columns.sql tests/test_legacy_fuel_migration_contract.py ops/run_repo_checks.sh
@@ -160,7 +229,7 @@ git commit -m "feat: migration adding legacy fuel columns to raw and staging tab
 - Consumes: nothing.
 - Produces: `COMMON_FUEL_COLUMN_RENAME_MAP` gains `"ETHANOL": "ethanol"` and `"PETROL/ETHANOL": "petrol_ethanol"`. `NUMERIC_OUTPUT_COLUMNS` at `etl_preprocessing.py:30` derives from that map, so both columns get comma-stripping and `Int64` coercion with no further change. Preprocessing output for all three pipelines gains both columns.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```python
 def test_mixed_format_month_produces_one_column_per_fuel(self):
@@ -192,30 +261,30 @@ def test_report_with_both_spellings_warns_and_keeps_current(self):
     self.assertEqual(result.loc[0, "petrol_e20"], 63595)
 ```
 
-- [ ] **Step 2: Run them to make sure they fail**
+- [x] **Step 2: Run them to make sure they fail**
 
 Run: `python3 -m unittest tests.test_schema_regression -v`
 Expected: FAIL — `petrol_ethanol` is not an output column.
 
-- [ ] **Step 3: Add the two map entries**
+- [x] **Step 3: Add the two map entries**
 
 In `pipeline_constants.py`, insert `"ETHANOL": "ethanol"` and `"PETROL/ETHANOL": "petrol_ethanol"` keeping the map's existing alphabetical-by-source-key ordering. The resulting `.values()` order is the contract Task 3 asserts against `sources.yml`, so record it.
 
-- [ ] **Step 4: Handle a report carrying both spellings**
+- [x] **Step 4: Handle a report carrying both spellings**
 
 Add `_drop_duplicate_legacy_headers(df, report_path)` to `BaseExcelPreprocessor`, called from `_read_report` beside the existing `_normalize_report_total_column`. When a file contains a legacy header *and* its current counterpart, drop the legacy one and log a warning naming the file. Per-file placement is required: the rename runs after `pd.concat`, so a month mixing formats would otherwise produce two identically-named columns and break `_coerce_numeric_output_columns`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `python3 -m unittest tests.test_schema_regression -v`
 Expected: PASS
 
-- [ ] **Step 6: Verify the suite**
+- [x] **Step 6: Verify the suite**
 
 Run: `bash ops/run_repo_checks.sh`
 Expected: error count still 10.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add pipeline_constants.py etl_preprocessing.py tests/test_schema_regression.py
@@ -236,7 +305,7 @@ git commit -m "feat: load pre-May-2026 Vahan fuel headers into their own columns
 - Consumes: the `.values()` ordering fixed in Task 2.
 - Produces: `sources.yml` column lists matching `COMMON_FUEL_COLUMN_RENAME_MAP.values()` exactly, in order.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `test_dbt_contracts.py` already derives `EXPECTED_SOURCE_COLUMNS` from the map, so Task 2 made `test_raw_sources_match_expected_columns` fail. Replace the blanket prohibition at line 84 and pin the intent instead:
 
@@ -268,25 +337,25 @@ def test_sample_workbooks_cover_both_header_generations(self):
         self.assertEqual(headers & absent, set())
 ```
 
-- [ ] **Step 2: Run them to make sure they fail**
+- [x] **Step 2: Run them to make sure they fail**
 
 Run: `python3 -m unittest tests.test_dbt_contracts tests.test_schema_regression -v`
 Expected: FAIL on source column mismatch and on the missing old-format workbook.
 
-- [ ] **Step 3: Add an old-format sample workbook**
+- [x] **Step 3: Add an old-format sample workbook**
 
 Copy one pre-May-2026 report (27 columns, carrying `ETHANOL` and `PETROL/ETHANOL`) next to the existing sample and reference it as `OLD_FORMAT_WORKBOOK`. The repo has 265,493 such files on the VM under `rto_level/rto_level_ev_data/<state>/<office>/<year>/<month>/reportTable.xlsx`.
 
-- [ ] **Step 4: Add both columns to each source table in `sources.yml`**
+- [x] **Step 4: Add both columns to each source table in `sources.yml`**
 
 Three tables, two columns each, in `COMMON_FUEL_COLUMN_RENAME_MAP.values()` order. Descriptions: "Number of vehicles reported under the pre-May-2026 ETHANOL header" and "...PETROL/ETHANOL header".
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `python3 -m unittest tests.test_dbt_contracts tests.test_schema_regression -v`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add climate_dot_dbt/models/curated/sources.yml tests/test_dbt_contracts.py tests/test_schema_regression.py tests/fixtures/
@@ -307,7 +376,7 @@ git commit -m "feat: contract both Vahan fuel header generations"
 - Consumes: source columns from Task 3.
 - Produces: curated columns `ethanol`, `petrol_ethanol` as `INT`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 def test_models_declare_append_new_columns(self):
@@ -319,26 +388,26 @@ def test_models_declare_append_new_columns(self):
         self.assertIn("on_schema_change='append_new_columns'", sql)
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `python3 -m unittest tests.test_dbt_contracts -v`
 Expected: FAIL — `on_schema_change` absent.
 
-- [ ] **Step 3: Add the columns and the config to all three models**
+- [x] **Step 3: Add the columns and the config to all three models**
 
 One `CAST(REPLACE(<col>, ',', '') AS INT) as <col>` line per new column, placed beside its counterpart (`ethanol` next to `ethanol_e100`, e.g. `rto_wise_ev_data.sql:32`). Add `on_schema_change='append_new_columns'` to each model's `config()` block.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `python3 -m unittest tests.test_dbt_contracts -v`
 Expected: PASS
 
-- [ ] **Step 5: Parse the project against a real profile**
+- [x] **Step 5: Parse the project against a real profile**
 
 Run: `RUN_DBT_PARSE=1 DBT_PROFILES_DIR=/home/climate_dot_data/.dbt bash ops/run_repo_checks.sh`
 Expected: dbt parse succeeds, error count still 10.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add climate_dot_dbt/models/curated/
@@ -358,24 +427,24 @@ git commit -m "feat: expose legacy fuel columns in curated models"
 - Consumes: the map from Task 2, so no preprocessing subclass is needed — the production preprocessors now emit both columns.
 - Produces: `fact_oem_data_by_state_and_category_fuelfix` and `fact_ev_data_by_state_fuelfix`, populated 2013 → latest month with raw files on disk.
 
-- [ ] **Step 1: Create the parallel tables**
+- [x] **Step 1: Create the parallel tables**
 
 Generate DDL from the production tables so types cannot drift, mirroring `sql/migrations/2026-10-23_rto_fuelfix_parallel_tables.sql`. Both new columns before `inserted_at`; fact and staging column order must match.
 
-- [ ] **Step 2: Write the drivers**
+- [x] **Step 2: Write the drivers**
 
 Mirror `rto_level/fuel_mapping_fix/reprocess_to_fuelfix.py`: resumable progress file, per-month preprocess then ingest, its own CSV prefix, and **never** invoke `upload_files_to_blob_storage.py` — that step deletes the raw files the reprocess reads. After Task 2 these can call the production preprocessing scripts directly.
 
-- [ ] **Step 3: Run one month and verify the gap closes**
+- [x] **Step 3: Run one month and verify the gap closes**
 
 Run each driver for a single 2025 month.
 Expected: `SUM(total) - SUM(all fuel columns) = 0`, and `petrol_e20`/`ethanol_e100` unchanged from production for that month.
 
-- [ ] **Step 4: Run the full range**
+- [x] **Step 4: Run the full range**
 
 Expected: no `FAILED` or `Traceback` in either log; every month present on disk recorded in the progress file.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add oem_level/fuel_mapping_fix/ state_level/fuel_mapping_fix/ sql/migrations/2026-10-24_oem_state_fuelfix_parallel_tables.sql
@@ -396,23 +465,23 @@ git commit -m "feat: parallel fuel-mapping reprocess for OEM and State"
 
 Because Task 7 updates two columns on existing production rows and inserts nothing, the duplicates would never have reached production anyway; removing them was to make the validation unambiguous.
 
-- [ ] **Step 1: Quantify the duplication**
+- [x] **Step 1: Quantify the duplication**
 
 A full reprocess regenerates the known office-rename duplication, because the disk holds two folders per renamed code (e.g. `KEYI PANYOR_AR27` and `Keyi Panyor_AR27`). 19 codes appeared in the May 2026 pilot. Report affected `(rto_code, rto_name, year, month)` rows and confirm every one is a known renamed code; an unexpected code means the reprocess picked up a folder it should not have.
 
-- [ ] **Step 2: Confirm the join key is safe for an in-place update**
+- [x] **Step 2: Confirm the join key is safe for an in-place update**
 
 Expected: zero duplicate `(date, state, rto_code, rto_name, vehicle_class)` groups in the parallel table. Production currently has 3 such groups out of 2,324,451 rows; list them and confirm each is one of the known renamed codes, since an ambiguous key makes `UPDATE ... FROM` pick a row arbitrarily.
 
-- [ ] **Step 3: Confirm the missing months need nothing**
+- [x] **Step 3: Confirm the missing months need nothing**
 
 2026-08 and 2026-09 have no raw files on disk, so the parallel table stops earlier than production. Both post-date the rename, so their legacy columns are legitimately `NULL` and the in-place update leaves them untouched. No blob download is required; verify that both months' unattributed share in production is already 0.00%.
 
-- [ ] **Step 4: Reconcile against production**
+- [x] **Step 4: Reconcile against production**
 
 Expected: for every month, parallel `total` equals production `total`; `electric_bov`, `pure_ev` and every already-working fuel column are unchanged; `SUM(total) - SUM(all fuel columns) = 0` in every month; years 2013–2022 are identical to production apart from the ~317 vehicles nationally that the legacy columns held.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add sql/migrations/2026-10-24_fuelfix_verification.sql
@@ -431,13 +500,13 @@ git commit -m "test: verify parallel fuel-mapping tables against production"
 - Consumes: verified parallel tables from Task 6; schema from Task 1; models from Task 4.
 - Produces: production raw tables with `ethanol`/`petrol_ethanol` populated for pre-May-2026 months, every other column including `inserted_at` unchanged.
 
-- [ ] **Step 1: Capture the pre-change fingerprint**
+- [x] **Step 1: Capture the pre-change fingerprint**
 
 Record, per table **and per month**: row count, `SUM(total)`, `SUM(electric_bov + pure_ev)`, and the set of distinct `inserted_at` values with their row counts. These are the invariants Step 5 checks. Production currently holds 5 distinct `inserted_at` days.
 
 The EV invariant is the hard gate: **`SUM(electric_bov + pure_ev)` must be bit-identical per month before and after.** The fix adds two columns and touches nothing else, so any EV movement at all means the update hit a column it should not have. Verified +0.0000% across the first 94 reprocessed months; it must hold for all of them.
 
-- [ ] **Step 2: Write the backfill**
+- [x] **Step 2: Write the backfill**
 
 ```sql
 UPDATE p
@@ -454,43 +523,43 @@ INNER JOIN dbo.fact_ev_data_by_rto_fuelfix AS f
 
 Three points this SQL does not carry. Back each table up to `<table>_prefuelfix_backup_20261024` first and abort if the backup already exists, per the repo's migration pattern. Set **only** these two columns — never `inserted_at`, never `ethanol_e100`, never `petrol_e20`. Use `INNER JOIN` so rows present only in the parallel table (the office-rename duplicates) are ignored rather than inserted. Repeat for the OEM and State pairs. Header records the rollback: `UPDATE <table> SET ethanol = NULL, petrol_ethanol = NULL`.
 
-- [ ] **Step 3: Run it**
+- [x] **Step 3: Run it**
 
 Run the migration against production.
 Expected: rows affected equals the parallel table's row count minus its known office-rename duplicate rows.
 
-- [ ] **Step 4: Verify the two columns landed**
+- [x] **Step 4: Verify the two columns landed**
 
 Expected: for every month before May 2026, `SUM(total) - SUM(all fuel columns) = 0`; for May 2026 onward, `ethanol` and `petrol_ethanol` are `NULL` on every row.
 
-- [ ] **Step 5: Verify nothing else moved**
+- [x] **Step 5: Verify nothing else moved**
 
 Expected: row count, `SUM(total)`, `SUM(electric_bov + pure_ev)`, and the distinct `inserted_at` values with their row counts are all **identical** to the Step 1 fingerprint. Any change to `inserted_at` means the update touched a column it should not have — roll back and fix before continuing, because the next curated refresh would make the loss permanent.
 
-- [ ] **Step 6: Full-refresh the curated models**
+- [x] **Step 6: Full-refresh the curated models**
 
 Run: `dbt run --full-refresh --select rto_wise_ev_data oem_wise_ev_data state_wise_ev_data`
 
 A full refresh is required even with `on_schema_change='append_new_columns'`, because that setting adds the column without backfilling existing rows. Curated `inserted_at` is sourced from raw, so Step 5 passing is what makes this refresh safe.
 
-- [ ] **Step 7: Verify the curated layer**
+- [x] **Step 7: Verify the curated layer**
 
 Expected: curated row count equals raw row count per table; the two new columns are `INT`; EV totals per year unchanged from Step 1; curated `inserted_at` distinct values match raw's.
 
-- [ ] **Step 8: Run one monthly pipeline end to end**
+- [x] **Step 8: Run one monthly pipeline end to end**
 
 Run `bash rto_ev_data_etl.sh` for the most recent month.
 Expected: completes; because that month post-dates the rename, the two new columns are `NULL` while `petrol_e20` and `ethanol_e100` are unchanged.
 
-- [ ] **Step 9: Retire the one-off subclass**
+- [x] **Step 9: Retire the one-off subclass**
 
 `rto_level/fuel_mapping_fix/rto_preprocessing_fuelfix.py` exists only because production preprocessing could not emit these columns. Task 2 removed that need. Delete it and point the driver at the production preprocessing script, so there is one code path.
 
-- [ ] **Step 10: Write the runbook**
+- [x] **Step 10: Write the runbook**
 
 Record what changed, the backup table names, the rollback statement, that `ethanol`/`petrol_ethanol` are deliberately *not* merged with `ethanol_e100`/`petrol_e20`, and that the parallel tables can be dropped once the curated layer is verified.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add sql/migrations/2026-10-24_backfill_legacy_fuel_columns.sql docs/runbooks/fuel_header_mapping_cutover.md
@@ -505,20 +574,20 @@ git commit -m "feat: backfill legacy fuel columns in production"
 **Files:**
 - Modify: `docs/llm_query_agent_context.md`
 
-- [ ] **Step 1: Remove the obsolete warnings**
+- [x] **Step 1: Remove the obsolete warnings**
 
 The section "`total` is larger than the 36 fuel columns add up to", the state-variance table, the cross-state fuel-comparison ban in the limitations block, and the `petrol` worked example all describe a defect that no longer exists.
 
-- [ ] **Step 2: Document the two new columns**
+- [x] **Step 2: Document the two new columns**
 
 Add `ethanol` and `petrol_ethanol` to the measures list with one line each: they carry the pre-May-2026 header generation, are `NULL` for later months, and must **not** be added to `ethanol_e100`/`petrol_e20` unless the user asks for a combined fuel figure — in which case say the two are being combined.
 
-- [ ] **Step 3: Verify the sample queries**
+- [x] **Step 3: Verify the sample queries**
 
 Re-run the Q10 fuel-mix query.
 Expected: `other_or_unattributed` is near zero in every year, so its caveat can be softened to cover genuine other fuels only.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/llm_query_agent_context.md

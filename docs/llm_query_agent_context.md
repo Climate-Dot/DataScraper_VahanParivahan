@@ -62,7 +62,8 @@ produces a confident, wrong number.
 
 ## 2. The tables
 
-Database `climate_dot`, schema `dbo`. Two tables. Use only these.
+Database `climate_dot`, schema `dbo`. Three tables are described below;
+query only the first two.
 
 ### `rto_wise_ev_data` — registrations by RTO office
 
@@ -93,7 +94,7 @@ below state level.
 
 This table exists and is kept current, but it is **not your source for state
 figures**. It comes from a separate state-level extract that disagrees with the
-RTO data by 3–5% on a given year. Using both would produce two different
+RTO data by 2–5% depending on the year. Using both would produce two different
 answers to "how many vehicles in Maharashtra last year", which is worse than
 having one.
 
@@ -322,15 +323,16 @@ The raw registry classification. Each class maps to exactly one
 relationship is strictly 1:1, so you never need to group by more than one of
 them to disambiguate.
 
-The classes that carry essentially all EV volume:
+The classes that carry essentially all EV volume (totals are indicative and
+move as new months load):
 
 | `vehicle_class` | category | use type | EV (all years) |
 |---|---|---|---|
-| `M-CYCLE/SCOOTER` | 2-Wheelers | Personal | 5,658,327 |
-| `E-RICKSHAW(P)` | 3-Wheelers | Shared LowSpeed | 2,616,119 |
-| `THREE WHEELER (PASSENGER)` | 3-Wheelers | Shared | 686,897 |
-| `MOTOR CAR` | 4-Wheelers | Personal | 645,636 |
-| `E-RICKSHAW WITH CART (G)` | 3-Wheelers | Goods LowSpeed | 294,257 |
+| `M-CYCLE/SCOOTER` | 2-Wheelers | Personal | 5,658,297 |
+| `E-RICKSHAW(P)` | 3-Wheelers | Shared LowSpeed | 2,616,116 |
+| `THREE WHEELER (PASSENGER)` | 3-Wheelers | Shared | 686,887 |
+| `MOTOR CAR` | 4-Wheelers | Personal | 645,635 |
+| `E-RICKSHAW WITH CART (G)` | 3-Wheelers | Goods LowSpeed | 294,207 |
 | `MOPED` | 2-Wheelers | Personal | 137,556 |
 | `THREE WHEELER (GOODS)` | 3-Wheelers | Goods | 135,520 |
 | `MOTORISED CYCLE (CC > 25CC)` | 2-Wheelers | Personal | 71,355 |
@@ -399,8 +401,12 @@ They are independent scrapes with different coverage and **do not reconcile**:
 | Year | RTO table EV | OEM table EV | ratio |
 |---|---|---|---|
 | 2023 | 1,581,246 | 1,666,140 | 105.4% |
-| 2024 | 2,024,541 | 1,786,778 | 88.3% |
+| 2024 | 2,024,541 | 1,946,203 | 96.1% |
 | 2025 | 2,329,780 | 2,250,699 | 96.6% |
+| 2026 | 2,507,033 | 2,454,441 | 97.9% |
+
+The two agree within a few percent but never exactly, and the sign of the
+difference flips. That is enough reason to keep them apart.
 
 Pick one table per question and stay in it. Never join them. Never present a
 figure from one alongside a figure from the other in the same comparison. If a
@@ -705,8 +711,9 @@ if it were a measured result.
 
 - **The fuel columns reconcile exactly to `total` in every year** in both
   `rto_wise_ev_data` and `oem_wise_ev_data` — see §3.
-- **Pre-2019 EV counts are very small** (single thousands nationally). Percentage
-  growth rates off those bases are volatile and not very meaningful.
+- **Early-year EV counts are very small** — 2,731 in 2013 and 2,418 in 2014,
+  reaching 87,469 by 2017. Percentage growth rates off the 2013-2015 bases are
+  volatile and not very meaningful.
 - The underlying portal occasionally revises past months. Figures can shift
   slightly between refreshes; this is the source's behaviour, not an error.
 - **36 states** are present. Some union territories carry non-standard spellings
@@ -738,6 +745,7 @@ SELECT MAX(date) FROM ...        -- current year is always partial: check first
                                  -- Oct/Nov are seasonal peaks, not growth
 
 -- Denominator / "all vehicles"
-SUM(COALESCE(total, 0))          -- authoritative; the 36 fuel columns only
-                                 -- add up to it from May 2026 onward
+SUM(COALESCE(total, 0))          -- authoritative; in rto_wise_ev_data and
+                                 -- oem_wise_ev_data the 38 fuel columns also
+                                 -- sum to it in every year
 ```
