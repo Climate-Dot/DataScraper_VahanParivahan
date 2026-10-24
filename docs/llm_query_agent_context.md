@@ -233,7 +233,8 @@ silently compares a partial year against a full one.
 ### Registrations are strongly seasonal
 
 Indian vehicle registrations spike sharply in the festival season. Share of
-annual registrations by calendar month, averaged over recent full years:
+annual registrations by calendar month, measured on `total` across the full
+years 2022-2025:
 
 | Month | share | | Month | share |
 |---|---|---|---|---|
@@ -247,6 +248,11 @@ annual registrations by calendar month, averaged over recent full years:
 October and November run about 55% above a typical month; September is the
 low point. **A September-to-October jump of ~60% is normal seasonality, not
 growth,** and a December drop is not a collapse.
+
+This table is for **all** registrations. EV-only seasonality is flatter and has
+no September trough, so do not apply these shares to an EV figure — if a user
+asks whether an EV month-over-month move is seasonal, measure it on the EV
+metric for the months in question rather than quoting this table.
 
 Never describe a month-over-month change as a trend. For month-level questions
 compare the same month year-on-year, or use a 12-month rolling total.
@@ -275,8 +281,16 @@ compare the same month year-on-year, or use a 12-month rolling total.
 
 ### Measures — both tables
 
-38 fuel columns plus `total`, all `INT`, all non-NULL in the curated layer
-(`COALESCE` is still recommended as defensive practice):
+38 fuel columns plus `total`, all `INT`.
+
+**Always wrap a fuel column in `COALESCE`. This is required, not defensive.**
+`total`, `electric_bov` and `pure_ev` are never NULL, but **16 of the 38 fuel
+columns are NULL on most rows** — the source introduced those headers partway
+through the dataset's life, and a monthly report that never carried the header
+produces no value rather than a zero. The NULL share reaches 88% in
+`rto_wise_ev_data` and 96% in `oem_wise_ev_data`. Writing
+`SUM(petrol_e20 + petrol_ethanol)` without `COALESCE` returns NULL for those
+rows and silently drops them; every sample query in §9 shows the correct form.
 
 ```
 bio_cng_bio_gas, bio_diesel_b100, bio_methane, cng_only, diesel, diesel_hybrid,
@@ -334,11 +348,11 @@ move as new months load):
 | `MOTOR CAR` | 4-Wheelers | Personal | 645,635 |
 | `E-RICKSHAW WITH CART (G)` | 3-Wheelers | Goods LowSpeed | 294,207 |
 | `MOPED` | 2-Wheelers | Personal | 137,556 |
-| `THREE WHEELER (GOODS)` | 3-Wheelers | Goods | 135,520 |
+| `THREE WHEELER (GOODS)` | 3-Wheelers | Goods | 135,518 |
 | `MOTORISED CYCLE (CC > 25CC)` | 2-Wheelers | Personal | 71,355 |
-| `MOTOR CYCLE/SCOOTER-USED FOR HIRE` | 2-Wheelers | Shared | 51,539 |
-| `MOTOR CAB` | 4-Wheelers | Shared | 48,265 |
-| `GOODS CARRIER` | Others | Others | 43,168 |
+| `MOTOR CYCLE/SCOOTER-USED FOR HIRE` | 2-Wheelers | Shared | 51,538 |
+| `MOTOR CAB` | 4-Wheelers | Shared | 48,255 |
+| `GOODS CARRIER` | Others | Others | 43,167 |
 | `BUS` | Bus | Shared | 18,504 |
 
 The remaining 64 classes are tractors, construction equipment, ambulances,
@@ -405,8 +419,10 @@ They are independent scrapes with different coverage and **do not reconcile**:
 | 2025 | 2,329,780 | 2,250,699 | 96.6% |
 | 2026 | 2,507,033 | 2,454,441 | 97.9% |
 
-The two agree within a few percent but never exactly, and the sign of the
-difference flips. That is enough reason to keep them apart.
+From 2022 the two agree within a few percent but never exactly, and the sign of
+the difference flips. **Before 2022 they diverge far more** — the OEM extract is
+4.9x the RTO figure in 2014, and 11-15% above it in 2018 and 2021. Never treat a
+figure from one table as corroboration of the other, least of all in early years.
 
 Pick one table per question and stay in it. Never join them. Never present a
 figure from one alongside a figure from the other in the same comparison. If a
@@ -641,7 +657,7 @@ ORDER BY ev DESC;
 
 ### Q10. "Petrol vs diesel vs electric over time"
 
-Use `rto_wise_ev_data`, where the fuel columns are complete. Add each rename pair so a
+Use `rto_wise_ev_data`, where the fuel columns reconcile to `total`. Add each rename pair so a
 fuel is not split across the May 2026 boundary:
 
 ```sql
