@@ -48,6 +48,8 @@ The repo currently contains three ingestion pipelines:
 - [`ops/run_repo_checks.sh`](/Users/monish/DataScraper_VahanParivahan/ops/run_repo_checks.sh): shared repo validation entrypoint for shell checks, tests, and optional dbt parsing
 - [`ops/production_vm.crontab`](/Users/monish/DataScraper_VahanParivahan/ops/production_vm.crontab): current production cron snapshot for the Azure VM
 - [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql): one-time SQL Server migration for the shared raw fuel taxonomy
+- [`sql/migrations/2026-10-23_legacy_fuel_columns.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-10-23_legacy_fuel_columns.sql): record of the legacy fuel-header fix (`ethanol`, `petrol_ethanol`) and the RTO/OEM history backfill. A record, not a runnable script.
+- `sql/migrations/` holds the full set; the two above are the ones that changed the fuel taxonomy.
 
 ## Browser Runtime
 
@@ -135,7 +137,7 @@ Historical RTO note:
 
 The dbt models now live under [`climate_dot_dbt/models/curated`](/Users/monish/DataScraper_VahanParivahan/climate_dot_dbt/models/curated). The repository does not yet set an explicit dbt target schema in `dbt_project.yml`, so schema resolution still depends on the active dbt profile on the VM.
 
-The active curated models now read from the newer shared raw fuel taxonomy directly. They do not alias new raw columns like `PETROL(E20)` back into legacy columns such as `petrol_ethanol`.
+The active curated models read from the shared raw fuel taxonomy directly, and expose **both** header generations as separate columns: `PETROL(E20)` lands in `petrol_e20` and the pre-May-2026 `PETROL/ETHANOL` lands in `petrol_ethanol` (likewise `ethanol_e100` and `ethanol`). Neither is aliased onto the other. Whether to combine each pair is a business decision; see `climate_dot_dbt/README.md`.
 
 Current curated models:
 

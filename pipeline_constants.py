@@ -107,6 +107,19 @@ MONTH_NAME_TO_NUMBER = {
 }
 
 
+# Vahan renamed two fuel-column headers effective May 2026:
+#   "ETHANOL"        -> "ETHANOL(E100)"
+#   "PETROL/ETHANOL" -> "PETROL(E20)"
+# Reports dated April 2026 and earlier still carry the legacy spellings, so both
+# generations are mapped. The legacy ones get their OWN output columns rather
+# than being folded into ethanol_e100/petrol_e20: treating them as equivalent is
+# an inference the source does not support, and the 2026-06-21 repair migration
+# explicitly reversed an earlier attempt to carry legacy values into the newer
+# semantic fields. Whether to combine them is a business decision, made with
+# both columns visible.
+#
+# A 29,182-file sweep (every office in one full month per year, 2013-2026)
+# confirmed these are the only two unmapped fuel headers in the entire corpus.
 COMMON_FUEL_COLUMN_RENAME_MAP = {
     "BIO-CNG/BIO-GAS": "bio_cng_bio_gas",
     "BIO-DIESEL(B100)": "bio_diesel_b100",
@@ -119,6 +132,7 @@ COMMON_FUEL_COLUMN_RENAME_MAP = {
     "DUAL DIESEL/CNG": "dual_diesel_cng",
     "DUAL DIESEL/LNG": "dual_diesel_lng",
     "ELECTRIC(BOV)": "electric_bov",
+    "ETHANOL": "ethanol",
     "ETHANOL(E100)": "ethanol_e100",
     "FLEX-FUEL(BIO-DIESEL)": "flex_fuel_bio_diesel",
     "FLEX-FUEL(ETHANOL)": "flex_fuel_ethanol",
@@ -136,6 +150,7 @@ COMMON_FUEL_COLUMN_RENAME_MAP = {
     "PETROL(E20)/HYBRID": "petrol_e20_hybrid",
     "PETROL(E20)/HYBRID/CNG": "petrol_e20_hybrid_cng",
     "PETROL(E20)/LPG": "petrol_e20_lpg",
+    "PETROL/ETHANOL": "petrol_ethanol",
     "PETROL/HYBRID": "petrol_hybrid",
     "PETROL/HYBRID/CNG": "petrol_hybrid_cng",
     "PETROL/LPG": "petrol_lpg",

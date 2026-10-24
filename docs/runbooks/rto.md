@@ -96,7 +96,7 @@ dbt run --select rto_wise_ev_data
 - If a state is still missing after the merge, the scraper now fails early with a clear missing-state error before download work starts.
 - The preprocessing step uses the shared fuel taxonomy and logs unexpected raw columns.
 - Vahan's blank report-total header is positional: older workbooks can expose it as `Unnamed: 26`, while current workbooks expose it as `Unnamed: 38`. The shared preprocessor normalizes the final unnamed column before monthly files are combined and fails if a non-empty report has no recognizable total column.
-- Legacy `ETHANOL` and `PETROL/ETHANOL` columns are intentionally not aliases for the newer `ETHANOL(E100)` taxonomy. They remain unmapped unless the business approves an explicit historical mapping.
+- Legacy `ETHANOL` and `PETROL/ETHANOL` columns are intentionally not aliases for the newer `ETHANOL(E100)`/`PETROL(E20)` taxonomy. Since 2026-10-23 they are mapped to their own columns, `ethanol` and `petrol_ethanol`, and are deliberately **not** merged into the newer ones; merging them remains a business decision. Before that date they were unmapped and their values were dropped, which is what the 2026-10-23 backfill repaired.
 - Missing expected output columns are written as `NULL`, not `0`.
 - The ingestion step deletes matching rows from the raw final table before inserting staged data.
 - The upload step removes local XLSX directories after blob upload and deletes the processed CSV after uploading it.

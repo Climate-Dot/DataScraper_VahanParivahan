@@ -161,6 +161,7 @@ The raw SQL Server tables still need an explicit migration before the full share
 Relevant files:
 
 - SQL migration: [`sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-06-19_vahan_fuel_schema_refresh.sql)
+- SQL migration: [`sql/migrations/2026-10-23_legacy_fuel_columns.sql`](/Users/monish/DataScraper_VahanParivahan/sql/migrations/2026-10-23_legacy_fuel_columns.sql) — adds `ethanol` and `petrol_ethanol`, backfills RTO and OEM history. See `sql/migrations/` for the complete list.
 - Runbook: [`docs/runbooks/raw_schema_migration.md`](/Users/monish/DataScraper_VahanParivahan/docs/runbooks/raw_schema_migration.md)
 
 That migration:
