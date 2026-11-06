@@ -24,6 +24,7 @@ UNIT_TEST_MODULES=(
     tests.test_new_portal_rto_fetch
     tests.test_new_portal_rto_blob_snapshot
     tests.test_new_portal_rto_bulk_ingest
+    tests.test_report_identity
 )
 
 should_run_dbt_parse() {
