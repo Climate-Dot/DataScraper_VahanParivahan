@@ -201,6 +201,43 @@ class VerifyRunCompleteTests(CompletenessTestCase):
         self.assertEqual(report.failures, [])
         self.assertIn(11, report.months_present)
 
+    def test_absent_checkpoint_with_fresh_csv_and_no_manifest_is_clean(self):
+        # rto_fetch DELETES the checkpoint when every office finished cleanly
+        # ("Run complete with no gaps; removed ...__progress.jsonl"). So the
+        # on-disk signature of a successful sweep is: no checkpoint, no gap
+        # manifest, a CSV this run wrote. Counting complete offices from a file
+        # that success removes would reject every good run.
+        self.write_csv([make_record()])
+        self.assertFalse(self.progress_path.exists())
+        report = self.verify(min_fetched_at=time.time() - 3600)
+        self.assertEqual(report.failures, [])
+        self.assertFalse(report.checkpoint_present)
+
+    def test_absent_checkpoint_without_a_fetch_floor_is_a_failure(self):
+        # With no floor, an absent checkpoint is indistinguishable from "no
+        # sweep ever ran here", so nothing proves provenance.
+        self.write_csv([make_record()])
+        report = self.verify()
+        self.assertNotEqual(report.failures, [])
+        self.assertIn("provenance", " ".join(report.failures).lower())
+
+    def test_absent_checkpoint_with_a_gap_manifest_is_still_a_failure(self):
+        # --allow-gaps lets rto_fetch reach the checkpoint-deleting path WITH
+        # gaps, but it writes the manifest first, so the manifest is what
+        # separates that case from a genuinely clean one.
+        self.write_csv([make_record()])
+        self.write_manifest()
+        report = self.verify(min_fetched_at=time.time() - 3600)
+        self.assertNotEqual(report.failures, [])
+
+    def test_absent_checkpoint_with_a_stale_csv_is_a_failure(self):
+        self.write_csv([make_record()])
+        stale = time.time() - 7200
+        os.utime(self.csv_path, (stale, stale))
+        report = self.verify(min_fetched_at=time.time() - 60)
+        self.assertTrue(report.stale_csv)
+        self.assertNotEqual(report.failures, [])
+
     def test_missing_csv_is_a_failure(self):
         self.write_progress(self.labels)
         report = self.verify()

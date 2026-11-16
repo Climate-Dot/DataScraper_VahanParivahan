@@ -29,6 +29,7 @@ UNIT_TEST_MODULES=(
     tests.test_pipeline_freshness
     tests.test_snapshot_freshness
     tests.test_v2_scratch_cleanup
+    tests.test_new_portal_monthly_entrypoint
 )
 
 should_run_dbt_parse() {
@@ -51,6 +52,9 @@ run_shell_checks() {
     bash -n "${PROJECT_ROOT}/oem_data_etl.sh" \
         "${PROJECT_ROOT}/state_ev_data_etl.sh" \
         "${PROJECT_ROOT}/rto_ev_data_etl.sh" \
+        "${PROJECT_ROOT}/new_portal_rto_etl.sh" \
+        "${PROJECT_ROOT}/new_portal_rto_monthly.sh" \
+        "${PROJECT_ROOT}/ops/new_portal_sweep_until_complete.sh" \
         "${PROJECT_ROOT}/ops/run_repo_checks.sh"
     sh -n "${PROJECT_ROOT}/ops/etl_runtime.sh"
 }

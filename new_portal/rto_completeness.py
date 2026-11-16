@@ -23,6 +23,16 @@ It must also not over-assert, in two directions:
   islands with no 2026 registrations). So office coverage is checked against the
   **checkpoint**, where an empty office is still recorded and still complete,
   and the CSV is checked only on aggregate month coverage -- never per office.
+- A **successful** sweep leaves no checkpoint at all. ``rto_fetch`` deletes it
+  on a clean completion ("Run complete with no gaps; removed
+  ...__progress.jsonl"), so counting complete offices from that file would
+  reject every good run. The on-disk signature of success is therefore: no
+  checkpoint, no gap manifest, and a CSV this run wrote. An absent checkpoint is
+  accepted only when all three hold -- and only when a ``min_fetched_at`` floor
+  was supplied, because without one "no checkpoint" is indistinguishable from
+  "no sweep ever ran here". A partial run always leaves a checkpoint, and
+  ``--allow-gaps`` reaches the deleting path only after writing the manifest, so
+  neither can disguise itself as the clean case.
 - The newest month in the CSV is *expected* to be partial, because one fetch
   returns a whole year and a run on day 3 includes three days of the current
   month. So the assertion is on ``target_month``, the previous and fully
@@ -70,6 +80,7 @@ class CompletenessReport:
 
     expected_offices: int
     complete_offices: int
+    checkpoint_present: bool
     csv_offices: int
     csv_rows: int
     months_present: set[int]
@@ -141,18 +152,13 @@ def verify_run_complete(
 
     failures: list[str] = []
 
+    checkpoint_present = progress_path.exists()
     progress = load_progress(progress_path)
     complete_offices = sum(
         1 for entry in progress.values() if office_is_complete(entry)
     )
     if expected_office_count is None:
         expected_office_count = len(load_rto_targets())
-    if complete_offices < expected_office_count:
-        failures.append(
-            f"checkpoint {progress_path} has {complete_offices} complete "
-            f"offices, expected {expected_office_count}; the sweep did not "
-            f"cover the whole country"
-        )
 
     gap_manifest_present = gap_manifest_path.exists()
     if gap_manifest_present:
@@ -166,6 +172,7 @@ def verify_run_complete(
         return CompletenessReport(
             expected_offices=expected_office_count,
             complete_offices=complete_offices,
+            checkpoint_present=checkpoint_present,
             csv_offices=0,
             csv_rows=0,
             months_present=set(),
@@ -187,6 +194,29 @@ def verify_run_complete(
                 f"CSV at {csv_path} was written {fetched_at.isoformat()}, "
                 f"before this run began {floor.isoformat()}; it is a leftover "
                 f"from an earlier run, not this one's output"
+            )
+
+    # Office coverage, decided only now that manifest presence and CSV
+    # provenance are both known -- the clean-completion case depends on them.
+    if complete_offices < expected_office_count:
+        if checkpoint_present:
+            failures.append(
+                f"checkpoint {progress_path} has {complete_offices} complete "
+                f"offices, expected {expected_office_count}; the sweep did not "
+                f"cover the whole country"
+            )
+        elif min_fetched_at is None:
+            failures.append(
+                f"no checkpoint at {progress_path} and no --min-fetched-at "
+                f"floor, so nothing establishes provenance: a clean sweep and "
+                f"a machine where no sweep ever ran look identical"
+            )
+        elif not (gap_manifest_present or stale_csv):
+            logger.info(
+                "No checkpoint at %s and no gap manifest, with a CSV newer "
+                "than this run's floor: the sweep completed cleanly and "
+                "removed its own checkpoint.",
+                progress_path,
             )
 
     header = _csv_header(csv_path)
@@ -215,6 +245,7 @@ def verify_run_complete(
     return CompletenessReport(
         expected_offices=expected_office_count,
         complete_offices=complete_offices,
+        checkpoint_present=checkpoint_present,
         csv_offices=summary.offices,
         csv_rows=summary.rows,
         months_present=summary.months,
@@ -269,12 +300,13 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     logger.info(
-        "Completeness gate year=%s target_month=%s offices=%s/%s csv_rows=%s "
-        "csv_offices=%s months=%s",
+        "Completeness gate year=%s target_month=%s offices=%s/%s "
+        "checkpoint_present=%s csv_rows=%s csv_offices=%s months=%s",
         args.year,
         args.target_month,
         report.complete_offices,
         report.expected_offices,
+        report.checkpoint_present,
         report.csv_rows,
         report.csv_offices,
         sorted(report.months_present),

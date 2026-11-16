@@ -17,6 +17,15 @@ YEAR=${YEAR:-$(date -u +%Y)}
 MAX=${MAX:-60}
 WAIT=${WAIT:-300}
 STALL_LIMIT=${STALL_LIMIT:-4}
+# This script exists only to run nationwide, multi-hour sweeps, which is exactly
+# the case the portal's token bucket punishes. Measured 2026-11-03 on the VM: the
+# portal serves ~1,500 requests per 60s (~25/s) then hard-429s for ~20s, and
+# rto_fetch's own 0.2s default puts 8 workers at 26.7/s -- just over the line, so
+# every attempt died at ~205 offices regardless of how many attempts were allowed.
+# 0.45s is 16.5/s, a ~31% margin, measured over 150s of sustained load. The 0.2
+# default stays correct for the short targeted runs rto_fetch is invoked for
+# directly, which is why the override lives here rather than there.
+SLEEP_SECONDS=${SLEEP_SECONDS:-0.45}
 
 stalled=0
 last=""
@@ -25,7 +34,8 @@ for i in $(seq 1 "$MAX"); do
   LOG="run_logs/attempt_${YEAR}_${i}_${TS}.log"
   echo "$LOG" > run_logs/CURRENT
   echo "=== ${YEAR} attempt $i/$MAX at $TS ==="
-  ./venv/bin/python -u -m new_portal.rto_fetch --year "$YEAR" > "$LOG" 2>&1
+  ./venv/bin/python -u -m new_portal.rto_fetch --year "$YEAR" \
+    --sleep-seconds "$SLEEP_SECONDS" > "$LOG" 2>&1
   RC=$?
   STATE=$(YEAR="$YEAR" PYTHONPATH=. ./venv/bin/python ops/new_portal_progress_count.py 2>/dev/null \
           || echo "count unavailable")
