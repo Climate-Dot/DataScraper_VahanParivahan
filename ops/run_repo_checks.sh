@@ -26,6 +26,7 @@ UNIT_TEST_MODULES=(
     tests.test_new_portal_rto_bulk_ingest
     tests.test_report_identity
     tests.test_new_portal_rto_completeness
+    tests.test_pipeline_freshness
 )
 
 should_run_dbt_parse() {
