@@ -13,3 +13,55 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 30 18 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_etl_logs.txt 2>&1
 00 19 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/oem_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt 2>&1
 30 23 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt 2>&1
+
+# ---------------------------------------------------------------------------
+# V2 new-portal RTO pipeline. Not Selenium: a JSON API, so no xvfb and no
+# VAHAN_HEADLESS. See docs/runbooks/new_portal_rto.md.
+#
+# Day 3, not day 1. Measured durations of the V1 block on 2026-10-01/02:
+# State ~4 min, OEM ~1h51m, RTO 23:30 to 00:39 next day (~1h10m), so V1 clears
+# by ~00:40 UTC on day 2. Day 3 at 03:30 therefore has a measured ~27-hour
+# margin. The independent reason for day 3 is the data rather than the clock:
+# the portal revises past months (two RTOs moved +0.6% and +0.9% between
+# consecutive daily runs), so two extra days of settling is worth having.
+#
+# 03:30 UTC is 09:00 IST and sits nowhere near the 18:30-23:30 UTC V1 block on
+# any day. A complete sweep took 31 minutes at the old unsafe pacing, but at
+# the required --sleep-seconds 0.45 the same work is ~2-2.5 hours and the
+# MAX=30 x WAIT=300 budget allows a worst case near 5 hours, so the window
+# closes by ~08:30 UTC and is no longer a comfortable margin. If the portal
+# tightens its bucket further, move the start earlier rather than cutting MAX.
+#
+# The day-5 run is outage tolerance, not a duplicate. rto_fetch checkpoints per
+# office, so it resumes rather than restarts: cheap when day 3 succeeded,
+# recovers the month when day 3 hit an outage. Safe to run twice because the
+# gate is independent of which attempt produced the CSV and ingestion replaces
+# the year wholesale.
+#
+# COUPLING: --max-load-age-days 35 below is derived from the day-5 retry. The
+# widest legitimate gap between successful loads is day 3 of a 31-day month to
+# day 5 of the next = 33 days, plus two days of buffer. If the retry day moves,
+# that number moves with it.
+#
+# REQUIRED VM UPTIME: 03:00-07:00 UTC on day 3 and day 5. The VM is off by
+# default and is started by external automation not represented in this repo, so
+# a cron line on a powered-off machine does nothing. This has NOT been confirmed
+# with whoever owns that automation -- do that before trusting the schedule.
+30 03 3 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly_logs.txt 2>&1
+30 03 5 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly_logs.txt 2>&1
+
+# Daily load-recency check. This is the thing that notices nothing happened;
+# monthly would discover a missed window a month late. Against the real
+# incident -- last load 2026-09-24, October never ran -- it would have alerted
+# from 2026-10-29 onward, every day, instead of two days of silence.
+#
+# It keys on MAX([inserted_at]), never MAX([date]): every V2 run writes rows for
+# the in-flight current month, so MAX([date]) is always the current month and
+# cannot distinguish a fresh load from a dead pipeline.
+#
+# Daily costs nothing when the VM is off -- cron simply does not fire -- so this
+# line buys coverage whenever the machine happens to be up and never requires a
+# power-on of its own. It cannot GUARANTEE coverage; that is what the off-VM
+# GitHub Actions watchdog (.github/workflows/freshness_watchdog.yml) is for, and
+# that watchdog is the only check that works when the VM never started.
+15 06 * * * bash -lc 'cd /home/climate_dot_data/DataScraper_VahanParivahan && . venv/bin/activate && python3 ops/check_pipeline_freshness.py --table fact_ev_data_by_rto_v2 --status-scope ALL_STATUSES --max-load-age-days 35 --min-month-total-ratio 0.85 --pipeline new_portal_rto_freshness' >> /home/climate_dot_data/DataScraper_VahanParivahan/freshness_check_logs.txt 2>&1
