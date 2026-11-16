@@ -30,7 +30,7 @@ failed. It remains useful only as a single-state smoke test.
 
 | Step | What it does | On failure |
 |---|---|---|
-| `fetch_sweep` | `ops/new_portal_sweep_until_complete.sh`, paced at `SLEEP_SECONDS=0.45`, `MAX=30 WAIT=300 STALL_LIMIT=6` | Nothing was ingested. Safe to re-run; it resumes from the per-office checkpoint. |
+| `fetch_sweep` | `ops/new_portal_sweep_until_complete.sh`, paced at `SLEEP_SECONDS=0.45`, `MAX=30 WAIT=300 STALL_LIMIT=6`, under `timeout "$SWEEP_TIMEOUT"` (default 3h) | Nothing was ingested. Safe to re-run; it resumes from the per-office checkpoint if one survives. |
 | `completeness_gate` | `new_portal.rto_completeness` — refuses to proceed unless the artifacts prove a complete, fresh, nationwide run covering the target month | Nothing was ingested. Read the logged failures; they name the reason. |
 | `blob_snapshot` | `new_portal.rto_blob_snapshot` — immutable per-run CSV snapshot, **before** ingestion | The CSV is still on disk. Re-run the snapshot and ingest stages only. |
 | `ingestion` | `new_portal.rto_bulk_ingest`, falling back to `new_portal.rto_ingest` | A snapshot exists; re-run ingest only. **See "If ingestion was killed" below.** |
@@ -48,9 +48,14 @@ which carries the full reasoning. In short:
   block clears by ~00:40 UTC on day 2 (measured: State ~4 min, OEM ~1h51m, RTO
   ~1h10m), and because the portal revises past months, so two extra days of
   settling is worth having.
-- **Day 5, 03:30 UTC** — retry. It resumes from the checkpoint rather than
-  restarting, so it is cheap when day 3 succeeded and recovers the month when
-  day 3 hit an outage.
+- **Day 5, 03:30 UTC** — retry. It resumes from the per-office checkpoint when
+  day 3 **failed**, which is the case it exists for.
+  **It does not resume when day 3 succeeded.** A successful run deletes its own
+  checkpoint, so day 5 re-fetches the whole year from zero (~2–3 hours), and its
+  first failing attempt overwrites day 3's complete CSV on disk with a partial
+  one. Nothing is lost — the blob snapshot is immutable and the database already
+  holds the month — but check whether the month already loaded before reacting
+  to a day-5 `fetch_sweep` alert.
 - **Daily, 06:15 UTC** — on-VM load-recency check.
 - **Daily, 06:00 UTC, off-VM** — `.github/workflows/freshness_watchdog.yml`.
 
@@ -68,7 +73,8 @@ than prevent.
 
 | Alert | Meaning | What to do |
 |---|---|---|
-| `new_portal_rto` FAILED at `fetch_sweep` | The sweep could not complete the year. Nothing ingested. | Re-run; it resumes. If it dies at ~205 offices every attempt, the portal's rate limit moved — re-measure with ≥150s of sustained load before changing `SLEEP_SECONDS`. |
+| `new_portal_rto` FAILED at `fetch_sweep` | The sweep could not complete the year within `SWEEP_TIMEOUT`. Nothing ingested. | **First check whether the month already loaded** — on day 5 this often means day 3 succeeded and day 5 was re-fetching from zero. If not, re-run. If it dies at ~205 offices every attempt, the portal's rate limit moved — re-measure with ≥150s of sustained load before changing `SLEEP_SECONDS`. |
+| `new_portal_rto` FAILED at `<step>(killed by SIGTERM)` | The run was killed, almost always the VM powering off mid-sweep. | Nothing was ingested unless the step says `ingestion`. Re-run in a window that fits. |
 | `new_portal_rto` FAILED at `completeness_gate` | The fetch output could not be proven complete. **Nothing ingested — this is the gate working.** | Read the named failures and re-run. |
 | `new_portal_rto` FAILED at `ingestion` | A snapshot exists; the load did not finish. | Re-run ingestion only. Check "If ingestion was killed". |
 | `new_portal_rto_freshness` FAILED on **load recency** | No run has landed. The VM was up enough to run the check, so the schedule or the pipeline is the problem. | Investigate the schedule; run the month by hand. |
@@ -126,9 +132,19 @@ is what the snapshots are for. Snapshots live in the `new-portal-rto-csv`
 container under `year=<Y>/`, named with the CSV's own mtime.
 
 **If ingestion was killed** (for example the VM powered off mid-load), the year
-may be deleted-but-not-reinserted, and `staging_cleanup` will not have run — so
-staging still holds the rows that would repair it. Check row counts per year
-before doing anything else.
+may be deleted-but-not-reinserted. Which path was running decides how exposed
+you are, and it is the opposite way round from what you might expect:
+
+- **`rto_bulk_ingest` (the normal path) is the exposed one.** It connects with
+  `autocommit=True`, so its `DELETE` commits on its own and a kill before the
+  `INSERT` leaves the year gone. The window is one set-based insert of ~169k
+  rows — seconds, not hours — so this is unlikely but possible.
+- **`rto_ingest` (the row-by-row fallback) is safe.** `etl_ingestion` puts the
+  `DELETE` and the staging→final `INSERT` in one transaction with a single
+  commit after both, so a kill rolls back and no year is left deleted.
+
+Either way `staging_cleanup` will not have run, so staging still holds the rows
+that would repair it. Check row counts per year before doing anything else.
 
 **Never run `build_delete_query()` or `INSERT INTO final SELECT * FROM staging`
 by hand without first checking what year staging holds.** Those statements are
@@ -141,6 +157,37 @@ there.
 **Crontab.** The live crontab and `ops/production_vm.crontab` are separate
 sources of truth with no automation syncing them, so a rollback needs both:
 `crontab ~/crontab_backup_<YYYYMMDD>.txt` and `git revert` the commit.
+
+## What bounds a run, and what happens if it is killed
+
+`MAX × WAIT` bounds only the *waiting* (30 × 300s = 2.5h of idle). It does not
+bound the run: a failing attempt that walks most of the country costs nearly as
+much as a successful one, and `STALL_LIMIT` resets on *any* progress, so one
+office per attempt keeps the loop alive. The real ceiling would be
+`MAX × (attempt duration + WAIT)` — ~17 hours at 30 minutes per attempt.
+
+So the sweep runs under `timeout "$SWEEP_TIMEOUT"`, default **3h**, chosen to
+finish inside the 03:00–07:00 UTC window the crontab asks the VM to be up for.
+**Raise it only together with that window.**
+
+The entrypoint also takes an exclusive `flock` on
+`new_portal_rto_monthly.lock` and exits 0 if another instance holds it, so a
+long day-3 run cannot have the day-5 cron start a second process against the
+same checkpoint and CSV. And it traps `TERM`/`INT` as well as `ERR`, because
+`install_failure_alert_trap` installs an ERR trap only — a run killed rather
+than failed would otherwise be exactly as silent as the November incident.
+`SIGKILL` cannot be trapped by anyone; systemd sends `TERM` first on shutdown.
+
+## When the settled check applies
+
+The daily check evaluates "did the target month settle" **only once a load has
+happened after that month ended**. On day 1 of a month the previous month holds
+nothing but the 3-to-5-day stub its own runs wrote while it was in flight, so
+asking the question before the day-3 run lands would report a failure every
+month — and a channel that cries wolf monthly stops being read, which the design
+calls worse than having no check. Load recency still runs daily and unchanged,
+so the dead-pipeline signal is untouched. The rule is derived from the data, not
+from a day-of-month constant, so it survives a schedule change.
 
 ## Known gaps
 

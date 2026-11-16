@@ -108,7 +108,9 @@ def newest_snapshot_age_days(
     return (_as_utc(reference) - newest).total_seconds() / 86400
 
 
-def list_snapshot_times(container_client) -> list[tuple[str, datetime]] | None:
+def list_snapshot_times(
+    container_client, *, container_name: str = CONTAINER_NAME
+) -> list[tuple[str, datetime]] | None:
     """Blob names and timestamps, or ``None`` when the container is unreachable.
 
     Absent and empty stay distinguishable: both alert, but only one of them
@@ -120,7 +122,7 @@ def list_snapshot_times(container_client) -> list[tuple[str, datetime]] | None:
         logger.error(
             "Container %s does not exist or cannot be read; treating as stale "
             "rather than as success.",
-            CONTAINER_NAME,
+            container_name,
         )
         return None
 
@@ -150,14 +152,17 @@ def build_container_client(
 
 
 def evaluate_snapshot_freshness(
-    age_days: float | None, *, max_age_days: int
+    age_days: float | None,
+    *,
+    max_age_days: int,
+    container_name: str = CONTAINER_NAME,
 ) -> WatchdogVerdict:
     """Whether the newest snapshot is recent enough to prove a run happened."""
     if age_days is None:
         return WatchdogVerdict(
             is_stale=True,
             message=(
-                f"no snapshot found in container {CONTAINER_NAME}, so no V2 run "
+                f"no snapshot found in container {container_name}, so no V2 run "
                 f"can be shown to have completed a fetch. {OFF_VM_HINT}"
             ),
         )
@@ -165,14 +170,14 @@ def evaluate_snapshot_freshness(
         return WatchdogVerdict(
             is_stale=True,
             message=(
-                f"newest snapshot in {CONTAINER_NAME} is {age_days:.1f} days "
+                f"newest snapshot in {container_name} is {age_days:.1f} days "
                 f"old, over the {max_age_days}-day limit. {OFF_VM_HINT}"
             ),
         )
     return WatchdogVerdict(
         is_stale=False,
         message=(
-            f"newest snapshot in {CONTAINER_NAME} is {age_days:.1f} days old, "
+            f"newest snapshot in {container_name} is {age_days:.1f} days old, "
             f"limit {max_age_days}"
         ),
     )
@@ -199,19 +204,47 @@ def send_failure_alert(*, pipeline: str, details: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Exit 1 and alert when no recent snapshot proves a run happened."""
+    """Exit 1 and alert when no recent snapshot proves a run happened.
+
+    Any unexpected failure of the check itself also alerts. A rotated blob
+    credential would otherwise surface only as a red Actions run with nothing
+    in the Chat channel -- a dead-man's switch that died quietly. The webhook
+    secret is independent of the blob secret, so the alert is still deliverable
+    in the likeliest case.
+    """
     parser = argparse.ArgumentParser(description="Off-VM snapshot watchdog.")
     parser.add_argument("--max-age-days", type=int, default=40)
     parser.add_argument("--container", default=CONTAINER_NAME)
     parser.add_argument("--pipeline", default=DEFAULT_PIPELINE)
     args = parser.parse_args(argv)
 
+    try:
+        return _run(args)
+    except Exception as error:  # noqa: BLE001 - the watchdog must not die quietly
+        logger.exception("Snapshot watchdog could not complete.")
+        send_failure_alert(
+            pipeline=args.pipeline,
+            details=(
+                f"The snapshot watchdog itself could not complete: {error!r}. "
+                f"Nothing is known about whether a V2 run happened -- treat "
+                f"this as unverified, not as healthy. Check the "
+                f"{CONNECTION_STRING_ENV_VAR} repository secret first. "
+                f"{OFF_VM_HINT}"
+            ),
+        )
+        return 1
+
+
+def _run(args) -> int:
+    """The check proper, with exceptions left for main() to turn into an alert."""
     container_client = build_container_client(container_name=args.container)
-    listed = list_snapshot_times(container_client)
+    listed = list_snapshot_times(container_client, container_name=args.container)
     age_days = (
         None if listed is None else newest_snapshot_age_days(listed, _now())
     )
-    verdict = evaluate_snapshot_freshness(age_days, max_age_days=args.max_age_days)
+    verdict = evaluate_snapshot_freshness(
+        age_days, max_age_days=args.max_age_days, container_name=args.container
+    )
 
     if not verdict.is_stale:
         logger.info("Snapshot watchdog passed: %s", verdict.message)

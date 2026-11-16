@@ -184,6 +184,54 @@ class MonthSettledTests(unittest.TestCase):
         self.assertIn("no preceding", verdict.message.lower())
 
 
+class TargetCapturedTests(unittest.TestCase):
+    """The settled check must not fire before the target month was captured.
+
+    Under the day-3/day-5 schedule, on day 1 of a month the previous month has
+    only the 3-to-5-day stub that the previous month's own runs wrote, because
+    every V2 run writes rows for the in-flight month. Evaluating "did it settle"
+    then reports a failure every month, which is the outcome the design calls
+    worse than having no check at all.
+    """
+
+    def test_load_before_the_target_month_ended_did_not_capture_it(self):
+        # Dec 1: newest load is Nov 5, so November cannot have been captured.
+        self.assertFalse(
+            freshness.target_month_was_captured(
+                datetime(2026, 11, 5, 4, 0), (2026, 11)
+            )
+        )
+
+    def test_load_after_the_target_month_ended_captured_it(self):
+        self.assertTrue(
+            freshness.target_month_was_captured(
+                datetime(2026, 12, 3, 4, 0), (2026, 11)
+            )
+        )
+
+    def test_load_on_the_last_day_of_the_target_month_did_not_capture_it(self):
+        self.assertFalse(
+            freshness.target_month_was_captured(
+                datetime(2026, 11, 30, 23, 0), (2026, 11)
+            )
+        )
+
+    def test_never_loaded_did_not_capture(self):
+        self.assertFalse(freshness.target_month_was_captured(None, (2026, 11)))
+
+    def test_february_target_handles_a_short_month(self):
+        self.assertTrue(
+            freshness.target_month_was_captured(
+                datetime(2026, 3, 1, 4, 0), (2026, 2)
+            )
+        )
+        self.assertFalse(
+            freshness.target_month_was_captured(
+                datetime(2026, 2, 28, 4, 0), (2026, 2)
+            )
+        )
+
+
 class QueryTests(unittest.TestCase):
     def test_fetch_last_loaded_at_reads_the_scalar(self):
         loaded = datetime(2026, 11, 3, 4, 0)
@@ -247,7 +295,15 @@ class MainTests(unittest.TestCase):
             "--pipeline", PIPELINE,
         ]
 
-    def run_main(self, *, loaded_at, target, preceding, reference=datetime(2026, 11, 16, 6, 15)):
+    def run_main(
+        self,
+        *,
+        loaded_at,
+        target,
+        preceding,
+        reference=datetime(2026, 11, 16, 6, 15),
+        extra=(),
+    ):
         connection = FakeConnection()
         with mock.patch.object(freshness, "connect", return_value=connection), \
              mock.patch.object(freshness, "_now", return_value=reference), \
@@ -260,8 +316,103 @@ class MainTests(unittest.TestCase):
                  return_value=(target, preceding),
              ), \
              mock.patch("subprocess.run") as run:
-            exit_code = freshness.main(self.argv())
+            exit_code = freshness.main([*self.argv(), *extra])
         return exit_code, run
+
+    def test_day_one_of_the_month_does_not_alert_on_the_uncaptured_stub(self):
+        # Dec 1. November holds only what the Nov 3 and Nov 5 runs wrote while
+        # November was in flight. The day-3 run has not happened yet.
+        exit_code, run = self.run_main(
+            loaded_at=datetime(2026, 11, 5, 4, 0),
+            target=freshness.MonthStats(6662, 170608),
+            preceding=AUGUST_SETTLED,
+            reference=datetime(2026, 12, 1, 6, 15),
+        )
+        self.assertEqual(exit_code, 0)
+        run.assert_not_called()
+
+    def test_a_stub_still_alerts_once_the_month_has_been_captured(self):
+        # Dec 4, after the day-3 run landed: a short November is now a fault.
+        exit_code, run = self.run_main(
+            loaded_at=datetime(2026, 12, 3, 5, 0),
+            target=freshness.MonthStats(6662, 170608),
+            preceding=AUGUST_SETTLED,
+            reference=datetime(2026, 12, 4, 6, 15),
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(run.call_count, 1)
+
+    def test_january_run_ingesting_last_year_does_not_alert_in_february(self):
+        # The January run targets last December, so January itself has no rows
+        # until February's run. That is the schedule, not a fault.
+        exit_code, run = self.run_main(
+            loaded_at=datetime(2027, 1, 3, 5, 0),
+            target=None,
+            preceding=AUGUST_SETTLED,
+            reference=datetime(2027, 2, 1, 6, 15),
+        )
+        self.assertEqual(exit_code, 0)
+        run.assert_not_called()
+
+    def test_target_month_can_be_overridden_for_a_hand_rerun(self):
+        captured = {}
+
+        def record(connection, table, *, status_scope, target, preceding):
+            captured["target"] = target
+            captured["preceding"] = preceding
+            return freshness.MonthStats(16546, 3172712), AUGUST_SETTLED
+
+        connection = FakeConnection()
+        with mock.patch.object(freshness, "connect", return_value=connection), \
+             mock.patch.object(
+                 freshness, "_now", return_value=datetime(2027, 2, 20, 6, 15)
+             ), \
+             mock.patch.object(
+                 freshness,
+                 "fetch_last_loaded_at",
+                 return_value=datetime(2027, 2, 20, 5, 0),
+             ), \
+             mock.patch.object(freshness, "fetch_month_stats_pair", record), \
+             mock.patch("subprocess.run") as run:
+            exit_code = freshness.main(
+                [*self.argv(), "--target-year", "2026", "--target-month", "10"]
+            )
+        self.assertEqual(captured["target"], (2026, 10))
+        self.assertEqual(captured["preceding"], (2026, 9))
+        self.assertEqual(exit_code, 0)
+        run.assert_not_called()
+
+    def test_no_alert_suppresses_the_webhook_but_not_the_exit_code(self):
+        # Used when the check runs as a pipeline stage, where the ETL runtime's
+        # ERR trap already posts one alert for the failing step.
+        exit_code, run = self.run_main(
+            loaded_at=datetime(2026, 9, 24, 17, 20),
+            target=SEPTEMBER_STUB,
+            preceding=AUGUST_SETTLED,
+            extra=["--no-alert"],
+        )
+        self.assertEqual(exit_code, 1)
+        run.assert_not_called()
+
+    def test_the_check_alerts_when_it_cannot_reach_the_database(self):
+        # This is the one check standing between a dead pipeline and silence, so
+        # its own failure must not be silent.
+        with mock.patch.object(
+            freshness, "connect", side_effect=RuntimeError("login timeout")
+        ), mock.patch("subprocess.run") as run:
+            exit_code = freshness.main(self.argv())
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(run.call_count, 1)
+        joined = " ".join(str(part) for part in run.call_args[0][0]).lower()
+        self.assertIn("could not complete", joined)
+
+    def test_no_alert_also_suppresses_the_self_failure_alert(self):
+        with mock.patch.object(
+            freshness, "connect", side_effect=RuntimeError("login timeout")
+        ), mock.patch("subprocess.run") as run:
+            exit_code = freshness.main([*self.argv(), "--no-alert"])
+        self.assertEqual(exit_code, 1)
+        run.assert_not_called()
 
     def test_main_sends_no_alert_when_both_checks_pass(self):
         exit_code, run = self.run_main(

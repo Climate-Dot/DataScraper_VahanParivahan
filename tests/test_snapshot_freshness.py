@@ -147,6 +147,48 @@ class MainTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
 
 
+class SelfFailureTests(unittest.TestCase):
+    """The dead-man's switch must not die quietly.
+
+    A rotated or missing blob credential previously raised before main could
+    reach send_failure_alert, so the only visible effect was a red Actions run
+    -- and nothing in the Chat channel anyone actually watches. The webhook
+    secret is independent of the blob secret, so an alert is still deliverable
+    in the likeliest case.
+    """
+
+    def test_missing_connection_string_still_alerts(self):
+        with mock.patch.dict(os.environ, {}, clear=True), mock.patch(
+            "subprocess.run"
+        ) as run:
+            exit_code = watchdog.main(["--max-age-days", "40"])
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(run.call_count, 1)
+        joined = " ".join(str(part) for part in run.call_args[0][0]).lower()
+        self.assertIn("could not complete", joined)
+
+    def test_an_authentication_failure_still_alerts(self):
+        class ClientAuthenticationError(Exception):
+            pass
+
+        with mock.patch.object(
+            watchdog,
+            "build_container_client",
+            side_effect=ClientAuthenticationError("credential expired"),
+        ), mock.patch("subprocess.run") as run:
+            exit_code = watchdog.main(["--max-age-days", "40"])
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(run.call_count, 1)
+
+    def test_self_failure_alert_says_nothing_is_known_either_way(self):
+        with mock.patch.object(
+            watchdog, "build_container_client", side_effect=RuntimeError("boom")
+        ), mock.patch("subprocess.run") as run:
+            watchdog.main(["--max-age-days", "40"])
+        joined = " ".join(str(part) for part in run.call_args[0][0]).lower()
+        self.assertIn("unverified", joined)
+
+
 class ImportSafetyTests(unittest.TestCase):
     def test_module_imports_without_azure(self):
         with mock.patch.dict(
@@ -164,6 +206,8 @@ class ImportSafetyTests(unittest.TestCase):
         self.assertIn("azure-storage-blob", str(caught.exception))
 
     def test_missing_connection_string_raises_a_clear_error(self):
+        # build_container_client still raises; main() is what turns it into an
+        # alert rather than a silent traceback.
         with mock.patch.dict(os.environ, {}, clear=True):
             with self.assertRaises(RuntimeError) as caught:
                 watchdog.build_container_client()

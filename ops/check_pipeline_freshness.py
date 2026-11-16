@@ -46,6 +46,7 @@ one production already exercises.
 from __future__ import annotations
 
 import argparse
+import calendar
 import dataclasses
 import logging
 import os
@@ -243,6 +244,27 @@ def fetch_month_stats_pair(
     return target_stats.get(target_number), preceding_stats.get(preceding_number)
 
 
+def target_month_was_captured(
+    last_loaded_at: datetime | None, target: tuple[int, int]
+) -> bool:
+    """Whether any load has happened since the target month ended.
+
+    Every V2 run writes rows for the in-flight current month, so on day 1 of a
+    month the previous month holds only the three-to-five-day stub that its own
+    runs wrote. Asking "did it settle" before the month has been captured
+    reports a failure every single month, and an alert channel that cries wolf
+    monthly is worse than no channel -- the operator stops reading it.
+
+    Deliberately derived from the data rather than from a day-of-month constant,
+    so it stays correct if the schedule moves.
+    """
+    if last_loaded_at is None:
+        return False
+    year, month = target
+    last_day = date(year, month, calendar.monthrange(year, month)[1])
+    return last_loaded_at.date() > last_day
+
+
 def evaluate_load_recency(
     last_loaded_at: datetime | None,
     reference: datetime,
@@ -362,10 +384,55 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--min-month-total-ratio", type=float, required=True)
     parser.add_argument("--pipeline", required=True)
+    parser.add_argument(
+        "--target-year",
+        type=int,
+        default=None,
+        help="Override the month checked; defaults to the previous month.",
+    )
+    parser.add_argument(
+        "--target-month",
+        type=int,
+        default=None,
+        help="Override the month checked; defaults to the previous month.",
+    )
+    parser.add_argument(
+        "--no-alert",
+        action="store_true",
+        help=(
+            "Do not post to Google Chat. Used when this runs as a pipeline "
+            "stage, where the ETL runtime's ERR trap already posts one alert "
+            "for the failing step; two alerts for one fault read as two faults."
+        ),
+    )
     args = parser.parse_args(argv)
 
+    try:
+        return _run(args)
+    except Exception as error:  # noqa: BLE001 - the check must not fail silently
+        # This is the one check standing between a dead pipeline and silence, so
+        # its own failure -- an unreachable database, a bad credential -- has to
+        # reach the same channel as the failures it watches for.
+        logger.exception("Freshness check could not complete.")
+        if not args.no_alert:
+            send_failure_alert(
+                pipeline=args.pipeline,
+                details=(
+                    f"The freshness check itself could not complete: "
+                    f"{error!r}. Nothing is known about {args.table} either "
+                    f"way -- treat this as unverified, not as healthy."
+                ),
+            )
+        return 1
+
+
+def _run(args) -> int:
+    """The check proper, with exceptions left for main() to turn into an alert."""
     reference = _now()
-    target = target_month(reference.date())
+    if args.target_year and args.target_month:
+        target = (args.target_year, args.target_month)
+    else:
+        target = target_month(reference.date())
     preceding = preceding_month(*target)
 
     connection = connect()
@@ -386,9 +453,22 @@ def main(argv: list[str] | None = None) -> int:
     recency = evaluate_load_recency(
         last_loaded_at, reference, max_load_age_days=args.max_load_age_days
     )
-    settled = evaluate_month_settled(
-        target_stats, preceding_stats, min_month_total_ratio=args.min_month_total_ratio
-    )
+
+    if target_month_was_captured(last_loaded_at, target):
+        settled = evaluate_month_settled(
+            target_stats,
+            preceding_stats,
+            min_month_total_ratio=args.min_month_total_ratio,
+        )
+    else:
+        settled = FreshnessVerdict(
+            is_stale=False,
+            age_days=None,
+            message=(
+                f"{target[0]}-{target[1]:02d} has not been captured by any load "
+                f"yet, so the settled check does not apply"
+            ),
+        )
 
     lines = [f"table {args.table}, status scope {args.status_scope}"]
     if recency.is_stale:
@@ -415,7 +495,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     logger.error("Freshness check failed. %s", details.replace("\n", " | "))
-    send_failure_alert(pipeline=args.pipeline, details=details)
+    if not args.no_alert:
+        send_failure_alert(pipeline=args.pipeline, details=details)
     return 1
 
 

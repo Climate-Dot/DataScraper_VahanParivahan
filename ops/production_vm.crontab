@@ -32,11 +32,19 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # closes by ~08:30 UTC and is no longer a comfortable margin. If the portal
 # tightens its bucket further, move the start earlier rather than cutting MAX.
 #
-# The day-5 run is outage tolerance, not a duplicate. rto_fetch checkpoints per
-# office, so it resumes rather than restarts: cheap when day 3 succeeded,
-# recovers the month when day 3 hit an outage. Safe to run twice because the
-# gate is independent of which attempt produced the CSV and ingestion replaces
-# the year wholesale.
+# The day-5 run is outage tolerance, not a duplicate. It resumes from the
+# per-office checkpoint when day 3 FAILED, which is the case it exists for.
+#
+# Note what it does NOT do: when day 3 *succeeded*, rto_fetch deleted the
+# checkpoint on its way out, so day 5 re-fetches the whole year from zero (~2-3
+# hours) and its first failing attempt overwrites day 3's complete on-disk CSV
+# with a partial. Harmless -- the blob snapshot is immutable and the database
+# already holds the month -- but do not read "resumes" as "cheap when day 3
+# succeeded", and check whether the month already loaded before reacting to a
+# day-5 fetch_sweep alert.
+#
+# Safe to run twice because the gate is independent of which attempt produced
+# the CSV and ingestion replaces the year wholesale.
 #
 # COUPLING: --max-load-age-days 35 below is derived from the day-5 retry. The
 # widest legitimate gap between successful loads is day 3 of a 31-day month to

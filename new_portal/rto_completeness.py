@@ -32,7 +32,9 @@ It must also not over-assert, in two directions:
   was supplied, because without one "no checkpoint" is indistinguishable from
   "no sweep ever ran here". A partial run always leaves a checkpoint, and
   ``--allow-gaps`` reaches the deleting path only after writing the manifest, so
-  neither can disguise itself as the clean case.
+  neither can disguise itself as the clean case. That branch still asserts a
+  floor on the CSV's own breadth, so it is never a no-op: without it the gate
+  would check nothing at all on the only path production takes.
 - The newest month in the CSV is *expected* to be partial, because one fetch
   returns a whole year and a run on day 3 includes three days of the current
   month. So the assertion is on ``target_month``, the previous and fully
@@ -62,6 +64,13 @@ from new_portal.rto_fetch import (
 from new_portal.schema import CSV_COLUMNS, STATUS_SCOPE_ALL
 
 logger = logging.getLogger(__name__)
+
+# How much of the expected office list must actually appear in the CSV before a
+# checkpoint-less run is believed. Offices that reported nothing all year
+# legitimately contribute no rows -- the real 2026 pull holds 1,398 of 1,676
+# targets, or 0.83 -- so this cannot be set near 1. It exists to catch the
+# shape of a narrow run: a single-state sweep is 48 of 1,676, or 0.03.
+MIN_CSV_OFFICE_FRACTION = 0.5
 
 
 @dataclasses.dataclass(frozen=True)
@@ -154,11 +163,28 @@ def verify_run_complete(
 
     checkpoint_present = progress_path.exists()
     progress = load_progress(progress_path)
-    complete_offices = sum(
-        1 for entry in progress.values() if office_is_complete(entry)
-    )
+
+    # Count only labels that are still in the target list. The checkpoint is
+    # append-only and survives a crosswalk refresh, so stale labels from
+    # renamed or removed offices would otherwise inflate the count past the
+    # expectation while real coverage is short -- suppressing the only coverage
+    # failure this gate produces. rto_fetch's own count filters the same way.
+    target_labels: set[str] | None = None
     if expected_office_count is None:
-        expected_office_count = len(load_rto_targets())
+        targets = load_rto_targets()
+        target_labels = {
+            f"{target['state_code']}/{target['new_rto_code']} "
+            f"{target['new_rto_name']}"
+            for target in targets
+        }
+        expected_office_count = len(targets)
+
+    complete_offices = sum(
+        1
+        for label, entry in progress.items()
+        if office_is_complete(entry)
+        and (target_labels is None or label in target_labels)
+    )
 
     gap_manifest_present = gap_manifest_path.exists()
     if gap_manifest_present:
@@ -196,8 +222,18 @@ def verify_run_complete(
                 f"from an earlier run, not this one's output"
             )
 
-    # Office coverage, decided only now that manifest presence and CSV
-    # provenance are both known -- the clean-completion case depends on them.
+    header = _csv_header(csv_path)
+    if header != CSV_COLUMNS:
+        failures.append(
+            f"CSV header at {csv_path} does not match the expected schema; "
+            f"ingestion maps columns by position"
+        )
+
+    summary = summarize_csv(csv_path)
+
+    # Office coverage, decided only now that manifest presence, CSV provenance
+    # and the CSV's own breadth are all known -- the clean-completion case
+    # depends on all three.
     if complete_offices < expected_office_count:
         if checkpoint_present:
             failures.append(
@@ -212,21 +248,29 @@ def verify_run_complete(
                 f"a machine where no sweep ever ran look identical"
             )
         elif not (gap_manifest_present or stale_csv):
-            logger.info(
-                "No checkpoint at %s and no gap manifest, with a CSV newer "
-                "than this run's floor: the sweep completed cleanly and "
-                "removed its own checkpoint.",
-                progress_path,
-            )
-
-    header = _csv_header(csv_path)
-    if header != CSV_COLUMNS:
-        failures.append(
-            f"CSV header at {csv_path} does not match the expected schema; "
-            f"ingestion maps columns by position"
-        )
-
-    summary = summarize_csv(csv_path)
+            # The path production always takes, because a clean sweep removes
+            # its own checkpoint. It must still assert something about
+            # coverage, or the gate checks nothing at all on the real path and
+            # rests entirely on the fetch's exit code -- the very thing it is
+            # supposed to be independent of.
+            minimum_offices = int(expected_office_count * MIN_CSV_OFFICE_FRACTION)
+            if summary.offices < minimum_offices:
+                failures.append(
+                    f"CSV holds only {summary.offices} offices against "
+                    f"{expected_office_count} expected, below the "
+                    f"{MIN_CSV_OFFICE_FRACTION:.0%} floor of "
+                    f"{minimum_offices}; this looks like a narrow run, not a "
+                    f"nationwide one"
+                )
+            else:
+                logger.info(
+                    "No checkpoint at %s and no gap manifest, with a CSV newer "
+                    "than this run's floor and %s of %s offices present: the "
+                    "sweep completed cleanly and removed its own checkpoint.",
+                    progress_path,
+                    summary.offices,
+                    expected_office_count,
+                )
     if target_month not in summary.months:
         failures.append(
             f"CSV has no rows for target month {year}-{target_month:02d}; "

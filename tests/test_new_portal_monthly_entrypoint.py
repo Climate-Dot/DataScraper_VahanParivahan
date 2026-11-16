@@ -130,6 +130,59 @@ class GateWiringTests(EntrypointTestCase):
         )
 
 
+class BoundedRuntimeTests(EntrypointTestCase):
+    """MAX x WAIT does not bound the run, so something else has to.
+
+    A failing sweep attempt that walks most of the country costs nearly as much
+    as a successful one, and STALL_LIMIT resets on any progress at all, so the
+    loop can outlive its window. A run killed by the VM powering off is exactly
+    as silent as the incident this work exists to end, because the ETL runtime
+    installs an ERR trap only.
+    """
+
+    def test_sweep_runs_under_an_explicit_deadline(self):
+        self.assertIn("timeout", self.text)
+        sweep = self.index_of("new_portal_sweep_until_complete.sh")
+        deadline = self.index_of("SWEEP_TIMEOUT")
+        self.assertLess(deadline, sweep)
+
+    def test_a_signal_kill_sends_an_alert(self):
+        for signal_name in ("TERM", "INT"):
+            self.assertRegex(self.text, rf"trap .*{signal_name}")
+        self.assertIn("etl_failure_trap_handler", self.text)
+
+    def test_only_one_instance_may_run(self):
+        # A long day-3 run must not have the day-5 cron start a second instance
+        # against the same checkpoint and the same CSV path.
+        self.assertIn("flock", self.text)
+        lock = self.index_of("flock")
+        self.assertLess(lock, self.index_of('CURRENT_STEP="fetch_sweep"'))
+
+
+class PostIngestWiringTests(EntrypointTestCase):
+    def test_post_ingest_check_receives_the_resolved_target(self):
+        # Without this, a hand re-run of an older month verifies whatever month
+        # is previous to today and fails a run whose data landed perfectly.
+        check = self.text[self.index_of('CURRENT_STEP="post_ingest_check"'):]
+        self.assertIn("--target-year", check)
+        self.assertIn('"${TARGET_YEAR}"', check)
+        self.assertIn('"${TARGET_MONTH}"', check)
+
+    def test_post_ingest_check_does_not_post_its_own_alert(self):
+        # The ERR trap already posts one alert for the failing step; two alerts
+        # for one fault read as two faults, with contradictory advice.
+        check = self.text[self.index_of('CURRENT_STEP="post_ingest_check"'):]
+        self.assertIn("--no-alert", check)
+
+    def test_staging_cleanup_cannot_fail_the_run(self):
+        # It runs after the data has correctly landed and its own docstring
+        # says it is not an ingestion-correctness fix, so a transient error
+        # there must not mark the run FAILED and suppress the success alert.
+        cleanup_start = self.index_of('CURRENT_STEP="staging_cleanup"')
+        cleanup = self.text[cleanup_start : self.index_of('CURRENT_STEP="completed"')]
+        self.assertIn("||", cleanup)
+
+
 class FileShapeTests(EntrypointTestCase):
     def test_shebang_is_the_first_bytes_of_the_file(self):
         # new_portal_rto_etl.sh begins with a stray `e` before its shebang.

@@ -238,6 +238,65 @@ class VerifyRunCompleteTests(CompletenessTestCase):
         self.assertTrue(report.stale_csv)
         self.assertNotEqual(report.failures, [])
 
+    def test_clean_completion_still_asserts_breadth(self):
+        # The absent-checkpoint branch is the path production always takes,
+        # because a successful sweep deletes its own checkpoint. If it asserts
+        # nothing, the gate performs no coverage check at all on the real path:
+        # a one-office CSV would sail through.
+        self.write_csv([make_record()])
+        report = verify_run_complete(
+            YEAR,
+            TARGET_MONTH,
+            csv_path=self.csv_path,
+            gap_manifest_path=self.manifest_path,
+            expected_office_count=1676,
+            min_fetched_at=time.time() - 3600,
+        )
+        self.assertNotEqual(report.failures, [])
+        joined = " ".join(report.failures)
+        self.assertIn("1", joined)
+        self.assertIn("1676", joined)
+
+    def test_clean_completion_accepts_realistic_breadth(self):
+        # The real 2026 pull holds 1,398 offices against 1,676 targets: offices
+        # that reported nothing all year contribute no rows, which is
+        # legitimate. That must pass.
+        self.write_csv(
+            [
+                make_record(state_code=f"S{index // 40}", rto_code=index)
+                for index in range(1398)
+            ]
+        )
+        report = verify_run_complete(
+            YEAR,
+            TARGET_MONTH,
+            csv_path=self.csv_path,
+            gap_manifest_path=self.manifest_path,
+            expected_office_count=1676,
+            min_fetched_at=time.time() - 3600,
+        )
+        self.assertEqual(report.failures, [])
+
+    def test_checkpoint_labels_outside_the_target_list_do_not_count(self):
+        # After a crosswalk refresh, stale checkpoint labels could otherwise
+        # push complete_offices to the expected count while real coverage is
+        # short, suppressing the only coverage failure the gate produces.
+        self.write_progress(
+            [
+                "ZZ/9999 AN OFFICE THAT IS NOT IN THE CROSSWALK",
+                "ZZ/9998 NOR IS THIS ONE",
+            ]
+        )
+        self.write_csv([make_record()])
+        report = verify_run_complete(
+            YEAR,
+            TARGET_MONTH,
+            csv_path=self.csv_path,
+            gap_manifest_path=self.manifest_path,
+        )
+        self.assertEqual(report.complete_offices, 0)
+        self.assertNotEqual(report.failures, [])
+
     def test_missing_csv_is_a_failure(self):
         self.write_progress(self.labels)
         report = self.verify()
