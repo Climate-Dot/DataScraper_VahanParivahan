@@ -28,6 +28,7 @@ UNIT_TEST_MODULES=(
     tests.test_new_portal_rto_completeness
     tests.test_pipeline_freshness
     tests.test_snapshot_freshness
+    tests.test_v2_scratch_cleanup
 )
 
 should_run_dbt_parse() {
