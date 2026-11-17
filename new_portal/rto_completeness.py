@@ -36,7 +36,7 @@ It must also not over-assert, in two directions:
   floor on the CSV's own breadth, so it is never a no-op: without it the gate
   would check nothing at all on the only path production takes.
 - The newest month in the CSV is *expected* to be partial, because one fetch
-  returns a whole year and a run on day 3 includes three days of the current
+  returns a whole year and a run on day 2 includes two days of the current
   month. So the assertion is on ``target_month``, the previous and fully
   elapsed calendar month, and never on the in-flight month.
 

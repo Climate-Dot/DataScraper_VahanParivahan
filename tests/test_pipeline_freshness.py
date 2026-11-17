@@ -93,8 +93,10 @@ class LoadRecencyTests(unittest.TestCase):
         self.assertIsNone(verdict.age_days)
 
     def test_thirty_three_day_gap_is_not_stale(self):
-        # The legitimate worst case: last success on day 3 of a 31-day month,
-        # next success on day 5 of the following month.
+        # Comfortably inside the threshold. Under the day-2 schedule the
+        # legitimate worst case is 31 days (day 2 to day 2 across a 31-day
+        # month); 33 is asserted because the threshold must leave headroom for
+        # a run that starts late, not sit flush against the schedule.
         verdict = freshness.evaluate_load_recency(
             self.reference - timedelta(days=33), self.reference, max_load_age_days=35
         )
@@ -187,11 +189,12 @@ class MonthSettledTests(unittest.TestCase):
 class TargetCapturedTests(unittest.TestCase):
     """The settled check must not fire before the target month was captured.
 
-    Under the day-3/day-5 schedule, on day 1 of a month the previous month has
-    only the 3-to-5-day stub that the previous month's own runs wrote, because
-    every V2 run writes rows for the in-flight month. Evaluating "did it settle"
-    then reports a failure every month, which is the outcome the design calls
-    worse than having no check at all.
+    On day 1 of a month the previous month holds only the stub that the
+    previous month's own run wrote, because every V2 run writes rows for the
+    in-flight month. Evaluating "did it settle" then reports a failure every
+    month, which is the outcome the design calls worse than having no check at
+    all. The rule is derived from the data rather than a day-of-month constant,
+    so these cases held when the schedule moved from day 3 to day 2.
     """
 
     def test_load_before_the_target_month_ended_did_not_capture_it(self):
@@ -321,7 +324,7 @@ class MainTests(unittest.TestCase):
 
     def test_day_one_of_the_month_does_not_alert_on_the_uncaptured_stub(self):
         # Dec 1. November holds only what the Nov 3 and Nov 5 runs wrote while
-        # November was in flight. The day-3 run has not happened yet.
+        # November was in flight. December's own run has not happened yet.
         exit_code, run = self.run_main(
             loaded_at=datetime(2026, 11, 5, 4, 0),
             target=freshness.MonthStats(6662, 170608),
@@ -332,7 +335,7 @@ class MainTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_a_stub_still_alerts_once_the_month_has_been_captured(self):
-        # Dec 4, after the day-3 run landed: a short November is now a fault.
+        # Dec 4, after December's run landed: a short November is now a fault.
         exit_code, run = self.run_main(
             loaded_at=datetime(2026, 12, 3, 5, 0),
             target=freshness.MonthStats(6662, 170608),

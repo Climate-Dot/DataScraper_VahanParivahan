@@ -44,36 +44,60 @@ There is **no dbt stage**, because no curated V2 model exists. Do not add one.
 See [`ops/production_vm.crontab`](/Users/monish/DataScraper_VahanParivahan/ops/production_vm.crontab),
 which carries the full reasoning. In short:
 
-- **Day 3, 03:30 UTC** — primary run. Day 3 rather than day 1 because the V1
-  block clears by ~00:40 UTC on day 2 (measured: State ~4 min, OEM ~1h51m, RTO
-  ~1h10m), and because the portal revises past months, so two extra days of
-  settling is worth having.
-- **Day 5, 03:30 UTC** — retry. It resumes from the per-office checkpoint when
-  day 3 **failed**, which is the case it exists for.
-  **It does not resume when day 3 succeeded.** A successful run deletes its own
-  checkpoint, so day 5 re-fetches the whole year from zero (~2–3 hours), and its
-  first failing attempt overwrites day 3's complete CSV on disk with a partial
-  one. Nothing is lost — the blob snapshot is immutable and the database already
-  holds the month — but check whether the month already loaded before reacting
-  to a day-5 `fetch_sweep` alert.
-- **Daily, 06:15 UTC** — on-VM load-recency check.
+- **Day 2, 02:00 UTC** — the run. There is one line, and the day is chosen by
+  the VM's power schedule rather than by the data. The VM is started and
+  stopped by external automation, and measured from `last -x -F reboot
+  shutdown` on 2026-11-17 that automation has a single window every month:
+  started day 1 at ~05:30 UTC, stopped day 2 at 11:30 UTC to the second. V1's
+  RTO run finishes ~00:39 on day 2, so 02:00 is clear of it, and a sweep
+  bounded by `SWEEP_TIMEOUT=3h` ends by ~05:00 — six hours before shutdown.
+- **There is no retry line.** The original design put a retry on day 5, which
+  cannot work: the VM was powered off on day 3 *and* day 5 in September,
+  October and November 2026. A failed run waits for a person, so the alerts
+  below are the whole safety net.
+- **Daily, 06:15 UTC** — on-VM load-recency check. Under the uptime window
+  above this really executes twice a month, on day 1 and day 2.
 - **Daily, 06:00 UTC, off-VM** — `.github/workflows/freshness_watchdog.yml`.
+  This is the primary detector, not a backstop: it is the only check that runs
+  when the VM is off, and at `--max-age-days 35` it alerts about five days into
+  the following month, against day 1 of the month *after* that for the on-VM
+  check.
 
-**Coupling to watch:** `--max-load-age-days 35` is derived from the day-5 retry
-(day 3 of a 31-day month to day 5 of the next = 33 days, plus two days of
-buffer). **If the retry day moves, that threshold moves with it.**
+**Coupling to watch:** `--max-load-age-days 35` and the watchdog's
+`--max-age-days 35` are both derived from the run day — day 2 of one month to
+day 2 of the next is 31 days, plus four days of buffer. **If the run day moves,
+both thresholds move with it.**
 
-**Hard external dependency:** the VM is off by default and is started by
-external automation not represented in this repo. The schedule needs it up
-03:00–07:00 UTC on days 3 and 5. A cron line on a powered-off machine does
-nothing, which is exactly the failure this whole design exists to catch rather
-than prevent.
+**One day less settling than day 3, and why that is acceptable:** the portal
+revises past months (two RTOs moved +0.6% and +0.9% between consecutive daily
+runs). One V2 call returns a whole calendar year and every run replaces that
+year wholesale, so next month's run rewrites this month's figures with their
+settled values. Only the last month of a calendar year gets a single correction
+pass instead of being revisited.
+
+**Hard external dependency — read this before trusting the schedule.** The VM
+is off by default. An **Azure Automation task** (confirmed by the maintainer on
+2026-11-17; it lives in the Azure portal, not in this repo) starts and stops
+it. The schedule needs the VM up 02:00–05:00 UTC on day 2, which is inside the
+window that task already provides, so it requires no change to the task.
+
+It does require the task to actually fire, and **on 2026-11-01 it did not.**
+The VM stayed down from Oct 24 to Nov 3, so V1's own monthly cron never ran and
+nothing reported it; October's V1 data exists only because a person loaded it by
+hand on 2026-11-06 (every Aug/Sep/Oct row in `fact_ev_data_by_rto` carries
+`inserted_at = 2026-11-06 07:46:46`). Check why the November start was missed
+before relying on the December one.
+
+A cron line on a powered-off machine does nothing, which is exactly the failure
+this whole design exists to catch rather than prevent — and the only check that
+can catch it is the off-VM watchdog, which cannot fire until GitHub Actions is
+enabled for this repository.
 
 ## What each alert means
 
 | Alert | Meaning | What to do |
 |---|---|---|
-| `new_portal_rto` FAILED at `fetch_sweep` | The sweep could not complete the year within `SWEEP_TIMEOUT`. Nothing ingested. | **First check whether the month already loaded** — on day 5 this often means day 3 succeeded and day 5 was re-fetching from zero. If not, re-run. If it dies at ~205 offices every attempt, the portal's rate limit moved — re-measure with ≥150s of sustained load before changing `SLEEP_SECONDS`. |
+| `new_portal_rto` FAILED at `fetch_sweep` | The sweep could not complete the year within `SWEEP_TIMEOUT`. Nothing ingested. | Re-run by hand — there is no retry line, so nothing else will. The checkpoint survives a failure, so a re-run resumes rather than starting over. If it dies at ~205 offices every attempt, the portal's rate limit moved — re-measure with ≥150s of sustained load before changing `SLEEP_SECONDS`. |
 | `new_portal_rto` FAILED at `<step>(killed by SIGTERM)` | The run was killed, almost always the VM powering off mid-sweep. | Nothing was ingested unless the step says `ingestion`. Re-run in a window that fits. |
 | `new_portal_rto` FAILED at `completeness_gate` | The fetch output could not be proven complete. **Nothing ingested — this is the gate working.** | Read the named failures and re-run. |
 | `new_portal_rto` FAILED at `ingestion` | A snapshot exists; the load did not finish. | Re-run ingestion only. Check "If ingestion was killed". |
@@ -172,8 +196,10 @@ finish inside the 03:00–07:00 UTC window the crontab asks the VM to be up for.
 
 The entrypoint also takes an exclusive `flock` on
 `new_portal_rto_monthly.lock` and exits 0 if another instance holds it, so a
-long day-3 run cannot have the day-5 cron start a second process against the
-same checkpoint and CSV. And it traps `TERM`/`INT` as well as `ERR`, because
+hand re-run started while the scheduled run is still going cannot put a
+second process against the same checkpoint and CSV. (It originally guarded the
+day-3/day-5 pair; with a single monthly line a person at a terminal is the
+remaining way to collide with it, which is the likelier one anyway.) And it traps `TERM`/`INT` as well as `ERR`, because
 `install_failure_alert_trap` installs an ERR trap only — a run killed rather
 than failed would otherwise be exactly as silent as the November incident.
 `SIGKILL` cannot be trapped by anyone; systemd sends `TERM` first on shutdown.
@@ -182,8 +208,8 @@ than failed would otherwise be exactly as silent as the November incident.
 
 The daily check evaluates "did the target month settle" **only once a load has
 happened after that month ended**. On day 1 of a month the previous month holds
-nothing but the 3-to-5-day stub its own runs wrote while it was in flight, so
-asking the question before the day-3 run lands would report a failure every
+nothing but the one-day stub its own run wrote while it was in flight, so
+asking the question before the day-2 run lands would report a failure every
 month — and a channel that cries wolf monthly stops being read, which the design
 calls worse than having no check. Load recency still runs daily and unchanged,
 so the dead-pipeline signal is untouched. The rule is derived from the data, not

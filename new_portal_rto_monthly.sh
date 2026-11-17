@@ -48,8 +48,8 @@ log_step() {
 
 cd "${PROJECT_ROOT}"
 
-# One instance at a time. A degraded day-3 run can outlast two days, and the
-# day-5 cron would otherwise start a second process against the same per-year
+# One instance at a time. The scheduled run and a hand re-run would otherwise
+# be two processes against the same per-year
 # checkpoint and the same CSV path. Exits 0 rather than failing, because "the
 # previous run is still going" is information, not a fault.
 LOCK_FILE="${PROJECT_ROOT}/new_portal_rto_monthly.lock"

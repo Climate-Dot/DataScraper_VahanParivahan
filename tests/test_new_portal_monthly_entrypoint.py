@@ -152,7 +152,7 @@ class BoundedRuntimeTests(EntrypointTestCase):
         self.assertIn("etl_failure_trap_handler", self.text)
 
     def test_only_one_instance_may_run(self):
-        # A long day-3 run must not have the day-5 cron start a second instance
+        # A long scheduled run must not have a hand re-run start a second instance
         # against the same checkpoint and the same CSV path.
         self.assertIn("flock", self.text)
         lock = self.index_of("flock")

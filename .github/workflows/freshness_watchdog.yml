@@ -18,8 +18,8 @@ name: V2 Snapshot Freshness Watchdog
 
 on:
   schedule:
-    # 06:00 UTC daily, after the V2 window closes on run days and harmlessly on
-    # every other day.
+    # 06:00 UTC daily, after the day-2 V2 run closes (~05:00 UTC) and harmlessly
+    # on every other day.
     - cron: "0 6 * * *"
   workflow_dispatch:
 
@@ -49,4 +49,9 @@ jobs:
         env:
           AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           GOOGLE_CHAT_WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
-        run: python ops/check_snapshot_freshness.py --max-age-days 40
+        # --max-age-days 35, not 40: the widest legitimate gap between snapshots
+        # is day 2 of one month to day 2 of the next = 31 days, so 35 leaves
+        # four days of buffer and still alerts about five days into the
+        # following month. It is coupled to the run day in
+        # ops/production_vm.crontab -- move one, move both.
+        run: python ops/check_snapshot_freshness.py --max-age-days 35

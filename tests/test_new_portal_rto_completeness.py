@@ -188,7 +188,7 @@ class VerifyRunCompleteTests(CompletenessTestCase):
         self.assertEqual(report.complete_offices, 3)
 
     def test_partial_in_flight_current_month_is_not_a_failure(self):
-        # A run on day 3 of November pulls Jan-Nov; November is a 3-day stub by
+        # A run in early November pulls Jan-Nov; November is a short stub by
         # design. The gate asserts on the target (closed) month only.
         self.write_progress(self.labels)
         records = [
