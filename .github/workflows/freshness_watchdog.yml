@@ -1,0 +1,57 @@
+# The only check in this repository that still works when the VM is off.
+#
+# Every other freshness check runs on the VM itself, so none of them can notice
+# the failure that actually happened in November 2026: the VM never powered on,
+# no cron job fired, and silence was indistinguishable from success. This
+# workflow runs on a GitHub-hosted runner, where the VM's power state cannot
+# reach it, and watches the age of the newest V2 blob snapshot as proof that a
+# run happened.
+#
+# Requires two repository secrets:
+#   AZURE_STORAGE_CONNECTION_STRING - read access to the snapshot container
+#   GOOGLE_CHAT_WEBHOOK_URL         - the same alert channel the VM uses
+# It must never read config.yaml; that file exists only on the VM.
+#
+# NOTE: GitHub Actions is disabled for this repository as of 2026-11-16, so this
+# workflow will not fire until Actions is enabled in the repository settings.
+name: V2 Snapshot Freshness Watchdog
+
+on:
+  schedule:
+    # 06:00 UTC daily, after the day-2 V2 run closes (~05:00 UTC) and harmlessly
+    # on every other day.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  snapshot-freshness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install watchdog dependencies
+        # azure-storage-blob for the client; requests only because importing the
+        # container name from new_portal.rto_blob_snapshot reaches
+        # new_portal.rto_fetch, which imports requests at module scope. The name
+        # is imported rather than re-spelled so a change to the default travels.
+        run: |
+          python -m pip install --upgrade pip
+          pip install azure-storage-blob==12.19.0 requests==2.32.3
+
+      - name: Check snapshot freshness
+        env:
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          GOOGLE_CHAT_WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
+        # --max-age-days 35, not 40: the widest legitimate gap between snapshots
+        # is day 2 of one month to day 2 of the next = 31 days, so 35 leaves
+        # four days of buffer and still alerts about five days into the
+        # following month. It is coupled to the run day in
+        # ops/production_vm.crontab -- move one, move both.
+        run: python ops/check_snapshot_freshness.py --max-age-days 35

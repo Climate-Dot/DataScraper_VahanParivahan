@@ -13,3 +13,81 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 30 18 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/state_ev_etl_logs.txt 2>&1
 00 19 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/oem_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/oem_etl_logs.txt 2>&1
 30 23 1 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_data_etl.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/rto_ev_etl_logs.txt 2>&1
+
+# ---------------------------------------------------------------------------
+# V2 new-portal RTO pipeline. Not Selenium: a JSON API, so no xvfb and no
+# VAHAN_HEADLESS. See docs/runbooks/new_portal_rto.md.
+#
+# DAY 2, AND THE REASON IS POWER, NOT DATA.
+#
+# This VM is off by default. An Azure Automation task starts and stops it
+# (confirmed by the maintainer 2026-11-17; it lives in the Azure portal, not in
+# this repository). Measured from `last -x -F reboot shutdown` on 2026-11-17,
+# that task has one window and it is the same every month:
+#
+#   started  day 1  05:30 UTC (Jul), 05:30 (Aug), 04:26 (Sep)
+#   stopped  day 2  11:30 UTC (Jul, Aug, Sep, Oct) -- to the second, every time
+#
+# So the machine is reliably up from day 1 ~05:30 to day 2 11:30 UTC and off
+# the rest of the month. An earlier draft of this file scheduled the V2 run for
+# day 3 at 03:30 with a day-5 retry, which reads well and cannot ever execute:
+# the VM was powered off on day 3 AND day 5 in September, October and November.
+#
+# 02:00 UTC on day 2 sits inside the real window. V1's RTO run starts 23:30 on
+# day 1 and finished 00:39 on day 2 when last measured, so 02:00 is clear of it
+# with ~1h20m of margin, and a sweep bounded by SWEEP_TIMEOUT=3h ends by ~05:00
+# -- six and a half hours before the 11:30 shutdown.
+#
+# What day 2 costs: one day less settling than day 3. The portal revises past
+# months (two RTOs moved +0.6% and +0.9% between consecutive daily runs). This
+# is largely self-correcting here, because one V2 portal call returns a whole
+# calendar year and every run replaces that year wholesale -- so next month's
+# run rewrites this month's figures with their settled values. The exception is
+# the last month of a calendar year, which gets only one correction pass.
+#
+# NO RETRY LINE. The day-5 retry is gone because there is no second window to
+# put it in; by day 5 the machine is off. A failed run is therefore a run that
+# waits for a human, which is precisely why the freshness checks below and the
+# off-VM watchdog matter more under this schedule than under the old one.
+#
+# COUPLING: --max-load-age-days 35 below is derived from this line. The widest
+# legitimate gap between successful loads is day 2 of one month to day 2 of the
+# next = 31 days, plus four days of buffer. If this run day moves, that number
+# moves with it. The same is true of --max-age-days in
+# .github/workflows/freshness_watchdog.yml.
+#
+# REQUIRED VM UPTIME: 02:00-05:00 UTC on day 2 -- inside the existing window,
+# so this needs no change to the Azure Automation task. IT DOES DEPEND ON THAT
+# TASK STILL FIRING, and on 2026-11-01 it did not: the VM never started,
+# V1's own monthly cron never fired, and nothing reported it. October's V1 data
+# exists only because a person loaded it by hand on 2026-11-06. Fixing the
+# day-1 start is a prerequisite for this schedule, not a nicety.
+00 02 2 * * bash /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly.sh >> /home/climate_dot_data/DataScraper_VahanParivahan/new_portal_rto_monthly_logs.txt 2>&1
+
+# Daily load-recency check. This is the thing that notices nothing happened;
+# monthly would discover a missed window a month late. Against the real
+# incident -- last load 2026-09-24, October never ran -- it would have alerted
+# from 2026-10-29 onward, every day, instead of two days of silence.
+#
+# It keys on MAX([inserted_at]), never MAX([date]): every V2 run writes rows for
+# the in-flight current month, so MAX([date]) is always the current month and
+# cannot distinguish a fresh load from a dead pipeline.
+#
+# Daily costs nothing when the VM is off -- cron simply does not fire -- so this
+# line buys coverage whenever the machine happens to be up and never requires a
+# power-on of its own.
+#
+# Be clear about how little that is under the measured uptime window. The VM is
+# up only from day 1 ~05:30 to day 2 11:30 UTC, so "daily" here executes on
+# exactly two mornings a month: day 1 (when the newest load is ~30 days old and
+# passes) and day 2 (just after the 02:00 run, when it is fresh). A run that
+# fails in month M is therefore not caught by THIS check until day 1 of month
+# M+2, at an age near 60 days -- a month late.
+#
+# The off-VM GitHub Actions watchdog
+# (.github/workflows/freshness_watchdog.yml) is what closes that gap: it runs
+# on a GitHub-hosted runner every day regardless of VM power, and at
+# --max-age-days 35 it alerts about five days into month M+1. It is the only
+# check that works when the VM never started, and under this schedule it is the
+# primary detector rather than a backstop.
+15 06 * * * bash -lc 'cd /home/climate_dot_data/DataScraper_VahanParivahan && . venv/bin/activate && python3 ops/check_pipeline_freshness.py --table fact_ev_data_by_rto_v2 --status-scope ALL_STATUSES --max-load-age-days 35 --min-month-total-ratio 0.85 --pipeline new_portal_rto_freshness' >> /home/climate_dot_data/DataScraper_VahanParivahan/freshness_check_logs.txt 2>&1
