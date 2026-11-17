@@ -27,10 +27,15 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 #
 # 03:30 UTC is 09:00 IST and sits nowhere near the 18:30-23:30 UTC V1 block on
 # any day. A complete sweep took 31 minutes at the old unsafe pacing, but at
-# the required --sleep-seconds 0.45 the same work is ~2-2.5 hours and the
-# MAX=30 x WAIT=300 budget allows a worst case near 5 hours, so the window
-# closes by ~08:30 UTC and is no longer a comfortable margin. If the portal
-# tightens its bucket further, move the start earlier rather than cutting MAX.
+# the required --sleep-seconds 0.45 the same work is ~2-2.5 hours.
+#
+# What bounds the run is SWEEP_TIMEOUT (3h in new_portal_rto_monthly.sh), not
+# the retry budget. MAX x WAIT bounds only the WAITING between attempts; a
+# failing attempt costs nearly as much as a successful one and STALL_LIMIT
+# resets on any progress, so the retry loop's own ceiling is ~17 hours. With
+# the 3h deadline the window closes by ~06:30 UTC. If the portal tightens its
+# bucket further, move the start earlier and raise SWEEP_TIMEOUT together --
+# raising one without the other just moves where the run gets killed.
 #
 # The day-5 run is outage tolerance, not a duplicate. It resumes from the
 # per-office checkpoint when day 3 FAILED, which is the case it exists for.
